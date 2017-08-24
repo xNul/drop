@@ -23,9 +23,12 @@ create Drop; a simple, efficient music player/visualizer.
   - Left Arrow: Previous Song
   - Right Arrow: Next Song
   - Space bar: Pause/Play
+  - Click the scrub bar to change time
+  - Drag the scrub head to change time
   - r, g, and b: change visualization type (colors disabled atm)
   - f: Fullscreen
   - Escape: Quit
+  - Comma and Period: move frame by frame through the visualization
 
 ### TODO:
   - add playlists
