@@ -1,0 +1,39 @@
+TODO:
+- optimize code (categorize and comment) check/optimize sample collection
+- move music folder to appdata directory
+- add better font
+- add external visualizations (and switch between in settings)
+- get song name/artist/etc metadata
+- add file metadata saving option to significantly decrease CPU usage
+  - file could keep track of changes in volume, not the actual volume to decrease file size.
+    Ex: at time(t)=0, change(c)=0 | t=1,c=2 | t=2,c=5 | t=3,c=-2 |
+    then at t=3, the real volume(not relative)=0+2+5-2=5.
+- add fade bloom (maybe) and fade transition softening and fade-visual sync
+- maybe auto scale sample size for maximum quality
+- add different designs
+- add settings panel with includes
+  - quality settings: 256, 512, 1024, 2048, auto (remember quality factors:
+    size/4, division function, waveform/10 division in draw and dtscounter
+    and fade, and scaling i)
+  - file metadata saving option: off, automatic, manual (greatly improves performance at the cost of disk space)
+  - tick distance slider
+  - screen ratio setting: 16/10, 16/9, 4/3
+  - fade options: toggle, turn off bloom, intensity slider (right side for louder songs, left for softer)
+  - more color options
+
+
+- drag and drop for music files love.filedropped/love.directorydropped or use love.system.openURL
+- playlists?
+- song navigation/selection without changing active song
+
+- read and evaluate how https://github.com/Sulunia/love2d-fftvis and https://github.com/opatut/VisuaLove handle ffts
+- fix fade average to scale with different qualities
+- make waveform iteration scale with quality Ex:
+    2048 = waveform[1], waveform[2], waveform[3], waveform[4], waveform[5], waveform[6]
+    4096 = waveform[2], waveform[4], waveform[6], waveform[8], waveform[10], waveform[12]
+    (probably not this simple aka not linear scaling)
+    this is intended to keep the active/varying portions of the waveform within the window of a particular visualization
+
+Researched/unfinished:
+- potential fft overlap NOTE: turns out the benefits from fixing the overlap were not great enough for the extra processing power and memory requirements necessary.  Actually ended up making things a lot worse.  The implementation consisted of calculating the fft in real-time separate from love.update, storing in in memory once some compression/optimization was preformed, obtaining it when the sample time appeared for love.draw, then removing it from memory once used.
+- when behind windows disable visualizer calcs NOTE: can't do this atm (10.2) bc love uses SDL which has issues implementing this.  Currently implemented, but likely error-prone need to test further on other computers

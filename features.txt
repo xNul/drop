@@ -1,0 +1,8 @@
+Features:
+- spectrum visualization
+- real-time calculations
+- multiple colors
+- custom music
+- handles multiple songs at once
+- overlay with scrub bar
+- if minimized or behind windows (Mac), disable visualization calcs
