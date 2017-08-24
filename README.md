@@ -20,6 +20,7 @@ create Drop; a simple, efficient music player/visualizer.
   - disables visualization when in the background (behind windows (Mac only) or minimized)
   - delay correction
   - bulk sampling
+  - fully-scalable
 
 ### Controls:
   - Left Arrow: Previous Song
