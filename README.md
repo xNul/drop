@@ -8,7 +8,7 @@ To me they felt like a gimic.  Something that you use once or twice, say "Oh coo
 I believe visualizers have a lot of potential integrated into music players and so, I decided to
 create Drop; a simple, efficient music player/visualizer.
 
-![music visualization](http://i.imgur.com/hMwYUCy.png)
+![music visualization](http://i.imgur.com/FeA2dlw.png)
 
 ### Features:
   - handles multiple songs
