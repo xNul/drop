@@ -1,6 +1,5 @@
 function love.load()
 	require 'luafft'
-	g=true
 
 	-- Setup --
 	local desktop_width, desktop_height = love.window.getDesktopDimensions()
@@ -39,6 +38,7 @@ function love.load()
 	waveform = {}
 	song_id = 0
 	current_song = nil
+	visualizer_type = 1
 	set_color("g", 255)
 
 	intro_video = love.graphics.newVideo("intro.ogv")
@@ -100,15 +100,15 @@ function love.draw()
 	local tick_count
 	local tick_distance
 	local tick_width
-	if g then
+	if visualizer_type == 1 then
 		tick_count = 48
 		tick_distance = graphics_width/(tick_count*2)
 		tick_width = graphics_width/(tick_count*5.5)
-	elseif b then
+	elseif visualizer_type == 2 then
 		tick_count = 64
 		tick_distance = graphics_width/(tick_count*2)
 		tick_width = graphics_width/(tick_count*4.3)
-	elseif r then
+	elseif visualizer_type == 3 then
 		tick_count = 128
 		tick_distance = graphics_width/(tick_count*2)
 		tick_width = graphics_width/(tick_count*2)
@@ -371,20 +371,17 @@ function love.keypressed(key, scancode, isrepeat)
 		elseif key == "left" then
 			prev_song()
 		elseif key == "r" then
-			--set_color("r")
-			g=false
-			b=false
-			r=true
+			set_color("r")
 		elseif key == "g" then
-			r=false
-			b=false
-			g=true
-			--set_color("g")
+			set_color("g")
 		elseif key == "b" then
-			--set_color("b")
-			r=false
-			g=false
-			b=true
+			set_color("b")
+		elseif key == "1" then
+			visualizer_type = 1
+		elseif key == "2" then
+			visualizer_type = 2
+		elseif key == "3" then
+			visualizer_type = 3
 		elseif key == "escape" then
 			love.event.quit()
 		elseif key == "f" then

@@ -15,7 +15,7 @@ create Drop; a simple, efficient music player/visualizer.
   - scrub bar and music controls
   - spectrum visualization
   - realtime fft calculations
-  - multiple colors (temporarily disabled)
+  - multiple colors
   - fade-visual sync (temporarily disabled)
   - disables visualization when in the background (behind windows (Mac only) or minimized)
   - delay correction
@@ -28,8 +28,9 @@ create Drop; a simple, efficient music player/visualizer.
   - Space bar: Pause/Play
   - Click the scrub bar to change time
   - Drag the scrub head to change time
-  - r, g, and b: change visualization type (colors disabled atm)
+  - r, g, and b: change visualization color
   - f: Fullscreen
+  - 1, 2, and 3: change visualization type
   - Escape: Quit
   - Comma and Period: move frame by frame through the visualization
 
@@ -41,7 +42,7 @@ create Drop; a simple, efficient music player/visualizer.
   - add fade transition softening
   - add drag and drop for music files (love.filedropped/love.directorydropped/love.system.openURL)
   - add song selection without changing songs
-  - add a settings panel with includes
+  - add a settings panel which includes
     - quality settings: 256, 512, 1024, 2048, auto (remember quality factors:
   	  size/4, division function, waveform/10 division in draw and dtscounter
 	  and fade, and scaling i)
@@ -52,7 +53,11 @@ create Drop; a simple, efficient music player/visualizer.
 	- fade options: toggle, turn off bloom, intensity slider (right side for louder songs, left for softer), auto
 	- more color options
   - move music folder to appdata
+  - maybe move fft to its own thread/coroutine
+  - make a gui for the visualizer (need to research, learn how to implement, designs, etc)
   - optimize icon
+  - understand fft library to potentially increase efficiency
+  - potentially use a better fft library made in C through FFI
   - read and evaluate how https://github.com/Sulunia/love2d-fftvis and https://github.com/opatut/VisuaLove handle ffts
   - fix fade average to scale with different qualities
   - fix scaling differences between Mac and Windows
