@@ -10,6 +10,8 @@ create Drop; a simple, efficient music player/visualizer.
 
 ![music visualization](http://i.imgur.com/FeA2dlw.png)
 
+To add music: run the visualizer, exit, navigate to your system's appdata directory, open "LOVE/Drop/music", and place your music there.
+
 ### Features:
   - handles multiple songs
   - scrub bar and music controls
@@ -36,7 +38,6 @@ create Drop; a simple, efficient music player/visualizer.
 
 ### TODO:
   - add playlists
-  - add a better font
   - add more visualizations (folder for custom visualizations?)
   - add fade bloom (maybe)
   - add fade transition softening
@@ -53,7 +54,6 @@ create Drop; a simple, efficient music player/visualizer.
 	- screen ratio setting: 16/10, 16/9, 4/3
 	- fade options: toggle, turn off bloom, intensity slider (right side for louder songs, left for softer), auto
 	- more color options
-  - move music folder to appdata
   - maybe move fft to its own thread/coroutine
   - make a gui for the visualizer (need to research, learn how to implement, designs, etc)
   - optimize icon

@@ -34,6 +34,7 @@ function love.load()
 
 
 	-- Main --
+	if not love.filesystem.exists("music") then love.filesystem.createDirectory("music") end
 	music_list = recursive_enumerate("music")
 	waveform = {}
 	song_id = 0
