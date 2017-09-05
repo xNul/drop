@@ -26,7 +26,8 @@ function love.load()
 	scrubbar_y = math.floor(graphics_height-graphics_height/7)
 	scrubbar_width = graphics_width-math.floor(graphics_width/(3*scale_ratio_width))
 	scrubbar_height = math.floor(graphics_height*4/155)
-	love.graphics.setFont(love.graphics.newFont(math.max(graphics_height/30, 16)))
+	font_size = math.max(graphics_height/30, 16)
+	love.graphics.setFont(love.graphics.newFont(font_size))
 	current_font = love.graphics.getFont()
 
 	love.keyboard.setKeyRepeat(true)
@@ -36,6 +37,12 @@ function love.load()
 	-- Main --
 	if not love.filesystem.exists("music") then love.filesystem.createDirectory("music") end
 	music_list = recursive_enumerate("music")
+	
+	music_exists = true
+	if next(music_list) == nil then
+		music_exists = false
+	end
+	
 	waveform = {}
 	song_id = 0
 	current_song = nil
@@ -63,7 +70,7 @@ function love.load()
 end
 
 function love.update(dt)
-	if not intro_video:isPlaying() then
+	if not intro_video:isPlaying() and music_exists then
 		-- plays first song
 		if current_song == nil then
 			love.audio.setVolume(0.5)
@@ -165,7 +172,7 @@ function love.draw()
 	end
 
 	-- overlay/video drawing
-	if enable_overlay and current_song ~= nil then
+	if enable_overlay and current_song ~= nil and music_exists then
 		overlay()
 	elseif intro_video:isPlaying() then
 		love.graphics.setColor(255, 255, 255)
@@ -182,6 +189,10 @@ function love.draw()
 				nil, nil, nil, current_font:getWidth(string)/2
 			)
 		end
+	elseif not music_exists then
+		love.graphics.setColor(255, 255, 255)
+		love.graphics.setFont(love.graphics.newFont(36))
+		love.graphics.printf("No music has been added.  Navigate to your appdata/LOVE/Drop/music folder to add music", 1, graphics_height/2, graphics_width, "center")
 	end
 
 	--[[ manual love.window.isVisible for behind windows and minimized
@@ -417,7 +428,8 @@ function love.resize(w, h)
 	scrubbar_y = math.floor(graphics_height-graphics_height/7)
 	scrubbar_width = graphics_width-math.floor(graphics_width/(3*scale_ratio_width))
 	scrubbar_height = math.floor(graphics_height*4/155)
-	love.graphics.setFont(love.graphics.newFont(math.max(graphics_height/30, 16)))
+	font_size = math.max(graphics_height/30, 16)
+	love.graphics.setFont(love.graphics.newFont(font_size))
 	current_font = love.graphics.getFont()
 end
 
