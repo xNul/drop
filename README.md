@@ -9,9 +9,7 @@ create Drop; a simple, efficient music player/visualizer.
 
 ![music visualization](https://i.imgur.com/vq5bnna.png)
 
-To add music:
-  1. Drag and drop your music folder on the window
-  2. Make sure you run the visualizer at least once, exit, navigate to your system's appdata directory, open "LOVE/Drop/music", and place your music files/folders there.
+To add music either drag and drop your music folder on the window or make sure you run the visualizer at least once, exit, navigate to your system's appdata directory, open "LOVE/Drop/music", and place your music files/folders there.
 
 ### Features:
   - handles multiple songs
