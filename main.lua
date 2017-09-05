@@ -26,10 +26,10 @@ function love.load()
 	scrubbar_y = graphics_height-graphics_height/7
 	scrubbar_width = graphics_width-graphics_width/(3*scale_ratio_width)
 	scrubbar_height = graphics_height*4/155
-	scale_text_height = graphics_height/1050+1
+	love.graphics.setFont(love.graphics.newFont(graphics_height/30))
+	current_font = love.graphics.getFont()
 
 	love.keyboard.setKeyRepeat(true)
-	current_font = love.graphics.getFont()
 	last_frame_time = love.timer.getTime()
 
 
@@ -68,7 +68,7 @@ function love.update(dt)
 			love.audio.setVolume(0.5)
 			next_song()
 		end
-		
+
 		-- when song finished, play next one
 		if not current_song:isPlaying() and not current_song:isPaused() then
 			next_song()
@@ -177,8 +177,8 @@ function love.draw()
 			local string = "Press any key to skip"
 			love.graphics.print(
 				string, graphics_width/2,
-				graphics_height-(current_font:getHeight()*scale_text_height)-80,
-				nil, scale_text_height, nil, current_font:getWidth(string)/2
+				graphics_height-(current_font:getHeight())-80,
+				nil, nil, nil, current_font:getWidth(string)/2
 			)
 		end
 	end
@@ -200,7 +200,7 @@ end
 function overlay()
 	love.graphics.setColor(255, 255, 255)
 	if song_id ~= 0 then
-		love.graphics.print(music_list[song_id][2], 10, 10, nil, scale_text_height)
+		love.graphics.print(music_list[song_id][2], 10, 10)
 	end
 
 	-- get time from start of song and change time_end in relation to time_start.  Result: both change time simultaneously
@@ -213,7 +213,7 @@ function overlay()
 		minutes = minutes-1
 	end
 	local time_end = string.format("%02d:%02d", minutes, seconds)
-	
+
 	love.graphics.rectangle(
 		"line", scrubbar_x, scrubbar_y,
 		scrubbar_width, scrubbar_height,
@@ -221,18 +221,15 @@ function overlay()
 	)
 	love.graphics.print(
 		time_start, scrubbar_x,
-		scrubbar_y-(current_font:getHeight()*scale_text_height),
-		nil, scale_text_height
+		scrubbar_y-(current_font:getHeight())
 	)
 	love.graphics.print(
-		time_end, scrubbar_x+scrubbar_width-(current_font:getWidth(time_end)*scale_text_height),
-		scrubbar_y-(current_font:getHeight()*scale_text_height),
-		nil, scale_text_height
+		time_end, scrubbar_x+scrubbar_width-(current_font:getWidth(time_end)),
+		scrubbar_y-(current_font:getHeight())
 	)
 	love.graphics.print(
 		"Change time by clicking the scrub bar          Change songs with the arrow keys               Play/Pause with the space bar\nChange colors with r, g, and b                      Toggle Fullscreen with f                                Press escape to exit",
-		10, graphics_height-(current_font:getHeight()*scale_text_height*2),
-		nil, scale_text_height
+		10, graphics_height-(current_font:getHeight()*2)
 	)
 
 	local current_time_proportion = current_song:tell('seconds')/current_song:getDuration('seconds')
@@ -396,7 +393,7 @@ function love.keypressed(key, scancode, isrepeat)
 			else
 				current_song:pause()
 			end
-			
+
 		-- moves slowly through the visualization by the length of a frame.  Used to compare visualizations
 		elseif key == "," then
 			local samples_per_frame = (sound:getSampleCount()/current_song:getDuration('seconds'))/60
@@ -416,7 +413,8 @@ function love.resize(w, h)
 	scrubbar_y = graphics_height-graphics_height/7
 	scrubbar_width = graphics_width-graphics_width/(3*scale_ratio_width)
 	scrubbar_height = graphics_height*4/155
-	scale_text_height = graphics_height/1050+1
+	love.graphics.setFont(love.graphics.newFont(graphics_height/30))
+	current_font = love.graphics.getFont()
 end
 
 function love.visible(v)
@@ -499,7 +497,7 @@ function next_song()
 		love.graphics.present()
 		current_song:stop()
 	end
-	
+
 	sound = love.sound.newSoundData(music_list[song_id][1])
 	sample_rate = sound:getSampleRate()
 	channels = sound:getChannels()

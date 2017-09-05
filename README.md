@@ -48,6 +48,7 @@ create Drop; a simple, efficient music player/visualizer.
 	  and fade, and scaling i)
 	  - maybe auto scale sample size option depending on song for maximum quality
 	- file visualization saving option: off, automatic, manual (greatly improves performance at the cost of disk space)
+	  - option to delete saves
 	- tick distance slider (inside settings menu for default vis)
 	- screen ratio setting: 16/10, 16/9, 4/3
 	- fade options: toggle, turn off bloom, intensity slider (right side for louder songs, left for softer), auto
@@ -61,6 +62,7 @@ create Drop; a simple, efficient music player/visualizer.
   - read and evaluate how https://github.com/Sulunia/love2d-fftvis and https://github.com/opatut/VisuaLove handle ffts
   - fix fade average to scale with different qualities
   - fix scaling differences between Mac and Windows
+  - fix background detection on windows
   - Researched/unfinished:
     - potential fft overlap NOTE: turns out the benefits from fixing the overlap were not great enough for the extra processing power and memory requirements necessary.  Actually ended up making things a lot worse.  The implementation consisted of calculating the fft in real-time separate from love.update, storing it in memory once some compression/optimization was preformed, obtaining it when the sample time appeared for love.draw, then removing it from memory once used.
     - when behind windows disable visualizer calcs NOTE: can't do this atm (10.2) bc love uses SDL which has issues implementing this.  Currently implemented, but likely error-prone need to test further on other computers
