@@ -38,11 +38,11 @@ To add music: run the visualizer, exit, navigate to your system's appdata direct
 
 ### TODO:
   - add playlists
-  x add a better font
+  - ~~add a better font~~
   - add more visualizations (folder for custom visualizations?)
   - add fade bloom (maybe)
   - add fade transition softening
-  x add drag and drop for music files (love.filedropped/love.directorydropped/love.system.openURL)
+  - ~~add drag and drop for music files (love.filedropped/love.directorydropped/love.system.openURL)~~
   - add song selection without changing songs
   - add a settings panel which includes
     - quality settings: 256, 512, 1024, 2048, auto (remember quality factors:
@@ -55,7 +55,7 @@ To add music: run the visualizer, exit, navigate to your system's appdata direct
 	- screen ratio setting: 16/10, 16/9, 4/3
 	- fade options: toggle, turn off bloom, intensity slider (right side for louder songs, left for softer), auto
 	- more color options
-  x move music folder to appdata
+  - ~~move music folder to appdata~~
   - maybe move fft to its own thread/coroutine
   - make a gui for the visualizer (need to research, learn how to implement, designs, etc)
   - optimize icon
