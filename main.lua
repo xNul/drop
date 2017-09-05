@@ -35,13 +35,9 @@ function love.load()
 
 
 	-- Main --
+	music_exists = false
+	appdata_music = true
 	if not love.filesystem.exists("music") then love.filesystem.createDirectory("music") end
-	music_list = recursive_enumerate("music")
-	
-	music_exists = true
-	if next(music_list) == nil then
-		music_exists = false
-	end
 	
 	waveform = {}
 	song_id = 0
@@ -192,7 +188,11 @@ function love.draw()
 	elseif not music_exists then
 		love.graphics.setColor(255, 255, 255)
 		love.graphics.setFont(love.graphics.newFont(36))
-		love.graphics.printf("No music has been added.  Navigate to your appdata/LOVE/Drop/music folder to add music", 1, graphics_height/2, graphics_width, "center")
+		if appdata_music then
+			love.graphics.printf("Drag and drop your music folder(s) here to listen or press any key to only listen to songs in appdata/LOVE/Drop/music.", 1, graphics_height/2, graphics_width, "center")
+		else
+			love.graphics.printf("There isn't any music in appdata/LOVE/Drop/music.", 1, graphics_height/2, graphics_width, "center")
+		end
 	end
 
 	--[[ manual love.window.isVisible for behind windows and minimized
@@ -377,7 +377,17 @@ function love.keypressed(key, scancode, isrepeat)
 	sleep(false)
 
 	-- rgb keys are being used as a test atm.  Not finished
-	if not intro_video:isPlaying() or key == "f" or key == "volumeup" or key == "volumedown" then
+	if not intro_video:isPlaying() then
+		if music_exists == false and appdata_music then
+			music_list = recursive_enumerate("music")
+			
+			music_exists = true
+			if next(music_list) == nil then
+				music_exists = false
+				appdata_music = false
+			end
+			love.graphics.setFont(love.graphics.newFont(font_size))
+		end
 		if key == "right" then
 			next_song()
 		elseif key == "left" then
@@ -431,6 +441,17 @@ function love.resize(w, h)
 	font_size = math.max(graphics_height/30, 16)
 	love.graphics.setFont(love.graphics.newFont(font_size))
 	current_font = love.graphics.getFont()
+end
+
+function love.directorydropped(path)
+	love.filesystem.mount(path, "music")
+	music_list = recursive_enumerate("music")
+	
+	music_exists = true
+	if next(music_list) == nil then
+		music_exists = false
+	end
+	love.graphics.setFont(love.graphics.newFont(font_size))
 end
 
 function love.visible(v)
