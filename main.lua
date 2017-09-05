@@ -22,11 +22,11 @@ function love.load()
 	scale_ratio_width = (10/ratio_height)*ratio_width
 
 	graphics_width, graphics_height = love.graphics.getDimensions()
-	scrubbar_x = graphics_width/(6*scale_ratio_width)
-	scrubbar_y = graphics_height-graphics_height/7
-	scrubbar_width = graphics_width-graphics_width/(3*scale_ratio_width)
-	scrubbar_height = graphics_height*4/155
-	love.graphics.setFont(love.graphics.newFont(graphics_height/30))
+	scrubbar_x = math.floor(graphics_width/(6*scale_ratio_width))
+	scrubbar_y = math.floor(graphics_height-graphics_height/7)
+	scrubbar_width = graphics_width-math.floor(graphics_width/(3*scale_ratio_width))
+	scrubbar_height = math.floor(graphics_height*4/155)
+	love.graphics.setFont(love.graphics.newFont(math.max(graphics_height/30, 16)))
 	current_font = love.graphics.getFont()
 
 	love.keyboard.setKeyRepeat(true)
@@ -38,7 +38,7 @@ function love.load()
 	waveform = {}
 	song_id = 0
 	current_song = nil
-	visualizer_type = 1
+	visualizer_type = 3
 	set_color("g", 255)
 
 	intro_video = love.graphics.newVideo("intro.ogv")
@@ -121,19 +121,19 @@ function love.draw()
 	if #waveform == 0 then tick_count = 0 end
 	for i=1, tick_count do
 		local tick_amplitude = waveform[i]
-		local tick_height = graphics_height*tick_amplitude:abs()*2--*(31/12)
+		local tick_height = math.ceil(graphics_height*tick_amplitude:abs()*2)
 
 		love.graphics.rectangle(
-			'fill', graphics_width/2+(i-1)*tick_distance,
-			graphics_height/2 - tick_height/2,
-			tick_width, tick_height,
-			tick_width/2, tick_width/2
+			'fill', math.ceil(graphics_width/2+(i-1)*tick_distance),
+			math.ceil(graphics_height/2 - tick_height/2),
+			math.ceil(tick_width), tick_height,
+			math.ceil(tick_width/2), math.ceil(tick_width/2)
 		)
 		love.graphics.rectangle(
-			'fill', graphics_width/2-(i-1)*tick_distance,
-			graphics_height/2 - tick_height/2,
-			tick_width, tick_height,
-			tick_width/2, tick_width/2
+			'fill', math.ceil(graphics_width/2-(i-1)*tick_distance),
+			math.ceil(graphics_height/2 - tick_height/2),
+			math.ceil(tick_width), tick_height,
+			math.ceil(tick_width/2), math.ceil(tick_width/2)
 		)
 
 		waveform_average = waveform_average + tick_amplitude:abs()
@@ -227,15 +227,18 @@ function overlay()
 		time_end, scrubbar_x+scrubbar_width-(current_font:getWidth(time_end)),
 		scrubbar_y-(current_font:getHeight())
 	)
-	love.graphics.print(
-		"Change time by clicking the scrub bar          Change songs with the arrow keys               Play/Pause with the space bar\nChange colors with r, g, and b                      Toggle Fullscreen with f                                Press escape to exit",
-		10, graphics_height-(current_font:getHeight()*2)
-	)
+	
+	if graphics_height > 360 then
+		love.graphics.print(
+			"Change time by clicking the scrub bar\tChange songs with the arrow keys\tPress escape to exit\nChange colors with r, g, and b\tToggle Fullscreen with f\tPlay/Pause with the space bar",
+			10, graphics_height-(current_font:getHeight()*2)
+		)
+	end
 
 	local current_time_proportion = current_song:tell('seconds')/current_song:getDuration('seconds')
 	love.graphics.circle(
 		"fill", current_time_proportion*scrubbar_width+scrubbar_x,
-		scrubbar_y+scrubbar_height/2, scrubbar_height/2
+		scrubbar_y+scrubbar_height/2, math.floor(scrubbar_height/2), math.max(3*math.floor(scrubbar_height/2), 3)
 	)
 end
 
@@ -409,11 +412,11 @@ end
 
 function love.resize(w, h)
 	graphics_width, graphics_height = love.graphics.getDimensions()
-	scrubbar_x = graphics_width/(6*scale_ratio_width)
-	scrubbar_y = graphics_height-graphics_height/7
-	scrubbar_width = graphics_width-graphics_width/(3*scale_ratio_width)
-	scrubbar_height = graphics_height*4/155
-	love.graphics.setFont(love.graphics.newFont(graphics_height/30))
+	scrubbar_x = math.floor(graphics_width/(6*scale_ratio_width))
+	scrubbar_y = math.floor(graphics_height-graphics_height/7)
+	scrubbar_width = graphics_width-math.floor(graphics_width/(3*scale_ratio_width))
+	scrubbar_height = math.floor(graphics_height*4/155)
+	love.graphics.setFont(love.graphics.newFont(math.max(graphics_height/30, 16)))
 	current_font = love.graphics.getFont()
 end
 
