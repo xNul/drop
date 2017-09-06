@@ -471,37 +471,39 @@ function recursive_enumerate(folder)
 		".psm", ".s3m", ".stm", ".ult", ".umx",
 		".xm", ".abc", ".mid", ".it"
 	}
+	
 	local lfs = love.filesystem
-	local filesTable = lfs.getDirectoryItems(folder)
+	local music_table = lfs.getDirectoryItems(folder)
+	local complete_music_table = {}
 	local valid_format = false
-	local fullFileTable = {}
-	local dirTable = {}
 	local index = 1
-	for i,v in ipairs(filesTable) do
+	
+	for i,v in ipairs(music_table) do
 		local file = folder.."/"..v
-		for j,v in ipairs(format_table) do
-			if filesTable[i]:sub(-4) == v then
+		for j,w in ipairs(format_table) do
+			if v:sub(-4) == w then
 				valid_format = true
 				break
 			end
 		end
 		if lfs.isFile(file) and valid_format then
-			fullFileTable[index] = {}
-			fullFileTable[index][1] = lfs.newFile(file)
-			fullFileTable[index][2] = v:sub(1, -5)
+			complete_music_table[index] = {}
+			complete_music_table[index][1] = lfs.newFile(file)
+			complete_music_table[index][2] = v:sub(1, -5)
 			index = index+1
 			valid_format = false
 		elseif lfs.isDirectory(file) then
-			dirTable = recursive_enumerate(file)
-			for j,w in ipairs(dirTable) do
-				fullFileTable[index] = {}
-				fullFileTable[index][1] = lfs.newFile(file.."/"..w)
-				fullFileTable[index][2] = w:sub(1, -5)
+			local recursive_table = recursive_enumerate(file)
+			for j,w in ipairs(recursive_table) do
+				complete_music_table[index] = {}
+				complete_music_table[index][1] = w[1]
+				complete_music_table[index][2] = w[2]
 				index = index+1
 			end
 		end
 	end
-	return fullFileTable
+	
+	return complete_music_table
 end
 
 

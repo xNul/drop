@@ -9,7 +9,7 @@ create Drop; a simple, efficient music player/visualizer.
 
 ![music visualization](https://i.imgur.com/vq5bnna.png)
 
-To add music either drag and drop your music folder on the window or make sure you run the visualizer at least once, exit, navigate to your system's appdata directory, open "LOVE/Drop/music", and place your music files/folders there.
+To add music, either drag and drop your music folder(s) on the window or make sure you run the visualizer at least once, exit, navigate to your system's appdata directory, open "LOVE/Drop/music", and place your music files/folders there.
 
 ### Features:
   - handles multiple songs
@@ -63,7 +63,7 @@ To add music either drag and drop your music folder on the window or make sure y
   - read and evaluate how https://github.com/Sulunia/love2d-fftvis and https://github.com/opatut/VisuaLove handle ffts
   - fix fade average to scale with different qualities
   - fix scaling differences between Mac and Windows
-  - fix background detection on windows
   - Researched/unfinished:
     - potential fft overlap NOTE: turns out the benefits from fixing the overlap were not great enough for the extra processing power and memory requirements necessary.  Actually ended up making things a lot worse.  The implementation consisted of calculating the fft in real-time separate from love.update, storing it in memory once some compression/optimization was preformed, obtaining it when the sample time appeared for love.draw, then removing it from memory once used.
     - when behind windows disable visualizer calcs NOTE: can't do this atm (10.2) bc love uses SDL which has issues implementing this.  Currently implemented, but likely error-prone need to test further on other computers
+	- fix background detection on windows: can't because the SDL in current version of LOVE is bugged
