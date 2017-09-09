@@ -3,11 +3,11 @@ Drop, a LÖVE visualizer and music player
 
 I've always loved music and music visualizations, but mainstream visualizers are frequently packed with features to
 the point where they feel cumbersome. They have some neat graphics, but they aren't very good at reflecting the actual beat of
-the music. To me they feel like gimics---something that you use once or twice, say "Cool!" and then never use again.
+the music. To me they feel like gimics—something that you use once or twice, say "Cool!" and then never use again.
 I believe visualizers have a lot of potential integrated into music players and so, I decided to
 create Drop; a simple, efficient music player/visualizer.
 
-![music visualization](https://i.imgur.com/vq5bnna.png)
+![music visualization](https://i.imgur.com/ZRqD1YO.png)
 
 To add music, either drag and drop your music folder(s) on the window or make sure you run the visualizer at least once, exit, navigate to your system's appdata directory, open "LOVE/Drop/music", and place your music files/folders there.
 
@@ -18,7 +18,7 @@ To add music, either drag and drop your music folder(s) on the window or make su
   - realtime fft calculations
   - multiple colors
   - fade-visual sync (temporarily disabled)
-  - disables visualization when in the background (behind windows (Mac only) or minimized)
+  - \[Mac only, see [this](https://github.com/nabakin/drop#researched%2Funfinished)\] disables visualization when in the background (behind windows or minimized)
   - delay correction
   - bulk sampling
   - fully-scalable
@@ -30,7 +30,7 @@ To add music, either drag and drop your music folder(s) on the window or make su
   - Click the scrub bar to change time
   - Drag the scrub head to change time
   - r, g, and b: change visualization color
-  - f: Fullscreen
+  - f: Fullscreen mode
   - 1, 2, and 3: change visualization type
   - Escape: Quit
   - Comma and Period: move frame by frame through the visualization
@@ -60,10 +60,12 @@ To add music, either drag and drop your music folder(s) on the window or make su
   - optimize icon
   - understand fft library to potentially increase efficiency
   - potentially use a better fft library made in C through FFI
-  - read and evaluate how https://github.com/Sulunia/love2d-fftvis and https://github.com/opatut/VisuaLove handle ffts
+  - ~~read and evaluate how https://github.com/Sulunia/love2d-fftvis and https://github.com/opatut/VisuaLove handle ffts~~
   - fix fade average to scale with different qualities
   - fix scaling differences between Mac and Windows
-  - Researched/unfinished:
-    - potential fft overlap NOTE: turns out the benefits from fixing the overlap were not great enough for the extra processing power and memory requirements necessary.  Actually ended up making things a lot worse.  The implementation consisted of calculating the fft in real-time separate from love.update, storing it in memory once some compression/optimization was preformed, obtaining it when the sample time appeared for love.draw, then removing it from memory once used.
-    - when behind windows disable visualizer calcs NOTE: can't do this atm (10.2) bc love uses SDL which has issues implementing this.  Currently implemented, but likely error-prone need to test further on other computers
-	- fix background detection on windows: can't because the SDL in current version of LOVE is bugged
+  - fix name overwrite when adding additional folders
+
+##### Researched/unfinished:
+  - potential fft overlap NOTE: turns out the benefits from fixing the overlap were not great enough for the extra processing power and memory requirements necessary.  Actually ended up making things a lot worse.  The implementation consisted of calculating the fft in real-time separate from love.update, storing it in memory once some compression/optimization was preformed, obtaining it when the sample time appeared for love.draw, then removing it from memory once used.
+  - when behind windows disable visualizer calcs NOTE: can't do this atm (10.2) bc love uses SDL which has issues implementing this.  Currently implemented, but likely error-prone need to test further on other computers
+  - fix background detection on windows: can't because Love uses SDL to handle these things and it's bugged
