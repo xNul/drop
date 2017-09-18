@@ -38,6 +38,7 @@ To add music, either drag and drop your music folder(s) on the window or make su
 ### TODO:
   - add playlists
   - ~~add a better font~~
+  - use decoders to generate SoundData and audio source
   - add more visualizations (folder for custom visualizations?)
   - add fade bloom (maybe)
   - add fade transition softening
