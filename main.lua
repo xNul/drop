@@ -28,9 +28,9 @@ function love.load()
 	scrubbar_y = math.floor(graphics_height-graphics_height/7)
 	scrubbar_width = graphics_width-math.floor(graphics_width/(3*scale_ratio_width))
 	scrubbar_height = math.floor(graphics_height*4/155)
-	font_size = math.max(graphics_height/30, 16)
-	love.graphics.setFont(love.graphics.newFont(font_size))
-	current_font = love.graphics.getFont()
+	normal_font = love.graphics.newFont(math.max(graphics_height/30, 16))
+	big_font = love.graphics.newFont(math.max(graphics_height/20, 24))
+	love.graphics.setFont(big_font)
 
 	love.keyboard.setKeyRepeat(true)
 	last_frame_time = 0
@@ -68,11 +68,15 @@ function love.load()
 end
 
 function love.update(dt)
-	if not intro_video:isPlaying() and music_exists then
+	if (intro_video == nil or not intro_video:isPlaying()) and music_exists then
 		-- plays first song
 		if current_song == nil then
 			love.audio.setVolume(0.5)
 			next_song()
+			if intro_video ~= nil then
+				intro_video = nil
+				collectgarbage()
+			end
 		end
 
 		-- when song finished, play next one
@@ -98,6 +102,11 @@ function love.update(dt)
 				sleep(true)
 				sleep_counter = 0
 			end
+		end
+	elseif intro_video == nil or not intro_video:isPlaying() then
+		if intro_video ~= nil then
+			intro_video = nil
+			collectgarbage()
 		end
 	end
 end
@@ -176,7 +185,7 @@ function love.draw()
 	-- overlay/video drawing
 	if enable_overlay and current_song ~= nil and music_exists then
 		overlay()
-	elseif intro_video:isPlaying() then
+	elseif intro_video ~= nil and intro_video:isPlaying() then
 		love.graphics.setColor(255, 255, 255)
 		love.graphics.draw(
 			intro_video, graphics_width/2, graphics_height/2,
@@ -185,6 +194,7 @@ function love.draw()
 		)
 		if intro_video:tell() > 1.3 then
 			local string = "Press any key to skip"
+			local current_font = love.graphics.getFont()
 			love.graphics.print(
 				string, graphics_width/2,
 				graphics_height-(current_font:getHeight())-80,
@@ -193,7 +203,7 @@ function love.draw()
 		end
 	elseif not music_exists then
 		love.graphics.setColor(255, 255, 255)
-		love.graphics.setFont(love.graphics.newFont(36))
+		love.graphics.setFont(big_font)
 		if appdata_music then
 			love.graphics.printf("Drag and drop your music folder(s) here to listen or press any key to only listen to songs in appdata/LOVE/Drop/music.", 1, graphics_height/2, graphics_width, "center")
 		else
@@ -232,6 +242,7 @@ function overlay()
 		minutes = minutes-1
 	end
 	local time_end = string.format("%02d:%02d", minutes, seconds)
+	local current_font = love.graphics.getFont()
 
 	love.graphics.rectangle(
 		"line", scrubbar_x, scrubbar_y,
@@ -438,8 +449,8 @@ function love.keypressed(key, scancode, isrepeat)
 		end
 	}
 
-	if not intro_video:isPlaying() then
-		if music_exists == false and appdata_music then
+	if intro_video == nil or not intro_video:isPlaying() then
+		if not music_exists and appdata_music then
 			music_list = recursive_enumerate("music")
 			
 			music_exists = true
@@ -447,7 +458,7 @@ function love.keypressed(key, scancode, isrepeat)
 				music_exists = false
 				appdata_music = false
 			end
-			love.graphics.setFont(love.graphics.newFont(font_size))
+			love.graphics.setFont(normal_font)
 		end
 		
 		key_functions[key]()
@@ -462,9 +473,8 @@ function love.resize(w, h)
 	scrubbar_y = math.floor(graphics_height-graphics_height/7)
 	scrubbar_width = graphics_width-math.floor(graphics_width/(3*scale_ratio_width))
 	scrubbar_height = math.floor(graphics_height*4/155)
-	font_size = math.max(graphics_height/30, 16)
-	love.graphics.setFont(love.graphics.newFont(font_size))
-	current_font = love.graphics.getFont()
+	normal_font = love.graphics.newFont(math.max(graphics_height/30, 16))
+	big_font = love.graphics.newFont(math.max(graphics_height/20, 24))
 end
 
 function love.directorydropped(path)
@@ -475,7 +485,7 @@ function love.directorydropped(path)
 	if next(music_list) == nil then
 		music_exists = false
 	end
-	love.graphics.setFont(love.graphics.newFont(font_size))
+	love.graphics.setFont(normal_font)
 end
 
 function love.visible(v)
