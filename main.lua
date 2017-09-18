@@ -116,6 +116,10 @@ function love.draw()
 		tick_count = 128
 		tick_distance = graphics_width/(tick_count*2)
 		tick_width = graphics_width/(tick_count*2)
+	elseif visualizer_type == 4 then
+		tick_count = 48
+		tick_distance = graphics_width/(tick_count*2)
+		tick_width = graphics_width/(tick_count*2)
 	end
 
 	local waveform_average = 0
@@ -375,8 +379,62 @@ end
 
 function love.keypressed(key, scancode, isrepeat)
 	sleep(false)
+	
+	local key_functions = {
+		["right"] = function ()
+			next_song()
+		end,
+		["left"] = function ()
+			prev_song()
+		end,
+		
+		-- rgb keys are being used as a test atm.  Not finished
+		["r"] = function ()
+			set_color("r")
+		end,
+		["g"] = function ()
+			set_color("g")
+		end,
+		["b"] = function ()
+			set_color("b")
+		end,
+		["1"] = function ()
+			visualizer_type = 1
+		end,
+		["2"] = function ()
+			visualizer_type = 2
+		end,
+		["3"] = function ()
+			visualizer_type = 3
+		end,
+		["4"] = function ()
+			visualizer_type = 4
+		end,
+		["escape"] = function ()
+			love.event.quit()
+		end,
+		["f"] = function ()
+			love.window.setFullscreen(not love.window.getFullscreen())
+		end,
+		["space"] = function ()
+			if current_song:isPaused() then
+				current_song:resume()
+			else
+				current_song:pause()
+			end
+		end,
+		
+		-- moves slowly through the visualization by the length of a frame.  Used to compare visualizations
+		[","] = function ()
+			local samples_per_frame = (sound:getSampleCount()/current_song:getDuration('seconds'))/60
+			current_song:seek(current_song:tell('samples')-samples_per_frame, 'samples')
+		end,
+		["."] = function ()
+			local samples_per_frame = (sound:getSampleCount()/current_song:getDuration('seconds'))/60
+			current_song:seek(current_song:tell('samples')+samples_per_frame, 'samples')
+		end
+	}
 
-	-- rgb keys are being used as a test atm.  Not finished
 	if not intro_video:isPlaying() then
 		if music_exists == false and appdata_music then
 			music_list = recursive_enumerate("music")
@@ -388,45 +446,8 @@ function love.keypressed(key, scancode, isrepeat)
 			end
 			love.graphics.setFont(love.graphics.newFont(font_size))
 		end
-		if key == "right" then
-			next_song()
-		elseif key == "left" then
-			prev_song()
-		elseif key == "r" then
-			set_color("r")
-		elseif key == "g" then
-			set_color("g")
-		elseif key == "b" then
-			set_color("b")
-		elseif key == "1" then
-			visualizer_type = 1
-		elseif key == "2" then
-			visualizer_type = 2
-		elseif key == "3" then
-			visualizer_type = 3
-		elseif key == "escape" then
-			love.event.quit()
-		elseif key == "f" then
-			if love.window.getFullscreen() then
-				love.window.setFullscreen(false)
-			else
-				love.window.setFullscreen(true)
-			end
-		elseif key == "space" then
-			if current_song:isPaused() then
-				current_song:resume()
-			else
-				current_song:pause()
-			end
-
-		-- moves slowly through the visualization by the length of a frame.  Used to compare visualizations
-		elseif key == "," then
-			local samples_per_frame = (sound:getSampleCount()/current_song:getDuration('seconds'))/60
-			current_song:seek(current_song:tell('samples')-samples_per_frame, 'samples')
-		elseif key == "." then
-			local samples_per_frame = (sound:getSampleCount()/current_song:getDuration('seconds'))/60
-			current_song:seek(current_song:tell('samples')+samples_per_frame, 'samples')
-		end
+		
+		key_functions[key]()
 	else
 		intro_video:getSource():stop()
 	end
