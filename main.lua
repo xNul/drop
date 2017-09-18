@@ -206,9 +206,9 @@ function love.draw()
 		love.graphics.setColor(255, 255, 255)
 		love.graphics.setFont(big_font)
 		if appdata_music then
-			love.graphics.printf("Drag and drop your music folder(s) here to listen or press any key to only listen to songs in "..appdata_path.."/LOVE/Drop/music.", 1, graphics_height/2, graphics_width, "center")
+			love.graphics.printf("Drag and drop your music folder(s) here to listen or press any key to only listen to songs in \""..appdata_path.."/LOVE/Drop/music.\"", 1, graphics_height/2, graphics_width, "center")
 		else
-			love.graphics.printf("There isn't any music in "..appdata_path.."/LOVE/Drop/music.", 1, graphics_height/2, graphics_width, "center")
+			love.graphics.printf("There aren't any songs in \""..appdata_path.."/LOVE/Drop/music yet.\"", 1, graphics_height/2, graphics_width, "center")
 		end
 	end
 
@@ -462,7 +462,9 @@ function love.keypressed(key, scancode, isrepeat)
 			love.graphics.setFont(normal_font)
 		end
 		
-		key_functions[key]()
+		local function catch_nil()
+		end
+		(key_functions[key] or catch_nil)()
 	else
 		intro_video:getSource():stop()
 	end
