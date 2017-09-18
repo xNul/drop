@@ -12,7 +12,7 @@ create Drop; a simple, efficient music player/visualizer.
 To add music, either drag and drop your music folder(s) on the window or make sure you run the visualizer at least once, exit, navigate to your system's appdata directory, open "LOVE/Drop/music", and place your music files/folders there.
 
 ### Features:
-  - handles multiple songs
+  - drag and drop
   - scrub bar and music controls
   - spectrum visualization
   - realtime fft calculations
@@ -31,7 +31,7 @@ To add music, either drag and drop your music folder(s) on the window or make su
   - Drag the scrub head to change time
   - r, g, and b: change visualization color
   - f: Fullscreen mode
-  - 1, 2, and 3: change visualization type
+  - 1, 2, 3, and 4: change visualization type
   - Escape: Quit
   - Comma and Period: move frame by frame through the visualization
 
@@ -64,7 +64,7 @@ To add music, either drag and drop your music folder(s) on the window or make su
   - ~~read and evaluate how https://github.com/Sulunia/love2d-fftvis and https://github.com/opatut/VisuaLove handle ffts~~
   - fix fade average to scale with different qualities
   - fix scaling differences between Mac and Windows
-  - fix name overwrite when adding additional folders
+  - fix title overwrite when adding additional folders
 
 ##### Researched/unfinished:
   - potential fft overlap NOTE: turns out the benefits from fixing the overlap were not great enough for the extra processing power and memory requirements necessary.  Actually ended up making things a lot worse.  The implementation consisted of calculating the fft in real-time separate from love.update, storing it in memory once some compression/optimization was preformed, obtaining it when the sample time appeared for love.draw, then removing it from memory once used.
