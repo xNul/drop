@@ -39,6 +39,7 @@ function love.load()
 	-- Main --
 	music_exists = false
 	appdata_music = true
+	appdata_path = love.filesystem.getAppdataDirectory()
 	if not love.filesystem.exists("music") then love.filesystem.createDirectory("music") end
 	
 	waveform = {}
@@ -205,9 +206,9 @@ function love.draw()
 		love.graphics.setColor(255, 255, 255)
 		love.graphics.setFont(big_font)
 		if appdata_music then
-			love.graphics.printf("Drag and drop your music folder(s) here to listen or press any key to only listen to songs in appdata/LOVE/Drop/music.", 1, graphics_height/2, graphics_width, "center")
+			love.graphics.printf("Drag and drop your music folder(s) here to listen or press any key to only listen to songs in "..appdata_path.."/LOVE/Drop/music.", 1, graphics_height/2, graphics_width, "center")
 		else
-			love.graphics.printf("There isn't any music in appdata/LOVE/Drop/music.", 1, graphics_height/2, graphics_width, "center")
+			love.graphics.printf("There isn't any music in "..appdata_path.."/LOVE/Drop/music.", 1, graphics_height/2, graphics_width, "center")
 		end
 	end
 
