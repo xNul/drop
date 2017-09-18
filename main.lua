@@ -11,8 +11,10 @@ function love.load()
 	love.window.setMode(
 		window_width, window_height,
 		{x=window_position_x, y=window_position_y,
-		resizable=true, highdpi=true}
+		resizable=true, highdpi=true, vsync=true}
 	)
+	love.window.setIcon(love.image.newImageData("icon.png"))
+	love.window.setTitle("Drop - by nabakin")
 	-- see love.resize for new variables
 
 	--[[ modify default screen ratio <<TEST>>
@@ -31,7 +33,7 @@ function love.load()
 	current_font = love.graphics.getFont()
 
 	love.keyboard.setKeyRepeat(true)
-	last_frame_time = love.timer.getTime()
+	last_frame_time = 0
 
 
 	-- Main --
@@ -199,18 +201,19 @@ function love.draw()
 		end
 	end
 
-	--[[ manual love.window.isVisible for behind windows and minimized
+	--[[ manual love.window.isVisible for behind windows and minimized.  Only works on Mac.
 	Saves a lot of cpu.  Likely error-prone because it's a bad implementation (no other way) ]]
 	if love.timer.getFPS() > 66 then
+		-- manual fps limiter (fixes background fps/CPU leak) it's 70 instead of 60 so we can detect when behind windows
+		if window_visible then last_frame_time = love.timer.getTime() end
+		local slack = 1/70 - (love.timer.getTime()-last_frame_time)
+		if slack > 0 then love.timer.sleep(slack) end
+		last_frame_time = love.timer.getTime()
+		
 		window_visible = false
 	else
 		window_visible = true
 	end
-
-	-- manual fps limiter (fixes background fps/CPU leak) it's 70 instead of 60 so we can detect when behind windows
-	local slack = 1/70 - (love.timer.getTime()-last_frame_time)
-	if slack > 0 then love.timer.sleep(slack) end
-	last_frame_time = love.timer.getTime()
 end
 
 function overlay()
