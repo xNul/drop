@@ -33,15 +33,17 @@ To add music, either drag and drop your music folder(s) on the window or make su
   - f: Fullscreen mode
   - 1, 2, 3, and 4: change visualization type
   - Escape: Quit
-  - Comma and Period: move frame by frame through the visualization
+  - Comma and Period: move frame by frame through the visualization (broken by decoder implementation)
 
 ### TODO:
-  - add playlists
-  - ~~add a better font~~
-  - use decoders to generate SoundData and audio source
+  - look into using pointers in Lua
+  - ~~use decoders to generate SoundData and audio source~~
+  - ~~migrate to 0.11.0~~
   - add more visualizations (folder for custom visualizations?)
   - add fade bloom (maybe)
   - add fade transition softening
+  - add playlists
+  - ~~add a better font~~
   - ~~add drag and drop for music files (love.filedropped/love.directorydropped/love.system.openURL)~~
   - add song selection without changing songs
   - add a settings panel which includes
@@ -65,6 +67,9 @@ To add music, either drag and drop your music folder(s) on the window or make su
   - fix fade average to scale with different qualities
   - fix scaling differences between Mac and Windows
   - fix title overwrite when adding additional folders
+  - fix spectrum change on scrub head drag
+  - fix ',' and '.' key functionality
+  - fix background window move/resize/fullscreen lag
 
 ##### Researched/unfinished:
   - potential fft overlap NOTE: turns out the benefits from fixing the overlap were not great enough for the extra processing power and memory requirements necessary.  Actually ended up making things a lot worse.  The implementation consisted of calculating the fft in real-time separate from love.update, storing it in memory once some compression/optimization was preformed, obtaining it when the sample time appeared for love.draw, then removing it from memory once used.

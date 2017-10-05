@@ -11,7 +11,7 @@ function love.load()
 	love.window.setMode(
 		window_width, window_height,
 		{x=window_position_x, y=window_position_y,
-		resizable=true, highdpi=true, vsync=true}
+		resizable=true, highdpi=true}
 	)
 	love.window.setIcon(love.image.newImageData("icon.png"))
 	love.window.setTitle("Drop - by nabakin")
@@ -39,12 +39,17 @@ function love.load()
 	-- Main --
 	music_exists = false
 	appdata_music = true
+	decoder_buffer = 2048
+	seconds_per_buffer = 0
+	queue_size = 8
+	decoder_array = {}
 	appdata_path = love.filesystem.getAppdataDirectory()
-	if not love.filesystem.exists("music") then love.filesystem.createDirectory("music") end
-	
+	if not love.filesystem.getInfo("music") then love.filesystem.createDirectory("music") end
+
 	waveform = {}
 	song_id = 0
 	current_song = nil
+	is_paused = false
 	visualizer_type = 3
 	set_color("g", 255)
 
@@ -81,11 +86,33 @@ function love.update(dt)
 		end
 
 		-- when song finished, play next one
-		if not current_song:isPlaying() and not current_song:isPaused() then
+		if decoder_array[queue_size-1] == nil then
 			next_song()
+		elseif not is_paused and not scrub_head_pause and not current_song:isPlaying() then
+			current_song:play()
 		end
 
-		if current_song:tell('samples') ~= old_sample and window_visible then
+		local check = current_song:getFreeBufferCount()
+		if check > 0 then
+			time_count = time_count+check*seconds_per_buffer
+
+			for i=0, queue_size-1 do
+				decoder_array[i] = decoder_array[i+check]
+			end
+
+			while check ~= 0 do
+				local tmp = decoder:decode()
+				if tmp ~= nil then
+					current_song:queue(tmp)
+					decoder_array[queue_size-check] = tmp
+					check = check-1
+				else
+					break
+				end
+			end
+		end
+
+		if (current_song:isPlaying() or decoder_tell('samples') ~= old_sample) and window_visible then
 			-- fft calculations (generates waveform for visualization)
 			waveform = generate_waveform()
 
@@ -220,7 +247,7 @@ function love.draw()
 		local slack = 1/70 - (love.timer.getTime()-last_frame_time)
 		if slack > 0 then love.timer.sleep(slack) end
 		last_frame_time = love.timer.getTime()
-		
+
 		window_visible = false
 	else
 		window_visible = true
@@ -234,8 +261,8 @@ function overlay()
 	end
 
 	-- get time from start of song and change time_end in relation to time_start.  Result: both change time simultaneously
-	local time_start, minute, second = secondstostring(current_song:tell('seconds'))
-	local _, minute_end, second_end = secondstostring(current_song:getDuration('seconds'))
+	local time_start, minute, second = secondstostring(decoder_tell())
+	local _, minute_end, second_end = secondstostring(decoder:getDuration())
 	local minutes = minute_end-minute
 	local seconds = second_end-second
 	if seconds < 0 then
@@ -258,7 +285,7 @@ function overlay()
 		time_end, scrubbar_x+scrubbar_width-(current_font:getWidth(time_end)),
 		scrubbar_y-(current_font:getHeight())
 	)
-	
+
 	if graphics_height > 360 then
 		love.graphics.print(
 			"Change time by clicking the scrub bar\tChange songs with the arrow keys\tPress escape to exit\nChange colors with r, g, and b\tToggle Fullscreen with f\tPlay/Pause with the space bar",
@@ -266,7 +293,7 @@ function overlay()
 		)
 	end
 
-	local current_time_proportion = current_song:tell('seconds')/current_song:getDuration('seconds')
+	local current_time_proportion = decoder_tell()/decoder:getDuration()
 	love.graphics.circle(
 		"fill", current_time_proportion*scrubbar_width+scrubbar_x,
 		scrubbar_y+scrubbar_height/2, math.floor(scrubbar_height/2), math.max(3*math.floor(scrubbar_height/2), 3)
@@ -274,13 +301,10 @@ function overlay()
 end
 
 function generate_waveform()
-	local current_sample = current_song:tell('samples')
-	local song_size = sound:getSampleCount()
 	local wave = {}
 	local size = next_possible_size(1024)
-	local new_sample = 0
 	local delay_seconds = delay_average --estimated optimial delay for music-visual sync
-	local sample = current_sample+sample_rate*delay_seconds
+	local sample = sample_rate*delay_seconds
 
 	--to estimate delay for spectrum
 	if estimate_delay then
@@ -291,25 +315,23 @@ function generate_waveform()
 	--[[ generates wave input for fft from audio
 	Optimized to take any number of channels (ex: Mono, Stereo, 5.1, 7.1) and grab
 	average samples (makes visualization smoother). Not supported by Love yet ]]
-	local sampling_size = 4 --number of samples to average
+	local sampling_size = bit_depth/4 --number of samples to average
+	local range = queue_size*decoder_buffer/(bit_depth/8)-1
 	local scaled_sampling_size = sampling_size*channels
-	for i=sample, sample+size-1 do-- -channels)/channels do
-		if i+scaled_sampling_size/2 > song_size then
-			i = song_size-scaled_sampling_size/2
-		elseif i-scaled_sampling_size/2 < 0 then
-			i = sampling_size/2
-		end
-
+	for i=sample, sample+size-1 do
+		local new_sample = 0
 		for j=1, scaled_sampling_size do
-			new_sample = new_sample+sound:getSample(i*channels+j-1-scaled_sampling_size/2) --scales sample size index, centers it, obtains samples, and sums them
+			--m = i*channels+j-1-scaled_sampling_size/2
+			local x = math.min(i*channels+j-1-scaled_sampling_size/2, range)
+			new_sample = new_sample+get_decoder_sample(math.max(x, 0)) --scales sample size index, centers it, obtains samples, and sums them
 		end
 		new_sample = new_sample/scaled_sampling_size --averages sample
 		table.insert(wave, complex.new(new_sample, 0))
 	end
-	old_sample = current_sample
+	old_sample = decoder_tell('samples')
 
 	--wave->spectrum takes most CPU usage
-	local spectrum = fft(wave,false)
+	local spectrum = fft(wave, false)
 
 	function divide(list, factor)
 		for i,v in ipairs(list) do
@@ -364,14 +386,15 @@ function love.mousepressed(x, y, button, istouch)
 
 	-- detects if scrub bar clicked and moves to the corresponding point in time
 	if button == 1 and current_song ~= nil and x <= scrubbar_x+scrubbar_width and x >= scrubbar_x and y <= scrubbar_y+scrubbar_height and y >= scrubbar_y then
-		current_song:seek(((x-scrubbar_x)/scrubbar_width)*current_song:getDuration('seconds'), "seconds")
+		time_count = ((x-scrubbar_x)/scrubbar_width)*decoder:getDuration()
+		decoder:seek(time_count)
 		scrub_head_pressed = true
 	end
 end
 
 function love.mousereleased(x, y, button, istouch)
 	if scrub_head_pause then
-		current_song:resume()
+		current_song:play()
 		scrub_head_pause = false
 	end
 	scrub_head_pressed = false
@@ -387,14 +410,15 @@ function love.mousemoved(x, y, dx, dy, istouch)
 			current_song:pause()
 		end
 		if x <= scrubbar_x+scrubbar_width and x >= scrubbar_x then
-			current_song:seek(((x-scrubbar_x)/scrubbar_width)*current_song:getDuration('seconds'), "seconds")
+			time_count = ((x-scrubbar_x)/scrubbar_width)*decoder:getDuration()
+			decoder:seek(time_count)
 		end
 	end
 end
 
 function love.keypressed(key, scancode, isrepeat)
 	sleep(false)
-	
+
 	local key_functions = {
 		["right"] = function ()
 			next_song()
@@ -402,7 +426,7 @@ function love.keypressed(key, scancode, isrepeat)
 		["left"] = function ()
 			prev_song()
 		end,
-		
+
 		-- rgb keys are being used as a test atm.  Not finished
 		["r"] = function ()
 			set_color("r")
@@ -432,39 +456,40 @@ function love.keypressed(key, scancode, isrepeat)
 			love.window.setFullscreen(not love.window.getFullscreen())
 		end,
 		["space"] = function ()
-			if current_song:isPaused() then
-				current_song:resume()
+			if is_paused then
+				current_song:play()
 			else
 				current_song:pause()
 			end
+			is_paused = not is_paused
 		end,
-		
+
 		-- moves slowly through the visualization by the length of a frame.  Used to compare visualizations
 		[","] = function ()
-			local samples_per_frame = (sound:getSampleCount()/current_song:getDuration('seconds'))/60
-			current_song:seek(current_song:tell('samples')-samples_per_frame, 'samples')
+			--[[local samples_per_frame = (sound:getSampleCount()/current_song:getDuration('seconds'))/60
+			current_song:seek(current_song:tell('samples')-samples_per_frame, 'samples')]]
 		end,
 		["."] = function ()
-			local samples_per_frame = (sound:getSampleCount()/current_song:getDuration('seconds'))/60
-			current_song:seek(current_song:tell('samples')+samples_per_frame, 'samples')
+			--[[local samples_per_frame = (sound:getSampleCount()/current_song:getDuration('seconds'))/60
+			current_song:seek(current_song:tell('samples')+samples_per_frame, 'samples')]]
 		end
 	}
 
 	if intro_video == nil or not intro_video:isPlaying() then
 		if not music_exists and appdata_music then
 			music_list = recursive_enumerate("music")
-			
+
 			music_exists = true
 			if next(music_list) == nil then
 				music_exists = false
 				appdata_music = false
 			end
 			love.graphics.setFont(normal_font)
+		else
+			local function catch_nil()
+			end
+			(key_functions[key] or catch_nil)()
 		end
-		
-		local function catch_nil()
-		end
-		(key_functions[key] or catch_nil)()
 	else
 		intro_video:getSource():stop()
 	end
@@ -483,7 +508,7 @@ end
 function love.directorydropped(path)
 	love.filesystem.mount(path, "music")
 	music_list = recursive_enumerate("music")
-	
+
 	music_exists = true
 	if next(music_list) == nil then
 		music_exists = false
@@ -508,13 +533,13 @@ function recursive_enumerate(folder)
 		".psm", ".s3m", ".stm", ".ult", ".umx",
 		".xm", ".abc", ".mid", ".it"
 	}
-	
+
 	local lfs = love.filesystem
 	local music_table = lfs.getDirectoryItems(folder)
 	local complete_music_table = {}
 	local valid_format = false
 	local index = 1
-	
+
 	for i,v in ipairs(music_table) do
 		local file = folder.."/"..v
 		for j,w in ipairs(format_table) do
@@ -523,13 +548,13 @@ function recursive_enumerate(folder)
 				break
 			end
 		end
-		if lfs.isFile(file) and valid_format then
+		if lfs.getInfo(file)["type"] == "file" and valid_format then
 			complete_music_table[index] = {}
 			complete_music_table[index][1] = lfs.newFile(file)
 			complete_music_table[index][2] = v:sub(1, -5)
 			index = index+1
 			valid_format = false
-		elseif lfs.isDirectory(file) then
+		elseif lfs.getInfo(file)["type"] == "directory" then
 			local recursive_table = recursive_enumerate(file)
 			for j,w in ipairs(recursive_table) do
 				complete_music_table[index] = {}
@@ -539,7 +564,7 @@ function recursive_enumerate(folder)
 			end
 		end
 	end
-	
+
 	return complete_music_table
 end
 
@@ -554,6 +579,32 @@ function secondstostring(sec)
 	return second_string, minute, second
 end
 
+function get_decoder_sample(buffer)
+	local sample_range = decoder_buffer/(bit_depth/8)
+
+	if buffer < 0 or buffer >= sample_range*queue_size then
+		love.errhand("buffer out of bounds "..buffer)
+	end
+
+	local sample = buffer/sample_range
+	local index = math.floor(sample)
+
+	if decoder_tell('samples')+buffer < decoder:getDuration()*sample_rate then
+		return decoder_array[index]:getSample((sample-index)*sample_range)
+	else
+		return 0
+	end
+end
+
+function decoder_tell(unit)
+	if unit == 'samples' then
+		return time_count*sample_rate
+	else
+		return time_count
+	end
+end
+
+
 
 
 -- Song Handling --
@@ -564,44 +615,51 @@ function next_song()
 		song_id = 1
 	end
 
-	if current_song ~= nil then
-		current_song:seek(0, 'seconds')
-		waveform = generate_waveform()
-		love.graphics.clear(love.graphics.getBackgroundColor())
-		love.graphics.origin()
-		love.draw()
-		love.graphics.present()
-		current_song:stop()
+	decoder = love.sound.newDecoder(music_list[song_id][1], decoder_buffer)
+	sample_rate = decoder:getSampleRate()
+	bit_depth = decoder:getBitDepth()
+	channels = decoder:getChannelCount()
+	seconds_per_buffer = decoder_buffer/(sample_rate*channels*bit_depth/8)
+
+	current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
+	local check = current_song:getFreeBufferCount()
+	time_count = check*seconds_per_buffer
+	while check ~= 0 do
+		local tmp = decoder:decode()
+		if tmp ~= nil then
+			current_song:queue(tmp)
+			decoder_array[queue_size-check] = tmp
+			check = check-1
+		end
 	end
 
-	sound = love.sound.newSoundData(music_list[song_id][1])
-	sample_rate = sound:getSampleRate()
-	channels = sound:getChannels()
-
-	current_song = love.audio.newSource(sound)
 	current_song:play()
 end
 
 function prev_song()
 	song_id = song_id-1
+	-- loops songs
 	if song_id < 1 then
 		song_id = #music_list
 	end
 
-	if current_song ~= nil and current_song:isPlaying() then
-		current_song:seek(0, 'seconds')
-		waveform = generate_waveform()
-		love.graphics.clear(love.graphics.getBackgroundColor())
-		love.graphics.origin()
-		love.draw()
-		love.graphics.present()
-		current_song:stop()
+	decoder = love.sound.newDecoder(music_list[song_id][1], decoder_buffer)
+	sample_rate = decoder:getSampleRate()
+	bit_depth = decoder:getBitDepth()
+	channels = decoder:getChannelCount()
+	seconds_per_buffer = decoder_buffer/(sample_rate*channels*bit_depth/8)
+
+	current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
+	local check = current_song:getFreeBufferCount()
+	time_count = check*seconds_per_buffer
+	while check ~= 0 do
+		local tmp = decoder:decode()
+		if tmp ~= nil then
+			current_song:queue(tmp)
+			decoder_array[queue_size-check] = tmp
+			check = check-1
+		end
 	end
 
-	sound = love.sound.newSoundData(music_list[song_id][1])
-	sample_rate = sound:getSampleRate()
-	channels = sound:getChannels()
-
-	current_song = love.audio.newSource(sound)
 	current_song:play()
 end
