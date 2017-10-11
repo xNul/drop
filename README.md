@@ -40,7 +40,7 @@ To add music, either drag and drop your music folder(s) on the window or make su
 2. Extract it and navigate to the drop-master folder
 3. Navigate to "releases", "Windows", and then double click "start.bat" to run Drop.
 
-##### Researched/unfinished:
+### Researched/unfinished features:
   - potential fft overlap NOTE: turns out the benefits from fixing the overlap were not great enough for the extra processing power and memory requirements necessary.  Actually ended up making things a lot worse.  The implementation consisted of calculating the fft in real-time separate from love.update, storing it in memory once some compression/optimization was preformed, obtaining it when the sample time appeared for love.draw, then removing it from memory once used.
-  - when behind windows disable visualizer calcs NOTE: can't do this atm (10.2) bc love uses SDL which has issues implementing this.  Currently implemented, but likely error-prone need to test further on other computers
+  - when behind windows disable visualizer calcs NOTE: can't do this atm (0.11.0) bc love uses SDL which has issues implementing this.  Currently implemented, but likely error-prone need to test further on other computers
   - fix background detection on windows: can't because Love uses SDL to handle these things and it's bugged
