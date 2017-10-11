@@ -38,7 +38,7 @@ To add music, either drag and drop your music folder(s) on the window or make su
 ### Setup:
 1. Download Drop with [this link](https://github.com/nabakin/drop/archive/master.zip)
 2. Extract it and navigate to the drop-master folder
-3. Navigate to "releases", "Drop - Windows", and double click "start.bat" to run Drop.
+3. Navigate to "releases", "Windows", and then double click "start.bat" to run Drop.
 
 ##### Researched/unfinished:
   - potential fft overlap NOTE: turns out the benefits from fixing the overlap were not great enough for the extra processing power and memory requirements necessary.  Actually ended up making things a lot worse.  The implementation consisted of calculating the fft in real-time separate from love.update, storing it in memory once some compression/optimization was preformed, obtaining it when the sample time appeared for love.draw, then removing it from memory once used.
