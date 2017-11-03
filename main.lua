@@ -48,6 +48,7 @@ function love.load()
 
 	waveform = {}
 	song_id = 0
+	song_name = nil
 	current_song = nil
 	is_paused = false
 	visualizer_type = 3
@@ -256,8 +257,8 @@ end
 
 function overlay()
 	love.graphics.setColor(255, 255, 255)
-	if song_id ~= 0 then
-		love.graphics.print(music_list[song_id][2], 10, 10)
+	if song_name ~= nil then
+		love.graphics.print(song_name, 10, 10)
 	end
 
 	-- get time from start of song and change time_end in relation to time_start.  Result: both change time simultaneously
@@ -614,6 +615,8 @@ function next_song()
 	if song_id > #music_list then
 		song_id = 1
 	end
+	
+	song_name = music_list[song_id][2]
 
 	decoder = love.sound.newDecoder(music_list[song_id][1], decoder_buffer)
 	sample_rate = decoder:getSampleRate()
@@ -642,6 +645,8 @@ function prev_song()
 	if song_id < 1 then
 		song_id = #music_list
 	end
+	
+	song_name = music_list[song_id][2]
 
 	decoder = love.sound.newDecoder(music_list[song_id][1], decoder_buffer)
 	sample_rate = decoder:getSampleRate()
