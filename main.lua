@@ -162,37 +162,37 @@ function love.draw()
 		tick_width = graphics_width/(tick_count*2)
 	end
 
-	local waveform_average = 0
+	local waveform_sum = 0
 
 	-- draw bar visualization
 	set_color()
 	if #waveform == 0 then tick_count = 0 end
 	for i=1, tick_count do
 		local tick_amplitude = waveform[i]
-		local tick_height = math.ceil(graphics_height*tick_amplitude:abs()*2)
+		local tick_height = graphics_height*tick_amplitude:abs()*2
 
 		love.graphics.rectangle(
-			'fill', math.ceil(graphics_width/2+(i-1)*tick_distance),
-			math.ceil(graphics_height/2 - tick_height/2),
-			math.ceil(tick_width), tick_height,
-			math.ceil(tick_width/2), math.ceil(tick_width/2)
+			'fill', graphics_width/2+(i-1)*tick_distance,
+			graphics_height/2 - tick_height/2,
+			tick_width, tick_height,
+			tick_width/2, tick_width/2
 		)
 		love.graphics.rectangle(
-			'fill', math.ceil(graphics_width/2-(i-1)*tick_distance),
-			math.ceil(graphics_height/2 - tick_height/2),
-			math.ceil(tick_width), tick_height,
-			math.ceil(tick_width/2), math.ceil(tick_width/2)
+			'fill', graphics_width/2-(i-1)*tick_distance,
+			graphics_height/2 - tick_height/2,
+			tick_width, tick_height,
+			tick_width/2, tick_width/2
 		)
 
-		waveform_average = waveform_average + tick_amplitude:abs()
+		waveform_sum = waveform_sum + tick_amplitude:abs()
 	end
 
 	-- controls visualization fade
 	if fade_bool then
-		local waveform_average_per_tick = waveform_average/tick_count
-		local fade = math.floor(waveform_average_per_tick*15000)+50
-
-		set_color(nil, 255)--fade) turned off atm
+		local waveform_average = waveform_sum/tick_count
+		local fade = waveform_average*60+.2
+		
+		set_color(nil, 0)--fade) --turned off atm
 		fade_bool = false
 	end
 
@@ -365,7 +365,7 @@ function set_color(c, f)
 		color = c
 	end
 	if f then
-		fade_intensity = math.min(math.max(f, 0), 255)
+		fade_intensity = math.min(math.max(f, 0), 1)
 	end
 	if color == "r" then
 		love.graphics.setColor(fade_intensity, 0, 0)
