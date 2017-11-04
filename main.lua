@@ -192,7 +192,7 @@ function love.draw()
 		local waveform_average = waveform_sum/tick_count
 		local fade = waveform_average*60+.2
 		
-		set_color(nil, 0)--fade) --turned off atm
+		set_color(nil, 255)--fade) --turned off atm
 		fade_bool = false
 	end
 

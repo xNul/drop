@@ -3,8 +3,7 @@ Drop, a LÖVE visualizer and music player
 
 I've always loved music and music visualizations, but mainstream visualizers are frequently packed with features to
 the point where they feel cumbersome. They have some neat graphics, but they aren't very good at reflecting the actual beat of
-the music. To me they feel like gimics—something that you use once or twice, say "Cool!" and then never use again.
-I believe visualizers have a lot of potential integrated into music players and so, I decided to
+the music. I believe visualizers have a lot of potential integrated into music players and so, I decided to
 create Drop; a simple, efficient music player/visualizer.
 
 ![music visualization](https://i.imgur.com/ZRqD1YO.png)
@@ -17,8 +16,8 @@ To add music, either drag and drop your music folder(s) on the window or make su
   - spectrum visualization
   - realtime fft calculations
   - multiple colors
-  - fade-visual sync (temporarily disabled)
-  - \[Mac only, see [this](https://github.com/nabakin/drop#researchedunfinished)\] disables visualization when in the background (behind windows or minimized)
+  - fade-visual sync (currently disabled)
+  - \[Mac only, see [this](https://github.com/nabakin/drop#researchedunfinished)\] disables fft generation when in the background (behind windows or minimized)
   - delay correction
   - bulk sampling
   - fully-scalable
