@@ -17,7 +17,7 @@ To add music, either drag and drop your music folder(s) on the window or make su
   - realtime fft calculations
   - multiple colors
   - fade-visual sync (currently disabled)
-  - \[Mac only, see [this](https://github.com/nabakin/drop#researchedunfinished)\] disables fft generation when in the background (behind windows or minimized)
+  - \[Mac only, see [this](https://github.com/nabakin/drop#researchedunfinished-features)\] disables fft generation when in the background (behind windows or minimized)
   - delay correction
   - bulk sampling
   - fully-scalable
