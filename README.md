@@ -1,9 +1,9 @@
 Drop, a LÖVE visualizer and music player
 ==========
 
-I've always loved music and music visualizations, but mainstream visualizers are frequently packed with features to
-the point where they feel cumbersome. They have some neat graphics, but they aren't very good at reflecting the actual beat of
-the music. I believe visualizers have a lot of potential integrated into music players and so, I decided to
+I've always loved music and visualizations, but mainstream visualizers are frequently so packed with features
+that they feel cumbersome. They have some neat graphics, but aren't very good at reflecting the actual beat of
+the music. I think visualizers have a lot of potential integrated into music players and so, I decided to
 create Drop; a simple, efficient music player/visualizer.
 
 ![music visualization](https://i.imgur.com/ZRqD1YO.png)

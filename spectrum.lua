@@ -6,19 +6,20 @@ local delay_initial_time = 0
 local old_sample = 0
 
 -- spectrum draw
-local AverageTickAmplitude
+local visualizer_type = 3
+local tick_amplitude_average = 0
 
-function spectrum.generate_waveform(delay_seconds)
+function spectrum.generateWaveform(delay_seconds)
 	local wave = {}
 	local size = next_possible_size(1024)
 	local sample = audio.getSampleRate()*delay_seconds
 
-	--to estimate delay for spectrum
+	-- to estimate delay for spectrum
 	delay_initial_time = love.timer.getTime()
 
 	--[[ generates wave input for fft from audio
 	Optimized to take any number of channels (ex: Mono, Stereo, 5.1, 7.1) and grab
-	average samples (makes visualization smoother). Not supported by Love yet ]]
+	average samples (makes visualization smoother). Not supported by Love2D yet ]]
 	local sampling_size = audio.getBitDepth()/4 --number of samples to average
 	local range = audio.getQueueSize()*audio.getDecoderBuffer()/(audio.getBitDepth()/8)-1
 	local scaled_sampling_size = sampling_size*audio.getChannels()
@@ -26,14 +27,14 @@ function spectrum.generate_waveform(delay_seconds)
 		local new_sample = 0
 		for j=1, scaled_sampling_size do
 			local x = math.min(i*audio.getChannels()+j-1-scaled_sampling_size/2, range)
-			new_sample = new_sample+audio.get_decoder_sample(math.max(x, 0)) --scales sample size index, centers it, obtains samples, and sums them
+			new_sample = new_sample+audio.getDecoderSample(math.max(x, 0)) --scales sample size index, centers it, obtains samples, and sums them
 		end
 		new_sample = new_sample/scaled_sampling_size --averages sample
 		table.insert(wave, complex.new(new_sample, 0))
 	end
-	old_sample = audio.decoder_tell('samples')
+	old_sample = audio.decoderTell('samples')
 
-	--wave->spectrum takes most CPU usage
+	-- wave->spectrum takes most CPU usage
 	local spectrum = fft(wave, false)
 
 	function divide(list, factor)
@@ -42,7 +43,7 @@ function spectrum.generate_waveform(delay_seconds)
 		end
 	end
 
-	--normalizes spectrum
+	-- normalizes spectrum
 	divide(spectrum, size/2)
 	return spectrum
 end
@@ -53,7 +54,8 @@ function spectrum.draw(waveform)
 	local tick_width
 	local graphics_width = gui.graphics:getWidth()
 	local graphics_height = gui.graphics:getHeight()
-	
+
+	-- load settings
 	if visualizer_type == 1 then
 		tick_count = 48
 		tick_distance = graphics_width/(tick_count*2)
@@ -72,10 +74,10 @@ function spectrum.draw(waveform)
 		tick_width = graphics_width/(tick_count*2)
 	end
 
-	local TickAmplitudeSum = 0
+	local tick_amplitude_sum = 0
 
 	-- draw bar visualization
-	set_color()
+	setColor()
 	if #waveform == 0 then tick_count = 0 end
 	for i=1, tick_count do
 		local tick_amplitude = waveform[i]
@@ -94,22 +96,31 @@ function spectrum.draw(waveform)
 			tick_width/2, tick_width/2
 		)
 
-		TickAmplitudeSum = TickAmplitudeSum + tick_amplitude:abs()
+		tick_amplitude_sum = tick_amplitude_sum + tick_amplitude:abs()
 	end
-	
-	AverageTickAmplitude = TickAmplitudeSum/tick_count
+
+	tick_amplitude_average = tick_amplitude_sum/tick_count
+end
+
+-- determine if sample position has changed
+function spectrum.wouldChange()
+	return (audio.decoderTell('samples') ~= old_sample and not audio.isPaused())
+end
+
+function spectrum.setVisualization(v)
+	visualizer_type = v
+end
+
+function spectrum.getVisualization()
+	return visualizer_type
 end
 
 function spectrum.getAverageTickAmplitude()
-	return AverageTickAmplitude
+	return tick_amplitude_average
 end
 
 function spectrum.getDelayInitialTime()
 	return delay_initial_time
-end
-
-function spectrum.getOldSample()
-	return old_sample
 end
 
 return spectrum
