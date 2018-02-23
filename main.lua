@@ -104,6 +104,7 @@ function love.load()
 
 	----------------------------------- Main -------------------------------------------
 	appdata_path = love.filesystem.getAppdataDirectory()
+  operating_system = love.system.getOS()
 
 	waveform = {}
 	scrub_head_pause = false
@@ -201,7 +202,7 @@ function love.draw()
 
 	--[[ manual love.window.isVisible for behind windows and minimized.  Only works on Mac.
 	Saves a lot of cpu.  Likely error-prone because it's a bad implementation (no other way) ]]
-	if love.timer.getFPS() > monitor_refresh_rate+6 then
+	if love.timer.getFPS() > monitor_refresh_rate+6 and operating_system == "OS X" then
 		-- manual fps limiter (fixes background fps/CPU leak) it's 70 instead of 60 so we can detect when behind windows
 		if window_visible then last_frame_time = love.timer.getTime() end
 		local slack = 1/(monitor_refresh_rate+10) - (love.timer.getTime()-last_frame_time)
