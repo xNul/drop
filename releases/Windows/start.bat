@@ -1,1 +1,1 @@
-start love.exe "../../../drop-master"
+start love.exe "../.."
