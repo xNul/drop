@@ -1,5 +1,6 @@
 ffi = require("ffi")
 
+-- initialize ffi
 ffi.cdef[[
 float* fft(float *samples, int nSamples, int tickCount);
 ]]
@@ -39,10 +40,9 @@ function spectrum.generateWaveform(delay_seconds)
 	end
 	old_sample = audio.decoderTell('samples')
 
-	-- wave->spectrum takes most CPU usage
+	-- wave->normalized spectrum using ffi
 	local spectrum = fft.fft(ffi.new("float["..size.."]", wave), ffi.new("int", size), ffi.new("int", tick_count))
 
-	-- normalizes spectrum
 	return spectrum
 end
 
@@ -51,8 +51,7 @@ function spectrum.draw(waveform)
   local tick_width
 	local graphics_width = gui.graphics:getWidth()
 	local graphics_height = gui.graphics:getHeight()
-	local graphics_scaled_width = gui.graphics:getScaledWidth()
-	local graphics_scaled_height = gui.graphics:getScaledHeight()
+	local graphics_scaled_height = math.max(71.138*graphics_height^(1/3), graphics_height) --scales spectrum at a decreasing rate
 
 	-- load settings
 	if visualizer_type == 1 then

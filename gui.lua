@@ -117,20 +117,12 @@ function gui.graphics:getHeight()
 	return graphics_height
 end
 
-function gui.graphics:getScaledHeight()
-	return math.max(71.138*graphics_height^(1/3), graphics_height)
-end
-
 function gui.graphics:setWidth(width)
 	graphics_width = width
 end
 
 function gui.graphics:getWidth()
 	return graphics_width
-end
-
-function gui.graphics:getScaledWidth()
-	return math.max(97.315*graphics_width^(1/3), graphics_width)
 end
 
 function secondsToString(sec)
