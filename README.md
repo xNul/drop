@@ -41,6 +41,9 @@ To add music, either drag and drop your music folder(s) on the window or make su
 For Windows, navigate to "releases", "Windows", and then double click "start.bat" to run Drop.    
 For Mac, navigate to "releases", "Mac", and then run `bash start.sh` from Terminal
 
+### Credit:
+Drop uses the [drop-fft](https://github.com/nabakin/drop-fft) library which is a modified version of the [kissfft](https://github.com/bazaar-projects/kissfft) library.  All credit for the amazing fft implementation should go to its creator Mark Borgerding.
+
 ### Researched/unfinished features:
   - potential fft overlap NOTE: turns out the benefits from fixing the overlap were not great enough for the extra processing power and memory requirements necessary.  Actually ended up making things a lot worse.  The implementation consisted of calculating the fft in real-time separate from love.update, storing it in memory once some compression/optimization was preformed, obtaining it when the sample time appeared for love.draw, then removing it from memory once used.
   - when behind windows disable visualizer calcs NOTE: can't do this atm (0.11.0) bc love uses SDL which has issues implementing this.  Currently implemented, but likely error-prone need to test further on other computers
