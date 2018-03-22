@@ -1,4 +1,9 @@
-require 'luafft'
+ffi = require("ffi")
+
+ffi.cdef[[
+float* fft(float *samples, int nSamples, int tickCount);
+]]
+fft = ffi.load(ffi.os == "Windows" and "fft" or "./libfft.dylib")
 
 -- fft gen
 local spectrum = {}
@@ -8,10 +13,11 @@ local old_sample = 0
 -- spectrum draw
 local visualizer_type = 3
 local tick_amplitude_average = 0
+local tick_count = 128
 
 function spectrum.generateWaveform(delay_seconds)
 	local wave = {}
-	local size = next_possible_size(1024)
+	local size = 1024
 	local sample = audio.getSampleRate()*delay_seconds
 
 	-- to estimate delay for spectrum
@@ -30,28 +36,20 @@ function spectrum.generateWaveform(delay_seconds)
 			new_sample = new_sample+audio.getDecoderSample(math.max(x, 0)) --scales sample size index, centers it, obtains samples, and sums them
 		end
 		new_sample = new_sample/scaled_sampling_size --averages sample
-		table.insert(wave, complex.new(new_sample, 0))
+		table.insert(wave, new_sample)
 	end
 	old_sample = audio.decoderTell('samples')
 
 	-- wave->spectrum takes most CPU usage
-	local spectrum = fft(wave, false)
-
-	function divide(list, factor)
-		for i,v in ipairs(list) do
-			list[i] = list[i] / factor
-		end
-	end
+	local spectrum = fft.fft(ffi.new("float["..size.."]", wave), ffi.new("int", size), ffi.new("int", tick_count))
 
 	-- normalizes spectrum
-	divide(spectrum, size/2)
 	return spectrum
 end
 
 function spectrum.draw(waveform)
-	local tick_count
-	local tick_distance
-	local tick_width
+  local tick_distance
+  local tick_width
 	local graphics_width = gui.graphics:getWidth()
 	local graphics_height = gui.graphics:getHeight()
 
@@ -78,10 +76,10 @@ function spectrum.draw(waveform)
 
 	-- draw bar visualization
 	setColor()
-	if #waveform == 0 then tick_count = 0 end
-	for i=1, tick_count do
+	if waveform[0] == nil then tick_count = 0 end
+	for i=0, tick_count-1 do
 		local tick_amplitude = waveform[i]
-		local tick_height = graphics_height*tick_amplitude:abs()*2
+		local tick_height = math.max(graphics_height*tick_amplitude*2, tick_width/2)
 
 		love.graphics.rectangle(
 			'fill', graphics_width/2+(i-1)*tick_distance,
@@ -96,7 +94,7 @@ function spectrum.draw(waveform)
 			tick_width/2, tick_width/2
 		)
 
-		tick_amplitude_sum = tick_amplitude_sum + tick_amplitude:abs()
+		tick_amplitude_sum = tick_amplitude_sum + tick_amplitude
 	end
 
 	tick_amplitude_average = tick_amplitude_sum/tick_count
