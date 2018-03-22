@@ -51,6 +51,8 @@ function spectrum.draw(waveform)
   local tick_width
 	local graphics_width = gui.graphics:getWidth()
 	local graphics_height = gui.graphics:getHeight()
+	local graphics_scaled_width = gui.graphics:getScaledWidth()
+	local graphics_scaled_height = gui.graphics:getScaledHeight()
 
 	-- load settings
 	if visualizer_type == 1 then
@@ -78,7 +80,7 @@ function spectrum.draw(waveform)
 	if waveform[0] == nil then tick_count = 0 end
 	for i=0, tick_count-1 do
 		local tick_amplitude = waveform[i]
-		local tick_height = math.max(graphics_height*tick_amplitude*2, tick_width/2)
+		local tick_height = math.max(graphics_scaled_height*tick_amplitude*2, tick_width/2)
 
 		love.graphics.rectangle(
 			'fill', graphics_width/2+(i-1)*tick_distance,
