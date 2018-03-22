@@ -19,23 +19,22 @@ function spectrum.generateWaveform(delay_seconds)
 	local wave = {}
 	local size = 1024
 	local sample = audio.getSampleRate()*delay_seconds
+  local channels = audio.getChannels()
 
 	-- to estimate delay for spectrum
 	delay_initial_time = love.timer.getTime()
 
-	--[[ generates wave input for fft from audio
-	Optimized to take any number of channels (ex: Mono, Stereo, 5.1, 7.1) and grab
-	average samples (makes visualization smoother). Not supported by Love2D yet ]]
-	local sampling_size = audio.getBitDepth()/4 --number of samples to average
+	--[[ generates wave input for fft from audio. Optimized
+  to take any number of channels (ex: Mono, Stereo, 5.1, 7.1)
+  Not supported by Love2D yet ]]
 	local range = audio.getQueueSize()*audio.getDecoderBuffer()/(audio.getBitDepth()/8)-1
-	local scaled_sampling_size = sampling_size*audio.getChannels()
 	for i=sample, sample+size-1 do
 		local new_sample = 0
-		for j=1, scaled_sampling_size do
-			local x = math.min(i*audio.getChannels()+j-1-scaled_sampling_size/2, range)
+		for j=1, channels do
+			local x = math.min(i*channels+j-1-channels/2, range)
 			new_sample = new_sample+audio.getDecoderSample(math.max(x, 0)) --scales sample size index, centers it, obtains samples, and sums them
 		end
-		new_sample = new_sample/scaled_sampling_size --averages sample
+		new_sample = new_sample/channels --averages sample
 		table.insert(wave, new_sample)
 	end
 	old_sample = audio.decoderTell('samples')
