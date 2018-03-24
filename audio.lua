@@ -3,6 +3,8 @@ local decoder_buffer = 2048
 local seconds_per_buffer = 0
 local queue_size = 8
 local decoder_array = {}
+local check_old = 0
+local end_of_song = false
 if not love.filesystem.getInfo("music") then love.filesystem.createDirectory("music") end
 local song_id = 0
 local song_name = nil
@@ -26,7 +28,7 @@ function audio.update()
 
 	-- manage decoder processing and audio queue
 	local check = current_song:getFreeBufferCount()
-	if check > 0 then
+	if check > 0 and not end_of_song then
 		time_count = time_count+check*seconds_per_buffer
 
 		for i=0, queue_size-1 do
@@ -40,10 +42,14 @@ function audio.update()
 				decoder_array[queue_size-check] = tmp
 				check = check-1
 			else
+        end_of_song = true
 				break
 			end
 		end
+  elseif end_of_song then
+    time_count = time_count+(check-check_old)*seconds_per_buffer
 	end
+  check_old = check
 end
 
 function audio.loadMusic()
@@ -207,6 +213,7 @@ function audio.changeSong(number)
 	seconds_per_buffer = decoder_buffer/(sample_rate*channels*bit_depth/8)
 
 	-- start song queue
+  end_of_song = false
 	current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
 	local check = current_song:getFreeBufferCount()
 	time_count = 0
