@@ -209,7 +209,7 @@ function audio.changeSong(number)
 	-- start song queue
 	current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
 	local check = current_song:getFreeBufferCount()
-	time_count = check*seconds_per_buffer
+	time_count = 0
 	while check ~= 0 do
 		local tmp = decoder:decode()
 		if tmp ~= nil then

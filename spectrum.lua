@@ -27,7 +27,7 @@ function spectrum.generateWaveform(delay_seconds)
 
 	--[[ generates wave input for fft from audio. Optimized
   to take any number of channels (ex: Mono, Stereo, 5.1, 7.1)
-  Not supported by Love2D yet ]]
+  Not completely supported by Love2D yet ]]
 	local range = audio.getQueueSize()*audio.getDecoderBuffer()/(audio.getBitDepth()/8)-1
 	for i=sample, sample+size-1 do
 		local new_sample = 0
