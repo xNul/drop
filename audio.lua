@@ -1,7 +1,7 @@
 local audio = {}
 local decoder_buffer = 2048
 local seconds_per_buffer = 0
-local queue_size = 4
+local queue_size = 0
 local decoder_array = {}
 local check_old = 0
 local end_of_song = false
@@ -223,11 +223,12 @@ function audio.changeSong(number)
 	local check = current_song:getFreeBufferCount()
 	time_count = 0
   local tmp = decoder:decode()
-  decoder_array = {tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp}
-  decoder_array[0] = tmp
+  for i=0, queue_size do
+    decoder_array[i] = tmp
+  end
   check = check-1
 	while check ~= 0 do
-		local tmp = decoder:decode()
+		tmp = decoder:decode()
 		if tmp ~= nil then
 			current_song:queue(tmp)
 			decoder_array[2*queue_size-check] = tmp
