@@ -31,7 +31,7 @@ To add music, either drag and drop your music folder(s) on the window or make su
   - f: Fullscreen mode
   - 1, 2, 3, and 4: change visualization type
   - Escape: Quit
-  - Comma and Period: move frame by frame through the visualization (broken by [decoder](https://github.com/nabakin/drop/commit/93eec1a518581f7ae7c63f26dc09aa4c6a54455d) implementation)
+  - Comma and Period: move frame by frame through the visualization
 
 ### Setup:
 1. Download Drop with [this link](https://github.com/nabakin/drop/archive/master.zip)

@@ -21,6 +21,9 @@ function audio.update()
 	-- when song finished, play next one
 	if decoder_array[2*queue_size-1] == nil then
 		audio.changeSong(1)
+  elseif decoder_array[0] == nil then
+    audio.changeSong(-1)
+    audio.decoderSeek(audio.getDuration()-queue_size*decoder_buffer/(bit_depth/8)/(audio.getSampleRate()*audio.getChannels()))
 	elseif not is_paused and not current_song:isPlaying() then
 		audio.play()
 	end
@@ -101,14 +104,24 @@ function audio.decoderSeek(t)
 	time_count = t
   
   -- prevent errors at the beginning of the song
-  -- propagate decoder_array with dummy data
+  -- generate nil data (indicates to change song)
   local start = 0
   local offset_time = t-queue_size*seconds_per_buffer
+  if t <= 0 then
+    local queue_pos = math.ceil((t*-1)/seconds_per_buffer)
+    for i=0, queue_pos+1 do
+      decoder_array[i] = nil
+      start = i+1
+    end
+    offset_time = t+offset_time
+  end
+  
+  -- fill decoder_array with dummy data
   if offset_time < 0 then
     decoder:seek(0)
     local tmp = decoder:decode()
     local queue_pos = math.ceil((offset_time*-1)/seconds_per_buffer)
-    for i=0, queue_pos do
+    for i=start, queue_pos do
       decoder_array[i] = tmp
       start = i+1
     end
@@ -117,7 +130,7 @@ function audio.decoderSeek(t)
   
 	decoder:seek(offset_time)
   
-  -- propagate new sounddata
+  -- fill with new sounddata
   for i=start, queue_size-1 do
     local tmp = decoder:decode()
     if tmp ~= nil then
@@ -131,7 +144,7 @@ function audio.decoderSeek(t)
   current_song:stop()
   current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
   
-  -- propagate new sounddata
+  -- fill with new sounddata
   local check = queue_size
   while check > 0 do
     local tmp = decoder:decode()
@@ -278,7 +291,7 @@ function audio.changeSong(number)
 		end
 	end
 
-	audio.play()
+	if is_paused then audio.pause() else audio.play() end
 end
 
 return audio

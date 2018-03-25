@@ -90,12 +90,10 @@ function love.load()
 
 		-- moves slowly through the visualization by the length of a frame.  Used to compare visualizations
 		[","] = function ()
-			--[[local samples_per_frame = (sound:getSampleCount()/current_song:getDuration('seconds'))/60
-			current_song:seek(current_song:tell('samples')-samples_per_frame, 'samples')]]
+			audio.decoderSeek(audio.decoderTell()-spectrum.getSize()/(audio.getSampleRate()*audio.getChannels()))
 		end,
 		["."] = function ()
-			--[[local samples_per_frame = (sound:getSampleCount()/current_song:getDuration('seconds'))/60
-			current_song:seek(current_song:tell('samples')+samples_per_frame, 'samples')]]
+			audio.decoderSeek(audio.decoderTell()+spectrum.getSize()/(audio.getSampleRate()*audio.getChannels()))
 		end
 	}
 
@@ -243,7 +241,7 @@ function love.mousemoved(x, y, dx, dy, istouch)
 	sleep_counter = 0
 
 	-- makes scrub bar draggable
-	if love.mouse.isDown(1) and scrub_head_pressed then
+	if scrub_head_pressed then
 		if audio.isPlaying() then
 			scrub_head_pause = true
 			audio.pause()
@@ -254,6 +252,14 @@ function love.mousemoved(x, y, dx, dy, istouch)
 			audio.decoderSeek(gui.scrubbar:getProportion(x)*audio.getDuration())
 		end
 	end
+end
+
+function love.mousefocus(focus)
+  if scrub_head_pause then
+		audio.play()
+		scrub_head_pause = false
+	end
+	scrub_head_pressed = false
 end
 
 function love.keypressed(key, scancode, isrepeat)
