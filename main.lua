@@ -125,12 +125,6 @@ function love.load()
 	setColor("g", 1)
 	sleep_counter = 0
 	window_visible = true
-
-	-- to estimate delay for spectrum
-	latency_records = {}
-	delay_average = 0
-
-	last_frame_time = 0
 	------------------------------------------------------------------------------------
 end
 
@@ -170,18 +164,6 @@ function love.draw()
 		setColor(nil, 1)--fade) --turned off atm
 		fade_bool = false
 	end
-
-	-- estimates optimial delay for music-visual sync
-	local delay_final_time = love.timer.getTime()
-	if #latency_records >= 20 then
-		table.remove(latency_records, 1)
-	end
-	latency_records[#latency_records+1] = delay_final_time-spectrum.getDelayInitialTime()
-	local total_latency = 0
-	for i,v in ipairs(latency_records) do
-		total_latency = total_latency+v
-	end
-	delay_average = total_latency/#latency_records
 
 	-- overlay/start_screen drawing
 	if start_screen then

@@ -8,7 +8,7 @@ fft = ffi.load(ffi.os == "Windows" and "fft" or "./libfft.dylib")
 
 -- fft gen
 local spectrum = {}
-local size = 2048
+local size = 1024
 local delay_initial_time = 0
 local old_sample = 0
 
@@ -17,19 +17,15 @@ local visualizer_type = 3
 local tick_amplitude_average = 0
 local tick_count = 128
 
-function spectrum.generateWaveform(delay_seconds)
+function spectrum.generateWaveform()
 	local wave = {}
-	local sample = audio.getSampleRate()*delay_seconds
   local channels = audio.getChannels()
-
-	-- to estimate delay for spectrum
-	delay_initial_time = love.timer.getTime()
 
 	--[[ generates wave input for fft from audio. Optimized
   to take any number of channels (ex: Mono, Stereo, 5.1, 7.1)
   Not completely supported by Love2D yet ]]
 	local range = 2*audio.getQueueSize()*audio.getDecoderBuffer()/(audio.getBitDepth()/8)
-	for i=sample+1, sample+size do
+	for i=1, size do
 		local new_sample = 0
 		for j=0, channels-1 do
 			local x = math.min((i-size/2)*channels+j+range/2, range-1)
