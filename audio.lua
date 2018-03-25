@@ -28,14 +28,15 @@ function audio.update()
 
 	-- manage decoder processing and audio queue
 	local check = current_song:getFreeBufferCount()
-  if check > 2 then print(check) end
 	if check > 0 and not end_of_song then
 		time_count = time_count+check*seconds_per_buffer
 
+    -- time to make room for new sounddata.  Shift everything.
 		for i=0, 2*queue_size-1 do
 			decoder_array[i] = decoder_array[i+check]
 		end
 
+    -- retrieve new sounddata
 		while check > 0 do
 			local tmp = decoder:decode()
 			if tmp ~= nil then
@@ -47,6 +48,8 @@ function audio.update()
 				break
 			end
 		end
+  
+  -- update timestamps for the last final miliseconds of the song
   elseif end_of_song then
     time_count = time_count+(check-check_old)*seconds_per_buffer
 	end

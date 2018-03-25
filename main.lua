@@ -134,7 +134,7 @@ function love.update(dt)
 
 		if spectrum.wouldChange() and window_visible then
 			-- fft calculations (generates waveform for visualization)
-			waveform = spectrum.generateWaveform(delay_average)
+			waveform = spectrum.generateWaveform()
 
 			--fade timer: limits fade update every .2 sec
 			fade_interval_counter = fade_interval_counter+dt

@@ -9,7 +9,6 @@ fft = ffi.load(ffi.os == "Windows" and "fft" or "./libfft.dylib")
 -- fft gen
 local spectrum = {}
 local size = 1024
-local delay_initial_time = 0
 local old_sample = 0
 
 -- spectrum draw
@@ -28,8 +27,8 @@ function spectrum.generateWaveform()
 	for i=1, size do
 		local new_sample = 0
 		for j=0, channels-1 do
-			local x = math.min((i-size/2)*channels+j+range/2, range-1)
-			new_sample = new_sample+audio.getDecoderSample(math.max(x, 0)) --scales sample size index, centers it, obtains samples, and sums them
+			local x = math.min((i-size/2)*channels+j+range/2, range-1) --calculates sample index and centers it
+			new_sample = new_sample+audio.getDecoderSample(math.max(x, 0)) --obtains samples and sums them
 		end
 		new_sample = new_sample/channels --averages sample
 		table.insert(wave, new_sample)
@@ -115,10 +114,6 @@ end
 
 function spectrum.getAverageTickAmplitude()
 	return tick_amplitude_average
-end
-
-function spectrum.getDelayInitialTime()
-	return delay_initial_time
 end
 
 return spectrum
