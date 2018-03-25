@@ -8,6 +8,7 @@ fft = ffi.load(ffi.os == "Windows" and "fft" or "./libfft.dylib")
 
 -- fft gen
 local spectrum = {}
+local size = 2048
 local delay_initial_time = 0
 local old_sample = 0
 
@@ -18,7 +19,6 @@ local tick_count = 128
 
 function spectrum.generateWaveform(delay_seconds)
 	local wave = {}
-	local size = 1024
 	local sample = audio.getSampleRate()*delay_seconds
   local channels = audio.getChannels()
 
@@ -28,11 +28,11 @@ function spectrum.generateWaveform(delay_seconds)
 	--[[ generates wave input for fft from audio. Optimized
   to take any number of channels (ex: Mono, Stereo, 5.1, 7.1)
   Not completely supported by Love2D yet ]]
-	local range = audio.getQueueSize()*audio.getDecoderBuffer()/(audio.getBitDepth()/8)-1
-	for i=sample, sample+size-1 do
+	local range = 2*audio.getQueueSize()*audio.getDecoderBuffer()/(audio.getBitDepth()/8)
+	for i=sample+1, sample+size do
 		local new_sample = 0
-		for j=1, channels do
-			local x = math.min(i*channels+j-1-channels/2, range)
+		for j=0, channels-1 do
+			local x = math.min((i-size/2)*channels+j+range/2, range-1)
 			new_sample = new_sample+audio.getDecoderSample(math.max(x, 0)) --scales sample size index, centers it, obtains samples, and sums them
 		end
 		new_sample = new_sample/channels --averages sample
@@ -67,7 +67,7 @@ function spectrum.draw(waveform)
 		tick_distance = graphics_width/(tick_count*2)
 		tick_width = graphics_width/(tick_count*2)
 	elseif visualizer_type == 4 then
-		tick_count = 48
+		tick_count = 256
 		tick_distance = graphics_width/(tick_count*2)
 		tick_width = graphics_width/(tick_count*2)
 	end
@@ -103,6 +103,10 @@ end
 -- determine if sample position has changed
 function spectrum.wouldChange()
 	return (audio.decoderTell('samples') ~= old_sample and not audio.isPaused())
+end
+
+function spectrum.getSize()
+  return size
 end
 
 function spectrum.setVisualization(v)

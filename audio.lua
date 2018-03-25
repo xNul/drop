@@ -1,7 +1,7 @@
 local audio = {}
 local decoder_buffer = 2048
 local seconds_per_buffer = 0
-local queue_size = 8
+local queue_size = 4
 local decoder_array = {}
 local check_old = 0
 local end_of_song = false
@@ -19,7 +19,7 @@ function audio.update()
 	end
 
 	-- when song finished, play next one
-	if decoder_array[queue_size-1] == nil then
+	if decoder_array[2*queue_size-1] == nil then
 		audio.changeSong(1)
 	elseif not is_paused and not current_song:isPlaying() then
 		audio.play()
@@ -28,18 +28,19 @@ function audio.update()
 
 	-- manage decoder processing and audio queue
 	local check = current_song:getFreeBufferCount()
+  if check > 2 then print(check) end
 	if check > 0 and not end_of_song then
 		time_count = time_count+check*seconds_per_buffer
 
-		for i=0, queue_size-1 do
+		for i=0, 2*queue_size-1 do
 			decoder_array[i] = decoder_array[i+check]
 		end
 
-		while check ~= 0 do
+		while check > 0 do
 			local tmp = decoder:decode()
 			if tmp ~= nil then
 				current_song:queue(tmp)
-				decoder_array[queue_size-check] = tmp
+				decoder_array[2*queue_size-check] = tmp
 				check = check-1
 			else
         end_of_song = true
@@ -120,13 +121,13 @@ function audio.getDecoderSample(buffer)
 	local sample_range = decoder_buffer/(bit_depth/8)
 
 	-- some defensive code..
-	if buffer < 0 or buffer >= sample_range*queue_size then
+	if buffer < 0 or buffer >= 2*sample_range*queue_size then
 		love.errhand("buffer out of bounds "..buffer)
 	end
 
 	local sample = buffer/sample_range
 	local index = math.floor(sample)
-
+  
 	-- finds sample using decoders
 	if audio.decoderTell('samples')+buffer < decoder:getDuration()*sample_rate then
 		return decoder_array[index]:getSample((sample-index)*sample_range)
@@ -214,14 +215,19 @@ function audio.changeSong(number)
 
 	-- start song queue
   end_of_song = false
+  queue_size = 2+math.floor(spectrum.getSize()/(decoder_buffer/(bit_depth/8)))
 	current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
 	local check = current_song:getFreeBufferCount()
 	time_count = 0
+  local tmp = decoder:decode()
+  decoder_array = {tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp}
+  decoder_array[0] = tmp
+  check = check-1
 	while check ~= 0 do
 		local tmp = decoder:decode()
 		if tmp ~= nil then
 			current_song:queue(tmp)
-			decoder_array[queue_size-check] = tmp
+			decoder_array[2*queue_size-check] = tmp
 			check = check-1
 		end
 	end
