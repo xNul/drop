@@ -52,8 +52,8 @@ function audio.update()
   -- update timestamps for the last final miliseconds of the song
   elseif end_of_song then
     time_count = time_count+(check-check_old)*seconds_per_buffer
+    check_old = check
 	end
-  check_old = check
 end
 
 function audio.loadMusic()
@@ -99,7 +99,50 @@ end
 -- goes to position in song
 function audio.decoderSeek(t)
 	time_count = t
-	decoder:seek(t)
+  
+  -- prevent errors at the beginning of the song
+  -- propagate decoder_array with dummy data
+  local start = 0
+  local offset_time = t-queue_size*seconds_per_buffer
+  if offset_time < 0 then
+    decoder:seek(0)
+    local tmp = decoder:decode()
+    local queue_pos = math.ceil((offset_time*-1)/seconds_per_buffer)
+    for i=0, queue_pos do
+      decoder_array[i] = tmp
+      start = i
+    end
+    offset_time = queue_pos+offset_time
+  end
+  
+	decoder:seek(offset_time)
+  
+  -- propagate new sounddata
+  for i=start, queue_size-1 do
+    local tmp = decoder:decode()
+    if tmp ~= nil then
+      decoder_array[i] = tmp
+    else
+      break
+    end
+  end
+  
+  -- clear queued audio
+  current_song:stop()
+  current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
+  
+  -- propagate new sounddata
+  local check = queue_size
+  while check > 0 do
+    local tmp = decoder:decode()
+    if tmp ~= nil then
+      current_song:queue(tmp)
+      decoder_array[2*queue_size-check] = tmp
+      check = check-1
+    else
+      break
+    end
+  end
 end
 
 function audio.getBitDepth()
@@ -218,7 +261,8 @@ function audio.changeSong(number)
 
 	-- start song queue
   end_of_song = false
-  queue_size = 2+math.floor(spectrum.getSize()/(decoder_buffer/(bit_depth/8)))
+  check_old = 0
+  queue_size = 2+math.max(math.floor(spectrum.getSize()/(decoder_buffer/(bit_depth/8))), 1)
 	current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
 	local check = current_song:getFreeBufferCount()
 	time_count = 0

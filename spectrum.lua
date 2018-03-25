@@ -97,7 +97,7 @@ end
 
 -- determine if sample position has changed
 function spectrum.wouldChange()
-	return (audio.decoderTell('samples') ~= old_sample and not audio.isPaused())
+	return (audio.decoderTell('samples') ~= old_sample)
 end
 
 function spectrum.getSize()
