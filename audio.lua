@@ -28,7 +28,7 @@ function audio.update()
 
 	-- manage decoder processing and audio queue
 	local check = current_song:getFreeBufferCount()
-	if check > 0 and not end_of_song then
+	if check > 0 and not end_of_song and current_song:isPlaying() then
 		time_count = time_count+check*seconds_per_buffer
 
     -- time to make room for new sounddata.  Shift everything.
@@ -110,7 +110,7 @@ function audio.decoderSeek(t)
     local queue_pos = math.ceil((offset_time*-1)/seconds_per_buffer)
     for i=0, queue_pos do
       decoder_array[i] = tmp
-      start = i
+      start = i+1
     end
     offset_time = queue_pos+offset_time
   end
@@ -137,11 +137,9 @@ function audio.decoderSeek(t)
     local tmp = decoder:decode()
     if tmp ~= nil then
       current_song:queue(tmp)
-      decoder_array[2*queue_size-check] = tmp
-      check = check-1
-    else
-      break
     end
+    decoder_array[2*queue_size-check] = tmp
+    check = check-1
   end
 end
 
