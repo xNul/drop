@@ -19,11 +19,11 @@ function audio.update()
 	end
 
 	-- when song finished, play next one
-	if decoder_array[2*queue_size-1] == nil then
+	if decoder_array[queue_size] == nil then
 		audio.changeSong(1)
   elseif decoder_array[0] == nil then
     audio.changeSong(-1)
-    audio.decoderSeek(audio.getDuration()-queue_size*decoder_buffer/(bit_depth/8)/(audio.getSampleRate()*audio.getChannels()))
+    audio.decoderSeek(audio.getDuration())
 	elseif not is_paused and not current_song:isPlaying() then
 		audio.play()
 	end
@@ -31,8 +31,14 @@ function audio.update()
 
 	-- manage decoder processing and audio queue
 	local check = current_song:getFreeBufferCount()
-	if check > 0 and not end_of_song and not is_paused then
-		time_count = time_count+check*seconds_per_buffer
+	if check > 0 and not is_paused then
+    if end_of_song then
+      -- update time_count for the last final miliseconds of the song
+      time_count = time_count+(check-check_old)*seconds_per_buffer
+      check_old = check
+    else
+      time_count = time_count+check*seconds_per_buffer
+    end
 
     -- time to make room for new sounddata.  Shift everything.
 		for i=0, 2*queue_size-1 do
@@ -48,14 +54,10 @@ function audio.update()
 				check = check-1
 			else
         end_of_song = true
-				break
+				decoder_array[2*queue_size-check] = tmp
+				check = check-1
 			end
 		end
-  
-  -- update timestamps for the last final miliseconds of the song
-  elseif end_of_song then
-    time_count = time_count+(check-check_old)*seconds_per_buffer
-    check_old = check
 	end
 end
 
