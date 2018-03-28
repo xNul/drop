@@ -31,7 +31,7 @@ function audio.update()
 
 	-- manage decoder processing and audio queue
 	local check = current_song:getFreeBufferCount()
-	if check > 0 and not end_of_song and current_song:isPlaying() then
+	if check > 0 and not end_of_song and not is_paused then
 		time_count = time_count+check*seconds_per_buffer
 
     -- time to make room for new sounddata.  Shift everything.
