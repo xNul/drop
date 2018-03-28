@@ -102,7 +102,8 @@ function gui.scrubbar:getHeight()
 end
 
 function gui.scrubbar:inBounds(x, y)
-	return x <= scrubbar_x+scrubbar_width and x >= scrubbar_x and y <= scrubbar_y+scrubbar_height and y >= scrubbar_y
+  local scrubhead_radius = math.floor(scrubbar_height/2)
+	return x <= scrubbar_x+scrubbar_width+scrubhead_radius and x >= scrubbar_x-scrubhead_radius and y <= scrubbar_y+scrubbar_height and y >= scrubbar_y
 end
 
 function gui.scrubbar:getProportion(x)
