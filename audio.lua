@@ -273,7 +273,7 @@ function audio.changeSong(number)
 	-- start song queue
   end_of_song = false
   check_old = 0
-  queue_size = 2+math.max(math.floor(spectrum.getSize()/(decoder_buffer/(bit_depth/8))), 1)
+  queue_size = 4+math.max(math.floor(2*spectrum.getSize()/(decoder_buffer/(bit_depth/8))), 1)
 	current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
 	local check = current_song:getFreeBufferCount()
 	time_count = 0
