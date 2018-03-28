@@ -8,7 +8,7 @@ fft = ffi.load(ffi.os == "Windows" and "fft" or "./libfft.dylib")
 
 -- fft gen
 local spectrum = {}
-local size = 1024
+local size = 2048
 local old_sample = 0
 
 -- spectrum draw
