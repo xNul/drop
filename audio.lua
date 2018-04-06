@@ -10,6 +10,9 @@ local song_id = 0
 local song_name = nil
 local is_paused = false
 local current_song = nil
+local time_count = 0
+local music_list = nil
+local music_exists = false
 
 function audio.update()
 	-- plays first song
@@ -64,12 +67,16 @@ end
 function audio.loadMusic()
 	music_list = recursiveEnumerate("music")
 
-	local music_exists = true
+	music_exists = true
 	if next(music_list) == nil then
 		music_exists = false
 	end
 
 	return music_exists
+end
+
+function audio.musicExists()
+  return music_exists
 end
 
 function audio.isPaused()
@@ -90,7 +97,7 @@ function audio.isPlaying()
 end
 
 function audio.getDuration()
-	return decoder:getDuration()
+  return decoder ~= nil and decoder:getDuration() or 0
 end
 
 function audio.getQueueSize()

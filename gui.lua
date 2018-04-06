@@ -41,7 +41,7 @@ function gui.overlay()
 			scrubbar_y-(current_font:getHeight())
 		)
 
-		if graphics_height > 360 then
+		if graphics_height > 360 and audio.musicExists() then
 			love.graphics.print(
 				"Change time by clicking the scrub bar\tChange songs with the arrow keys\tPress escape to exit\nChange colors with r, g, and b\tToggle Fullscreen with f\tPlay/Pause with the space bar",
 				10, graphics_height-(current_font:getHeight()*2)

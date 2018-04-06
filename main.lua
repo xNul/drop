@@ -3,12 +3,16 @@ function love.load()
 	spectrum = require 'spectrum'
 	gui = require 'gui'
 
+  -- Mac only and if not 60hz
 	monitor_refresh_rate = 60
 
 	---------------------------------- Window/Scaling ----------------------------------
-	local desktop_width, desktop_height = love.window.getDesktopDimensions()
-	window_width = desktop_width*(2/3)
-	window_height = desktop_height*(2/3)
+	local desktop_width
+  local desktop_height
+  desktop_width, desktop_height = love.window.getDesktopDimensions()
+  
+	local window_width = desktop_width*(2/3)
+	local window_height = desktop_height*(2/3)
 
 	local window_position_x = (desktop_width-window_width)/2
 	local window_position_y = (desktop_height-window_height)*(5/12) --5/12 to account for taskbar/dock
@@ -17,14 +21,14 @@ function love.load()
 		{x=window_position_x, y=window_position_y,
 		resizable=true, highdpi=true}
 	)
-	love.window.setIcon(love.image.newImageData("icon.png"))
+	love.window.setIcon(love.image.newImageData("images/icon.png"))
 	love.window.setTitle("Drop - by nabakin")
 	-- see love.resize for new variables
 
 	--[[ modify default screen ratio <<TEST>>
 	goal is to optimize Drop for screen ratios other than 16/10 ]]
-	ratio_width = 16
-	ratio_height = 10
+	local ratio_width = 16
+	local ratio_height = 10
 	scale_ratio_width = (10/ratio_height)*ratio_width
 
 	local graphics_width
@@ -111,7 +115,6 @@ function love.load()
 	love.graphics.setLineWidth(1)
 	love.graphics.setLineStyle('smooth')
 
-	start_screen = true
 	appdata_music = true
 
 	-- see love.resize for scrub bar variables
@@ -127,7 +130,7 @@ function love.load()
 end
 
 function love.update(dt)
-	if not start_screen then
+	if audio.musicExists() then
 		audio.update()
 
 		if spectrum.wouldChange() and window_visible then
@@ -164,7 +167,7 @@ function love.draw()
 	end
 
 	-- overlay/start_screen drawing
-	if start_screen then
+	if not audio.musicExists() then
 		love.graphics.setColor(1, 1, 1)
 		love.graphics.setFont(big_font)
 
@@ -176,9 +179,8 @@ function love.draw()
 		else
 			love.graphics.printf("There aren't any songs in \""..appdata_path.."/LOVE/Drop/music\" yet.  If you copy some there, this feature will work.", 1, graphics_height/2, graphics_width, "center")
 		end
-	else
-		gui.overlay()
 	end
+  gui.overlay()
 
 	--[[ manual love.window.isVisible for behind windows and minimized.  Only works on Mac.
 	Saves a lot of cpu.  Likely error-prone because it's a bad implementation (no other way) ]]
@@ -222,7 +224,7 @@ function love.mousepressed(x, y, button, istouch)
 	sleep_counter = 0
 
 	-- detects if scrub bar clicked and moves to the corresponding point in time
-	if button == 1 and not start_screen and gui.scrubbar:inBounds(x, y) then
+	if button == 1 and audio.musicExists() and gui.scrubbar:inBounds(x, y) then
 		audio.decoderSeek(gui.scrubbar:getProportion(x)*audio.getDuration())
 		scrub_head_pressed = true
 	end
@@ -266,10 +268,8 @@ function love.keypressed(key, scancode, isrepeat)
 	gui.sleep(false)
 	sleep_counter = 0
 
-	if start_screen then
+	if not audio.musicExists() then
 		appdata_music = audio.loadMusic()
-		love.graphics.setFont(normal_font)
-		start_screen = false
 	else
 		local function catch_nil() end
 		(key_functions[key] or catch_nil)()
@@ -293,7 +293,7 @@ end
 
 function love.directorydropped(path)
 	love.filesystem.mount(path, "music")
-	start_screen = not audio.loadMusic()
+  audio.loadMusic()
 end
 
 function love.visible(v)
