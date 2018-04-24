@@ -6,47 +6,9 @@ function love.load()
   -- Mac only and if not 60hz
 	monitor_refresh_rate = 60
 
-	---------------------------------- Window/Scaling ----------------------------------
-	local desktop_width
-  local desktop_height
-  desktop_width, desktop_height = love.window.getDesktopDimensions()
+  -- load/scale gui
+	gui.load()
   
-	local window_width = desktop_width*(2/3)
-	local window_height = desktop_height*(2/3)
-
-	local window_position_x = (desktop_width-window_width)/2
-	local window_position_y = (desktop_height-window_height)*(5/12) --5/12 to account for taskbar/dock
-	love.window.setMode(
-		window_width, window_height,
-		{x=window_position_x, y=window_position_y,
-		resizable=true, highdpi=true}
-	)
-	love.window.setIcon(love.image.newImageData("images/icon.png"))
-	love.window.setTitle("Drop - by nabakin")
-	-- see love.resize for new variables
-
-	--[[ modify default screen ratio <<TEST>>
-	goal is to optimize Drop for screen ratios other than 16/10 ]]
-	local ratio_width = 16
-	local ratio_height = 10
-	scale_ratio_width = (10/ratio_height)*ratio_width
-
-	local graphics_width
-	local graphics_height
-	graphics_width, graphics_height = love.graphics.getDimensions()
-	gui.graphics:setWidth(graphics_width)
-	gui.graphics:setHeight(graphics_height)
-	gui.scrubbar:setX(math.floor(graphics_width/(6*scale_ratio_width)))
-	gui.scrubbar:setY(math.floor(graphics_height-graphics_height/7))
-	gui.scrubbar:setWidth(graphics_width-math.floor(graphics_width/(3*scale_ratio_width)))
-	gui.scrubbar:setHeight(math.floor(graphics_height*4/155))
-
-	normal_font = love.graphics.newFont(math.max(graphics_height/30, 16))
-	big_font = love.graphics.newFont(math.max(graphics_height/20, 24))
-	love.graphics.setFont(big_font)
-	------------------------------------------------------------------------------------
-
-
 	--------------------------------- Keyboard Actions ---------------------------------
 	key_functions = {
 		["right"] = function ()
@@ -175,7 +137,7 @@ function love.draw()
 		local graphics_height = gui.graphics:getHeight()
 
 		if appdata_music then
-			love.graphics.printf("Drag and drop your music folder(s) here to listen or press any key to only listen to songs in \""..appdata_path.."/LOVE/Drop/music.\"", 1, graphics_height/2, graphics_width, "center")
+			love.graphics.printf("Drag and drop your music folder(s) here to listen or press any key to only listen to songs in \""..appdata_path.."/LOVE/Drop/music.\"", 1, graphics_height/2-3*love.graphics.getFont():getHeight()/2, graphics_width, "center")
 		else
 			love.graphics.printf("There aren't any songs in \""..appdata_path.."/LOVE/Drop/music\" yet.  If you copy some there, this feature will work.", 1, graphics_height/2, graphics_width, "center")
 		end
@@ -224,7 +186,7 @@ function love.mousepressed(x, y, button, istouch)
 	sleep_counter = 0
 
 	-- detects if scrub bar clicked and moves to the corresponding point in time
-	if button == 1 and audio.musicExists() and gui.scrubbar:inBounds(x, y) then
+	if button == 1 and audio.musicExists() and gui.scrubbar:inBoundsX(x) and gui.scrubbar:inBoundsY(y) then
 		audio.decoderSeek(gui.scrubbar:getProportion(x)*audio.getDuration())
 		scrub_head_pressed = true
 	end
@@ -249,8 +211,7 @@ function love.mousemoved(x, y, dx, dy, istouch)
 			audio.pause()
 		end
 
-		-- check x-axis bounds for scrub bar
-		if x <= gui.scrubbar:getX()+gui.scrubbar:getWidth() and x >= gui.scrubbar:getX() then
+		if gui.scrubbar:inBoundsX(x) then
 			audio.decoderSeek(gui.scrubbar:getProportion(x)*audio.getDuration())
 		end
 	end
@@ -278,17 +239,7 @@ end
 
 -- when window resizes, scale
 function love.resize(w, h)
-	local graphics_width
-	local graphics_height
-	graphics_width, graphics_height = love.graphics.getDimensions()
-	gui.graphics:setWidth(graphics_width)
-	gui.graphics:setHeight(graphics_height)
-	gui.scrubbar:setX(math.floor(graphics_width/(6*scale_ratio_width)))
-	gui.scrubbar:setY(math.floor(graphics_height-graphics_height/7))
-	gui.scrubbar:setWidth(graphics_width-math.floor(graphics_width/(3*scale_ratio_width)))
-	gui.scrubbar:setHeight(math.floor(graphics_height*4/155))
-	normal_font = love.graphics.newFont(math.max(graphics_height/30, 16))
-	big_font = love.graphics.newFont(math.max(graphics_height/20, 24))
+  gui.update()
 end
 
 function love.directorydropped(path)

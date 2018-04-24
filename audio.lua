@@ -285,6 +285,7 @@ function audio.changeSong(number)
 	current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
 	local check = current_song:getFreeBufferCount()
 	time_count = 0
+  gui.timestamp_end:setValue(audio.getDuration())
   local tmp = decoder:decode()
   for i=0, queue_size do
     decoder_array[i] = tmp
