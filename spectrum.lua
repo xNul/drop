@@ -59,12 +59,13 @@ function spectrum.draw(waveform)
 		tick_width = graphics_width/(tick_count*4.3)
 	elseif visualizer_type == 3 then
 		tick_count = 128
-		tick_distance = graphics_width/(tick_count*2)
-		tick_width = graphics_width/(tick_count*2)
+    local tick_padding = 2
+		tick_distance = graphics_width/((tick_count+tick_padding)*2)
+		tick_width = tick_distance
 	elseif visualizer_type == 4 then
 		tick_count = 256
 		tick_distance = graphics_width/(tick_count*2)
-		tick_width = graphics_width/(tick_count*2)
+		tick_width = tick_distance
 	end
 
 	local tick_amplitude_sum = 0
@@ -77,13 +78,13 @@ function spectrum.draw(waveform)
 		local tick_height = math.max(graphics_scaled_height*tick_amplitude*2, tick_width/2)
 
 		love.graphics.rectangle(
-			'fill', graphics_width/2+(i-1)*tick_distance,
+			'fill', graphics_width/2+i*tick_distance,
 			graphics_height/2 - tick_height/2,
 			tick_width, tick_height,
 			tick_width/2, tick_width/2
 		)
 		love.graphics.rectangle(
-			'fill', graphics_width/2-(i-1)*tick_distance,
+			'fill', graphics_width/2-(i+1)*tick_distance,
 			graphics_height/2 - tick_height/2,
 			tick_width, tick_height,
 			tick_width/2, tick_width/2
