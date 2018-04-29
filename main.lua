@@ -140,7 +140,7 @@ function love.draw()
 		if appdata_music then
 			love.graphics.printf("Drag and drop your music folder(s) here to listen or press any key to listen to songs in \""..appdata_path.."/LOVE/Drop/music.\"", 1, graphics_height/2-3*love.graphics.getFont():getHeight()/2, graphics_width, "center")
 		else
-			love.graphics.printf("There aren't any songs in \""..appdata_path.."/LOVE/Drop/music\" yet.  If you copy some there, this feature will work.", 1, graphics_height/2, graphics_width, "center")
+			love.graphics.printf("You just tried to play music from your appdata.  Copy songs to \""..appdata_path.."/LOVE/Drop/music\" to make this work.", 1, graphics_height/2-3*love.graphics.getFont():getHeight()/2, graphics_width, "center")
 		end
 	end
   gui.overlay()

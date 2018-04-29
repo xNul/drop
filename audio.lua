@@ -69,6 +69,7 @@ function audio.loadMusic()
 	local music_exists = true
 	if next(music_list) == nil then
 		music_exists = false
+    music_list = nil
 	end
 
 	return music_exists
