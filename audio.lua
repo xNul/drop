@@ -75,6 +75,37 @@ function audio.loadMusic()
 	return music_exists
 end
 
+function audio.addSong(file)
+  if music_list == nil then
+    music_list = {}
+  end
+  
+  local format_table = {
+		".mp3", ".wav", ".ogg", ".oga", ".ogv",
+		".699", ".amf", ".ams", ".dbm", ".dmf",
+		".dsm", ".far", ".pat", ".j2b", ".mdl",
+		".med", ".mod", ".mt2", ".mtm", ".okt",
+		".psm", ".s3m", ".stm", ".ult", ".umx",
+		".xm", ".abc", ".mid", ".it"
+	}
+  
+  local filename = file:getFilename()
+  local valid_format = false
+  for i,v in ipairs(format_table) do
+    if filename:sub(-4) == v then
+      valid_format = true
+      break
+    end
+  end
+  
+  if valid_format then
+    local index = #music_list+1
+    music_list[index] = {}
+    music_list[index][1] = file
+    music_list[index][2] = filename:sub((string.find(filename, "\\[^\\]*$") or string.find(filename, "/[^/]*$") or 0)+1, -5)
+  end
+end
+
 function audio.musicExists()
   return music_list ~= nil
 end
