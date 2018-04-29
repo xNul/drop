@@ -88,6 +88,7 @@ function love.load()
 	setColor("g", 1)
 	sleep_counter = 0
 	window_visible = true
+  last_frame_time = 0
 	------------------------------------------------------------------------------------
 end
 
@@ -131,13 +132,13 @@ function love.draw()
 	-- overlay/start_screen drawing
 	if not audio.musicExists() then
 		love.graphics.setColor(1, 1, 1)
-		love.graphics.setFont(big_font)
+		love.graphics.setFont(gui.graphics:getBigFont())
 
 		local graphics_width = gui.graphics:getWidth()
 		local graphics_height = gui.graphics:getHeight()
 
 		if appdata_music then
-			love.graphics.printf("Drag and drop your music folder(s) here to listen or press any key to only listen to songs in \""..appdata_path.."/LOVE/Drop/music.\"", 1, graphics_height/2-3*love.graphics.getFont():getHeight()/2, graphics_width, "center")
+			love.graphics.printf("Drag and drop your music folder(s) here to listen or press any key to listen to songs in \""..appdata_path.."/LOVE/Drop/music.\"", 1, graphics_height/2-3*love.graphics.getFont():getHeight()/2, graphics_width, "center")
 		else
 			love.graphics.printf("There aren't any songs in \""..appdata_path.."/LOVE/Drop/music\" yet.  If you copy some there, this feature will work.", 1, graphics_height/2, graphics_width, "center")
 		end
@@ -239,7 +240,7 @@ end
 
 -- when window resizes, scale
 function love.resize(w, h)
-  gui.update()
+  gui.scale()
 end
 
 function love.directorydropped(path)

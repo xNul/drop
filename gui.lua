@@ -12,6 +12,13 @@ local timestamp_end_y = 0
 local timestamp_end_value = "00:00"
 local graphics_width = 0
 local graphics_height = 0
+local sprite_quads
+local sprite_batch
+local shuffle_sprite
+local loop_sprite
+local sprites
+local normal_font
+local big_font
 
 function gui.load()
   -------------------------------------- Window --------------------------------------
@@ -39,13 +46,11 @@ function gui.load()
 	local ratio_height = 10
 	scale_ratio_width = (10/ratio_height)*ratio_width
 
-	local graphics_width
-	local graphics_height
   graphics_width, graphics_height = love.graphics.getDimensions()
 	------------------------------------------------------------------------------------
 
   
-  ------------------------------------- Sprites/Scaling --------------------------------------
+  --------------------------------- Sprites/Scaling ----------------------------------
   local music_control_image = love.graphics.newImage("images/music_control_sprites.png")
   local shuffle_image = love.graphics.newImage("images/shuffle_sprite.png")
   local loop_image = love.graphics.newImage("images/loop_sprite.png")
@@ -72,6 +77,7 @@ function gui.load()
   shuffle_sprite = love.graphics.newSpriteBatch(shuffle_image, 1)
   loop_sprite = love.graphics.newSpriteBatch(loop_image, 1)
   local gui_scaling_multiplier = math.max(graphics_height, 480)
+  local ui_height = graphics_height-7*gui_scaling_multiplier/240
   
   sprites = {}
   
@@ -84,25 +90,25 @@ function gui.load()
   local medium_spacing = (icon_height/240)*5*gui_scaling_multiplier/96
   local large_spacing = (icon_height/240)*5*gui_scaling_multiplier/60
   
-  local left_height = graphics_height-sprite_square_side_length-small_spacing
+  local left_height = graphics_height-sprite_square_side_length-11*small_spacing/8
   local right_height = graphics_height-sprite_square_side_length-medium_spacing
   
-  local offset = 0
+  local offset = small_spacing
   sprites["left"] = sprite_batch:add(sprite_quads["left"], offset, left_height, 0, scale_x)
-  offset = offset+sprite_square_side_length
+  offset = offset+sprite_square_side_length+small_spacing/2
   sprites["playback"] = sprite_batch:add(sprite_quads["pause"], offset, left_height, 0, scale_x)
-  offset = offset+sprite_square_side_length
+  offset = offset+sprite_square_side_length+small_spacing/2
   sprites["right"] = sprite_batch:add(sprite_quads["right"], offset, left_height, 0, scale_x)
-  offset = offset+sprite_square_side_length+small_spacing
+  offset = offset+sprite_square_side_length+small_spacing+small_spacing/2
   sprites["shuffle"] = shuffle_sprite:add(sprite_quads["shuffle"], offset, left_height, 0, scale_x)
-  offset = offset+sprite_rectangle_side_length+large_spacing
+  offset = offset+sprite_rectangle_side_length+large_spacing+small_spacing/2
   sprites["loop"] = loop_sprite:add(sprite_quads["loop"], offset, left_height, 0, scale_x)
   
   local offset_x = offset
   
-  offset = graphics_width-sprite_square_side_length-medium_spacing
-  sprites["fullscreen"] = sprite_batch:add(sprite_quads["fullscreen"], offset, right_height, 0, scale_x)
-  offset = offset-sprite_square_side_length-large_spacing
+  offset = graphics_width-sprite_square_side_length-medium_spacing-small_spacing
+  sprites["fullscreen"] = sprite_batch:add(sprite_quads["fullscreen"], offset, right_height, 0, scale_x*.93)
+  offset = offset-sprite_square_side_length-large_spacing-small_spacing/2
   sprites["volume"] = sprite_batch:add(sprite_quads["volume3"], offset, right_height, 0, scale_x)
   ------------------------------------------------------------------------------------
   
@@ -114,26 +120,22 @@ function gui.load()
   
   offset_x = offset_x+sprite_rectangle_side_length+3*large_spacing
   offset = offset-3*large_spacing-normal_font:getWidth("00:00")
-  local ui_height = graphics_height-7*gui_scaling_multiplier/240
   
-  gui.scrubhead:setRadius(gui_scaling_multiplier/96)
-  gui.timestamp_start:setPosition(offset_x, ui_height-normal_font:getHeight("00:00")/2)
-  gui.timestamp_end:setPosition(offset, ui_height-normal_font:getHeight("00:00")/2)
+  scrubhead_radius = gui_scaling_multiplier/96
+  timestamp_start_x = offset_x
+  timestamp_start_y = ui_height-normal_font:getHeight("00:00")/2
+  timestamp_end_x = offset
+  timestamp_end_y = ui_height-normal_font:getHeight("00:00")/2
   
-  gui.graphics:setWidth(graphics_width)
-	gui.graphics:setHeight(graphics_height)
-	gui.scrubbar:setPosition(
-    offset_x+normal_font:getWidth("00:00")+large_spacing,
-    ui_height,
-    offset-large_spacing,
-    ui_height
-  )
+	scrubbar_x1 = offset_x+normal_font:getWidth("00:00")+large_spacing
+  scrubbar_y1 = ui_height
+  scrubbar_x2 = offset-large_spacing
+  scrubbar_y2 = ui_height
   ------------------------------------------------------------------------------------
 end
 
-function gui.update()
-  local graphics_width
-	local graphics_height
+function gui.scale()
+  -------------------------------------- Sprites -------------------------------------
 	graphics_width, graphics_height = love.graphics.getDimensions()
   local gui_scaling_multiplier = math.max(graphics_height, 480)
     
@@ -146,27 +148,30 @@ function gui.update()
   local medium_spacing = (icon_height/240)*5*gui_scaling_multiplier/96
   local large_spacing = (icon_height/240)*5*gui_scaling_multiplier/60
   
-  local left_height = graphics_height-sprite_square_side_length-small_spacing
+  local left_height = graphics_height-sprite_square_side_length-11*small_spacing/8
   local right_height = graphics_height-sprite_square_side_length-medium_spacing
   
-  local offset = 0
+  local offset = small_spacing
   sprite_batch:set(sprites["left"], sprite_quads["left"], offset, left_height, 0, scale_x)
-  offset = offset+sprite_square_side_length
+  offset = offset+sprite_square_side_length+small_spacing/2
   sprite_batch:set(sprites["playback"], sprite_quads["pause"], offset, left_height, 0, scale_x)
-  offset = offset+sprite_square_side_length
+  offset = offset+sprite_square_side_length+small_spacing/2
   sprite_batch:set(sprites["right"], sprite_quads["right"], offset, left_height, 0, scale_x)
-  offset = offset+sprite_square_side_length+small_spacing
+  offset = offset+sprite_square_side_length+small_spacing+small_spacing/2
   shuffle_sprite:set(sprites["shuffle"], sprite_quads["shuffle"], offset, left_height, 0, scale_x)
-  offset = offset+sprite_rectangle_side_length+large_spacing
+  offset = offset+sprite_rectangle_side_length+large_spacing+small_spacing/2
   loop_sprite:set(sprites["loop"], sprite_quads["loop"], offset, left_height, 0, scale_x)
   
   local offset_x = offset
   
-  offset = graphics_width-sprite_square_side_length-medium_spacing
-  sprite_batch:set(sprites["fullscreen"], sprite_quads["fullscreen"], offset, right_height, 0, scale_x)
-  offset = offset-sprite_square_side_length-large_spacing
+  offset = graphics_width-sprite_square_side_length-medium_spacing-small_spacing
+  sprite_batch:set(sprites["fullscreen"], sprite_quads["fullscreen"], offset, right_height, 0, scale_x*.93)
+  offset = offset-sprite_square_side_length-large_spacing-small_spacing/2
   sprite_batch:set(sprites["volume"], sprite_quads["volume3"], offset, right_height, 0, scale_x)
+  ------------------------------------------------------------------------------------
   
+  
+  ------------------------------------- Scrubbar -------------------------------------
   normal_font = love.graphics.newFont(math.max(graphics_height/30, 16))
 	big_font = love.graphics.newFont(math.max(graphics_height/20, 24))
   
@@ -174,18 +179,17 @@ function gui.update()
   offset = offset-3*large_spacing-normal_font:getWidth("00:00")
   local ui_height = graphics_height-7*gui_scaling_multiplier/240
   
-  gui.scrubhead:setRadius(gui_scaling_multiplier/96)
-  gui.timestamp_start:setPosition(offset_x, ui_height-normal_font:getHeight("00:00")/2)
-  gui.timestamp_end:setPosition(offset, ui_height-normal_font:getHeight("00:00")/2)
+  scrubhead_radius = gui_scaling_multiplier/96
+  timestamp_start_x = offset_x
+  timestamp_start_y = ui_height-normal_font:getHeight("00:00")/2
+  timestamp_end_x = offset
+  timestamp_end_y = ui_height-normal_font:getHeight("00:00")/2
   
-	gui.graphics:setWidth(graphics_width)
-	gui.graphics:setHeight(graphics_height)
-	gui.scrubbar:setPosition(
-    offset_x+normal_font:getWidth("00:00")+large_spacing,
-    ui_height,
-    offset-large_spacing,
-    ui_height
-  )
+  scrubbar_x1 = offset_x+normal_font:getWidth("00:00")+large_spacing
+  scrubbar_y1 = ui_height
+  scrubbar_x2 = offset-large_spacing
+  scrubbar_y2 = ui_height
+  ------------------------------------------------------------------------------------
 end
 
 function gui.overlay()
@@ -320,6 +324,14 @@ end
 
 function gui.graphics:getWidth()
 	return graphics_width
+end
+
+function gui.graphics:getBigFont()
+  return big_font
+end
+
+function gui.graphics:getNormalFont()
+  return normal_font
 end
 
 function secondsToString(sec)
