@@ -96,7 +96,7 @@ function love.update(dt)
 	if audio.musicExists() then
 		audio.update()
 
-		if spectrum.wouldChange() and window_visible then
+		if spectrum.wouldChange() and window_visible and not love.window.isMinimized() then
 			-- fft calculations (generates waveform for visualization)
 			waveform = spectrum.generateWaveform()
 
@@ -119,7 +119,9 @@ function love.update(dt)
 end
 
 function love.draw()
-	spectrum.draw(waveform)
+	if not love.window.isMinimized() then
+    spectrum.draw(waveform)
+  end
 
 	-- controls visualization fade
 	if fade_bool then
@@ -253,5 +255,5 @@ function love.filedropped(file)
 end
 
 function love.visible(v)
-	--window_visible = v
+	window_visible = v
 end
