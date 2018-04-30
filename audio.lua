@@ -12,6 +12,7 @@ local is_paused = false
 local current_song = nil
 local time_count = 0
 local music_list = nil
+local toggle_loop = false
 
 function audio.update()
 	-- plays first song
@@ -121,6 +122,10 @@ end
 function audio.play()
 	is_paused = false
 	current_song:play()
+end
+
+function audio.toggleLoop()
+  toggle_loop = not toggle_loop
 end
 
 function audio.isPlaying()
@@ -292,7 +297,9 @@ end
 -- Song Handling --
 -- only pass 0, 1, and -1 for now
 function audio.changeSong(number)
-	song_id = song_id+number
+  if not toggle_loop then
+    song_id = song_id+number
+  end
 
 	-- loops song table
 	if song_id < 1 then

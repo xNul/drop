@@ -422,6 +422,7 @@ end
 
 function gui.loop:activate()
   loop_activate = not loop_activate
+  audio.toggleLoop()
 end
 
 function gui.volume:inBoundsX(x)
