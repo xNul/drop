@@ -410,6 +410,7 @@ end
 
 function gui.shuffle:activate()
   shuffle_activate = not shuffle_activate
+  audio.toggleShuffle()
 end
 
 function gui.loop:inBoundsX(x)
