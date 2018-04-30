@@ -124,7 +124,7 @@ function audio.play()
 end
 
 function audio.isPlaying()
-	return current_song:isPlaying()
+	return ((current_song ~= nil) and current_song:isPlaying()) or false
 end
 
 function audio.getDuration()

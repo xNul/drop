@@ -1,8 +1,20 @@
-local gui = {scrubbar = {}, graphics = {}, timestamp_start = {}, timestamp_end = {}, scrubhead = {}}
+local gui = {leftPanel = {}, rightPanel = {}, scrubbar = {}, left = {}, playback = {}, right = {}, shuffle = {}, loop = {}, volume = {}, fullscreen = {}, graphics = {}, timestamp_start = {}, timestamp_end = {}, scrubhead = {}}
 local scrubbar_x1 = 0
 local scrubbar_y1 = 0
 local scrubbar_x2 = 0
 local scrubbar_y2 = 0
+local left_x = 0
+local playback_x = 0
+local playback_quad = "pause"
+local right_x = 0
+local shuffle_x = 0
+local loop_x = 0
+local loop_x_end = 0
+local volume_x = 0
+local volume_quad = "volume2"
+local fullscreen_x = 0
+local fullscreen_quad = "fullscreen"
+local click_area_y = 0
 local scrubhead_radius = 0
 local timestamp_start_x = 0
 local timestamp_start_y = 0
@@ -94,22 +106,30 @@ function gui.load()
   local right_height = graphics_height-sprite_square_side_length-medium_spacing
   
   local offset = small_spacing
+  left_x = 0
   sprites["left"] = sprite_batch:add(sprite_quads["left"], offset, left_height, 0, scale_x)
   offset = offset+sprite_square_side_length+small_spacing/2
-  sprites["playback"] = sprite_batch:add(sprite_quads["pause"], offset, left_height, 0, scale_x)
+  playback_x = offset
+  sprites["playback"] = sprite_batch:add(sprite_quads[playback_quad], offset, left_height, 0, scale_x)
   offset = offset+sprite_square_side_length+small_spacing/2
+  right_x = offset
   sprites["right"] = sprite_batch:add(sprite_quads["right"], offset, left_height, 0, scale_x)
   offset = offset+sprite_square_side_length+small_spacing+small_spacing/2
+  shuffle_x = offset-3*small_spacing/2
   sprites["shuffle"] = shuffle_sprite:add(sprite_quads["shuffle"], offset, left_height, 0, scale_x)
   offset = offset+sprite_rectangle_side_length+large_spacing+small_spacing/2
+  loop_x = offset-3*small_spacing/2
+  loop_x_end = offset+sprite_rectangle_side_length+3*small_spacing/2
   sprites["loop"] = loop_sprite:add(sprite_quads["loop"], offset, left_height, 0, scale_x)
   
   local offset_x = offset
   
   offset = graphics_width-sprite_square_side_length-medium_spacing-small_spacing
-  sprites["fullscreen"] = sprite_batch:add(sprite_quads["fullscreen"], offset, right_height, 0, scale_x*.93)
+  fullscreen_x = offset-medium_spacing
+  sprites["fullscreen"] = sprite_batch:add(sprite_quads[fullscreen_quad], offset, right_height, 0, scale_x*.93)
   offset = offset-sprite_square_side_length-large_spacing-small_spacing/2
-  sprites["volume"] = sprite_batch:add(sprite_quads["volume3"], offset, right_height, 0, scale_x)
+  volume_x = offset-3*small_spacing/2
+  sprites["volume"] = sprite_batch:add(sprite_quads[volume_quad], offset, right_height, 0, scale_x)
   ------------------------------------------------------------------------------------
   
   
@@ -131,6 +151,8 @@ function gui.load()
   scrubbar_y1 = ui_height
   scrubbar_x2 = offset-large_spacing
   scrubbar_y2 = ui_height
+  
+  click_area_y = graphics_height-gui_scaling_multiplier/16
   ------------------------------------------------------------------------------------
 end
 
@@ -152,22 +174,30 @@ function gui.scale()
   local right_height = graphics_height-sprite_square_side_length-medium_spacing
   
   local offset = small_spacing
+  left_x = 0
   sprite_batch:set(sprites["left"], sprite_quads["left"], offset, left_height, 0, scale_x)
   offset = offset+sprite_square_side_length+small_spacing/2
-  sprite_batch:set(sprites["playback"], sprite_quads["pause"], offset, left_height, 0, scale_x)
+  playback_x = offset
+  sprite_batch:set(sprites["playback"], sprite_quads[playback_quad], offset, left_height, 0, scale_x)
   offset = offset+sprite_square_side_length+small_spacing/2
+  right_x = offset
   sprite_batch:set(sprites["right"], sprite_quads["right"], offset, left_height, 0, scale_x)
   offset = offset+sprite_square_side_length+small_spacing+small_spacing/2
+  shuffle_x = offset-3*small_spacing/2
   shuffle_sprite:set(sprites["shuffle"], sprite_quads["shuffle"], offset, left_height, 0, scale_x)
   offset = offset+sprite_rectangle_side_length+large_spacing+small_spacing/2
+  loop_x = offset-3*small_spacing/2
+  loop_x_end = offset+sprite_rectangle_side_length+3*small_spacing/2
   loop_sprite:set(sprites["loop"], sprite_quads["loop"], offset, left_height, 0, scale_x)
   
   local offset_x = offset
   
   offset = graphics_width-sprite_square_side_length-medium_spacing-small_spacing
-  sprite_batch:set(sprites["fullscreen"], sprite_quads["fullscreen"], offset, right_height, 0, scale_x*.93)
+  fullscreen_x = offset-medium_spacing
+  sprite_batch:set(sprites["fullscreen"], sprite_quads[fullscreen_quad], offset, right_height, 0, scale_x*.93)
   offset = offset-sprite_square_side_length-large_spacing-small_spacing/2
-  sprite_batch:set(sprites["volume"], sprite_quads["volume3"], offset, right_height, 0, scale_x)
+  volume_x = offset-3*small_spacing/2
+  sprite_batch:set(sprites["volume"], sprite_quads[volume_quad], offset, right_height, 0, scale_x)
   ------------------------------------------------------------------------------------
   
   
@@ -189,6 +219,8 @@ function gui.scale()
   scrubbar_y1 = ui_height
   scrubbar_x2 = offset-large_spacing
   scrubbar_y2 = ui_height
+  
+  click_area_y = graphics_height-gui_scaling_multiplier/16
   ------------------------------------------------------------------------------------
 end
 
@@ -308,6 +340,133 @@ end
 
 function gui.scrubbar:getProportion(x)
 	return (x-scrubbar_x1)/(scrubbar_x2-scrubbar_x1)
+end
+
+function gui.left:inBoundsX(x)
+  return x <= playback_x and x >= left_x
+end
+
+function gui.left:inBoundsY(y)
+  return y <= graphics_height and y >= click_area_y
+end
+
+function gui.left:activate()
+  audio.changeSong(-1)
+end
+
+function gui.playback:inBoundsX(x)
+  return x <= right_x and x >= playback_x
+end
+
+function gui.playback:inBoundsY(y)
+  return y <= graphics_height and y >= click_area_y
+end
+
+function gui.playback:activate()
+  if audio.isPaused() then
+    audio.play()
+    playback_quad = "pause"
+    gui.scale()
+  elseif audio.isPlaying() then
+    audio.pause()
+    playback_quad = "play"
+    gui.scale()
+  end
+end
+
+function gui.right:inBoundsX(x)
+  return x <= shuffle_x and x >= right_x
+end
+
+function gui.right:inBoundsY(y)
+  return y <= graphics_height and y >= click_area_y
+end
+
+function gui.right:activate()
+  audio.changeSong(1)
+end
+
+function gui.shuffle:inBoundsX(x)
+  return x <= loop_x and x >= shuffle_x
+end
+
+function gui.shuffle:inBoundsY(y)
+  return y <= graphics_height and y >= click_area_y
+end
+
+function gui.shuffle:activate()
+  print("shuffle pressed")
+end
+
+function gui.loop:inBoundsX(x)
+  return x <= loop_x_end and x >= loop_x
+end
+
+function gui.loop:inBoundsY(y)
+  return y <= graphics_height and y >= click_area_y
+end
+
+function gui.loop:activate()
+  print("loop pressed")
+end
+
+function gui.volume:inBoundsX(x)
+  return x <= fullscreen_x and x >= volume_x
+end
+
+function gui.volume:inBoundsY(y)
+  return y <= graphics_height and y >= click_area_y
+end
+
+function gui.volume:activate(v)
+  if v == nil then
+    local volume_rotation = {
+      ["volume1"] = function ()
+        volume_quad = "volume2"
+        love.audio.setVolume(0.5)
+      end,
+      ["volume2"] = function ()
+        volume_quad = "volume3"
+        love.audio.setVolume(1)
+      end,
+      ["volume3"] = function ()
+        volume_quad = "volume1"
+        love.audio.setVolume(0)
+      end
+    }
+    
+    volume_rotation[volume_quad]()
+  else
+    volume_quad = v
+  end
+  gui.scale()
+end
+
+function gui.fullscreen:inBoundsX(x)
+  return x <= graphics_width and x >= fullscreen_x
+end
+
+function gui.fullscreen:inBoundsY(y)
+  return y <= graphics_height and y >= click_area_y
+end
+
+function gui.fullscreen:activate()
+  local fullscreen_rotation = {
+    ["fullscreen"] = "fullscreen_exit",
+    ["fullscreen_exit"] = "fullscreen"
+  }
+  
+  love.window.setFullscreen(not love.window.getFullscreen())
+  fullscreen_quad = fullscreen_rotation[fullscreen_quad]
+  gui.scale()
+end
+
+function gui.leftPanel:inBoundsX(x)
+  return x <= loop_x_end
+end
+
+function gui.rightPanel:inBoundsX(x)
+  return x >= volume_x
 end
 
 function gui.graphics:setHeight(height)

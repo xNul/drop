@@ -11,11 +11,37 @@ function love.load()
   
 	--------------------------------- Keyboard Actions ---------------------------------
 	key_functions = {
+    ["up"] = function ()
+      local new_volume = math.floor((love.audio.getVolume()+.1) * 10 + 0.5) / 10 -- round to nearest 1st decimal place
+      
+      if new_volume <= 1 then
+        if new_volume == 0.6 then
+          gui.volume:activate("volume3")
+        elseif new_volume == 0.1 then
+          gui.volume:activate("volume2")
+        end
+        
+        love.audio.setVolume(new_volume)
+      end
+    end,
+    ["down"] = function ()
+      local new_volume = math.floor((love.audio.getVolume()-.1) * 10 + 0.5) / 10 -- round to nearest 1st decimal place
+      
+      if new_volume ~= -0.1 then
+        if new_volume == 0.5 then
+          gui.volume:activate("volume2")
+        elseif new_volume == 0 then
+          gui.volume:activate("volume1")
+        end
+        
+        love.audio.setVolume(new_volume)
+      end
+    end,
 		["right"] = function ()
-			audio.changeSong(1)
+			gui.right:activate()
 		end,
 		["left"] = function ()
-			audio.changeSong(-1)
+			gui.left:activate()
 		end,
 
 		-- rgb keys are being used as a test atm.  Not finished
@@ -27,6 +53,12 @@ function love.load()
 		end,
 		["b"] = function ()
 			setColor("b")
+		end,
+    ["s"] = function ()
+			gui.shuffle:activate()
+		end,
+    ["l"] = function ()
+			gui.loop:activate()
 		end,
 		["1"] = function ()
 			spectrum.setVisualization(1)
@@ -41,17 +73,15 @@ function love.load()
 			spectrum.setVisualization(4)
 		end,
 		["escape"] = function ()
-			love.event.quit()
+      if love.window.getFullscreen() then
+        gui.fullscreen:activate()
+      end
 		end,
 		["f"] = function ()
-			love.window.setFullscreen(not love.window.getFullscreen())
+			gui.fullscreen:activate()
 		end,
 		["space"] = function ()
-			if audio.isPaused() then
-				audio.play()
-			else
-				audio.pause()
-			end
+			gui.playback:activate()
 		end,
 
 		-- moves slowly through the visualization by the length of a frame.  Used to compare visualizations
@@ -81,6 +111,8 @@ function love.load()
 
 	-- see love.resize for scrub bar variables
 
+  button_pressed = ""
+  
 	fade_interval_counter = 1
 	fade_bool = false
 	color = "g"
@@ -89,6 +121,7 @@ function love.load()
 	sleep_counter = 0
 	window_visible = true
   last_frame_time = 0
+  cursor_hand_activated = false
 	------------------------------------------------------------------------------------
 end
 
@@ -184,18 +217,35 @@ end
 
 
 -- Input Callbacks --
-function love.mousepressed(x, y, button, istouch)
+function love.mousepressed(x, y, key, istouch)
 	gui.sleep(false)
 	sleep_counter = 0
-
+  
+  local button_table = {"left", "playback", "right", "shuffle", "loop", "volume", "fullscreen"}
+  
+  local button
+  for i,v in ipairs(button_table) do
+    button = gui[v]
+    
+    if button:inBoundsX(x) and button:inBoundsY(y) then
+      button_pressed = v
+      break
+    end
+  end
+  
 	-- detects if scrub bar clicked and moves to the corresponding point in time
-	if button == 1 and audio.musicExists() and gui.scrubbar:inBoundsX(x) and gui.scrubbar:inBoundsY(y) then
+	if key == 1 and audio.musicExists() and gui.scrubbar:inBoundsX(x) and gui.scrubbar:inBoundsY(y) then
 		audio.decoderSeek(gui.scrubbar:getProportion(x)*audio.getDuration())
 		scrub_head_pressed = true
 	end
 end
 
-function love.mousereleased(x, y, button, istouch)
+function love.mousereleased(x, y, key, istouch)
+  if button_pressed ~= "" and gui[button_pressed]:inBoundsX(x) and gui[button_pressed]:inBoundsY(y) then
+    gui[button_pressed]:activate()
+  end
+  button_pressed = ""
+
 	if scrub_head_pause then
 		audio.play()
 		scrub_head_pause = false
@@ -206,6 +256,14 @@ end
 function love.mousemoved(x, y, dx, dy, istouch)
 	gui.sleep(false)
 	sleep_counter = 0
+  
+  if gui.left:inBoundsY(y) and ((gui.scrubbar:inBoundsY(y) and gui.scrubbar:inBoundsX(x)) or gui.leftPanel:inBoundsX(x) or gui.rightPanel:inBoundsX(x)) then
+    if not cursor_hand_activated then love.mouse.setCursor(love.mouse.getSystemCursor("hand")) end
+    cursor_hand_activated = true
+  elseif cursor_hand_activated then
+    love.mouse.setCursor(love.mouse.getSystemCursor("arrow"))
+    cursor_hand_activated = false
+  end
 
 	-- makes scrub bar draggable
 	if scrub_head_pressed then
