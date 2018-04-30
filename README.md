@@ -6,32 +6,39 @@ that they feel cumbersome. They have some neat graphics, but aren't very good at
 the music. I think visualizers have a lot of potential integrated into music players and so, I decided to
 create Drop; a simple, efficient music player/visualizer.
 
-![music visualization](https://i.imgur.com/ZRqD1YO.png)
+![music visualization](https://i.imgur.com/sfbMpr4.png)
 
-To add music, either drag and drop your music folder(s) on the window or make sure you run the visualizer at least once, exit, navigate to your system's appdata directory, open "LOVE/Drop/music", and place your music files/folders there.
+To add music, either drag and drop your music on the window or make sure you run the visualizer at least once, exit, navigate to your system's appdata directory, open "LOVE/Drop/music", and place your music files/folders in there.
 
 ### Features:
   - drag and drop
-  - fully-scalable
-  - scrub bar and music controls
+  - fully scaling ui
+  - realtime ffi-implemented rfft calculations (really fast and efficient spectrum generation)
+  - decoder/queueable audio support
+  - keyboard music controls and now graphical music controls (with color accents!)
+  - scrub bar, timestamps, and draggable scrub head with an updating visualization
+  - frame-by-frame visualization navigation
+  - shuffle and loop functionality
+  - volume and mute controls
   - spectrum visualization
   - multiple colors
-  - fade-visual sync (currently disabled)
-  - realtime ffi-implemented rfft calculations (really fast and efficient spectrum generation)
-  - uses decoders to play/sample audio
-  - \[Mac only, see [this](https://github.com/nabakin/drop#researchedunfinished-features)\] disables fft generation when in the background (behind windows or minimized)
+  - doesn't run fft calculations when minimized
 
 ### Controls:
   - Left Arrow: Previous Song
   - Right Arrow: Next Song
+  - Up Arrow: Volume Up
+  - Down Arrow: Volume Down
   - Space bar: Pause/Play
   - Click the scrub bar to change time
   - Drag the scrub head to change time
   - r, g, and b: change visualization color
-  - f: Fullscreen mode
+  - s and l: Shuffle and Loop
+  - m: toggle mute
+  - f: Fullscreen Mode
   - 1, 2, 3, and 4: change visualization type
-  - Escape: Quit
-  - Comma and Period: move frame by frame through the visualization
+  - Escape: exit Fullscreen Mode
+  - Comma and Period: move frame-by-frame through the visualization
 
 ### Setup:
 1. Download Drop with [this link](https://github.com/nabakin/drop/archive/master.zip)
@@ -47,3 +54,4 @@ Drop uses the [drop-fft](https://github.com/nabakin/drop-fft) library which is a
   - potential fft overlap NOTE: turns out the benefits from fixing the overlap were not great enough for the extra processing power and memory requirements necessary.  Actually ended up making things a lot worse.  The implementation consisted of calculating the fft in real-time separate from love.update, storing it in memory once some compression/optimization was preformed, obtaining it when the sample time appeared for love.draw, then removing it from memory once used.
   - when behind windows disable visualizer calcs NOTE: can't do this atm (0.11.0) bc love uses SDL which has issues implementing this.  Currently implemented, but likely error-prone need to test further on other computers
   - fix background detection on windows: can't because Love uses SDL to handle these things and it's bugged
+  - fade-visual sync (currently disabled)
