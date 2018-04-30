@@ -19,6 +19,7 @@ function love.load()
           gui.volume:activate("volume3")
         elseif new_volume == 0.1 then
           gui.volume:activate("volume2")
+          previous_volume = 0
         end
         
         love.audio.setVolume(new_volume)
@@ -59,6 +60,24 @@ function love.load()
 		end,
     ["l"] = function ()
 			gui.loop:activate()
+		end,
+    ["m"] = function ()
+      local current_volume = love.audio.getVolume()
+      
+      if current_volume == 0 and previous_volume ~= 0 then
+        if previous_volume > 0 and previous_volume < 0.6 then
+          gui.volume:activate("volume2")
+        else
+          gui.volume:activate("volume3")
+        end
+      
+        love.audio.setVolume(previous_volume)
+        previous_volume = 0
+      else
+        gui.volume:activate("volume1")
+        love.audio.setVolume(0)
+        previous_volume = current_volume
+      end
 		end,
 		["1"] = function ()
 			spectrum.setVisualization(1)
@@ -122,6 +141,7 @@ function love.load()
 	window_visible = true
   last_frame_time = 0
   cursor_hand_activated = false
+  previous_volume = 0
 	------------------------------------------------------------------------------------
 end
 

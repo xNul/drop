@@ -8,8 +8,10 @@ local playback_x = 0
 local playback_quad = "pause"
 local right_x = 0
 local shuffle_x = 0
+local shuffle_activate = false
 local loop_x = 0
 local loop_x_end = 0
+local loop_activate = false
 local volume_x = 0
 local volume_quad = "volume2"
 local fullscreen_x = 0
@@ -249,10 +251,22 @@ function gui.overlay()
 		)
     
     love.graphics.draw(sprite_batch)
+    
+    if shuffle_activate then
+      setColor()
+    end
     love.graphics.draw(shuffle_sprite)
+    
+    if loop_activate and not shuffle_activate then
+      setColor()
+    elseif shuffle_activate and not loop_activate then
+      love.graphics.setColor(1, 1, 1)
+    end
     love.graphics.draw(loop_sprite)
 
-    setColor()
+    if not loop_activate then
+      setColor()
+    end
 		local scrubhead_x = (audio.decoderTell()/audio.getDuration())*(scrubbar_x2-scrubbar_x1)+scrubbar_x1
     love.graphics.line(
 			scrubbar_x1, scrubbar_y1,
@@ -395,7 +409,7 @@ function gui.shuffle:inBoundsY(y)
 end
 
 function gui.shuffle:activate()
-  print("shuffle pressed")
+  shuffle_activate = not shuffle_activate
 end
 
 function gui.loop:inBoundsX(x)
@@ -407,7 +421,7 @@ function gui.loop:inBoundsY(y)
 end
 
 function gui.loop:activate()
-  print("loop pressed")
+  loop_activate = not loop_activate
 end
 
 function gui.volume:inBoundsX(x)
