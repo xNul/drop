@@ -142,16 +142,18 @@ function love.load()
   last_frame_time = 0
   cursor_hand_activated = false
   previous_volume = 0
+  microphone_init = false
+  devices_list = nil
 	------------------------------------------------------------------------------------
 end
 
 function love.update(dt)
-	if audio.musicExists() then
-		audio.update()
+	if audio.musicExists() or audio.isPlayingMicrophone() then
+		if audio.isPlayingMicrophone() then audio.updateMicrophone() else audio.update() end
 
-		if spectrum.wouldChange() and window_visible and not love.window.isMinimized() then
+		if (spectrum.wouldChange() or audio.isPlayingMicrophone()) and window_visible and not love.window.isMinimized() then
 			-- fft calculations (generates waveform for visualization)
-			waveform = spectrum.generateWaveform()
+			if audio.isPlayingMicrophone() then waveform = spectrum.generateMicrophoneWaveform() else waveform = spectrum.generateWaveform() end
 
 			--fade timer: limits fade update every .2 sec
 			fade_interval_counter = fade_interval_counter+dt
@@ -185,18 +187,26 @@ function love.draw()
 	end
 
 	-- overlay/start_screen drawing
-	if not audio.musicExists() then
+	if not audio.musicExists() and not audio.isPlayingMicrophone() then
 		love.graphics.setColor(1, 1, 1)
 		love.graphics.setFont(gui.graphics:getBigFont())
 
 		local graphics_width = gui.graphics:getWidth()
 		local graphics_height = gui.graphics:getHeight()
 
-		if appdata_music then
-			love.graphics.printf("Drag and drop your music here to listen or press any key to listen to songs in \""..appdata_path.."/LOVE/Drop/music.\"", 1, graphics_height/2-3*love.graphics.getFont():getHeight()/2, graphics_width, "center")
-		else
-			love.graphics.printf("You just tried to play music from your appdata.  Copy songs to \""..appdata_path.."/LOVE/Drop/music\" to make this work or drag and drop music onto this window.", 1, graphics_height/2-3*love.graphics.getFont():getHeight()/2, graphics_width, "center")
-		end
+    if not microphone_init then
+      if appdata_music then
+        love.graphics.printf("Drop music here or press the corresponding number:\n1) Play system audio\n2) Play music in appdata", graphics_width/80, graphics_height/2-5*love.graphics.getFont():getHeight()/2, graphics_width, "left")
+      else
+        love.graphics.printf("You just tried to play music from your appdata.  Copy songs to \""..appdata_path.."/LOVE/Drop/music\" to make this work or just drag and drop music onto this window.", graphics_width/80, graphics_height/2-5*love.graphics.getFont():getHeight()/2, graphics_width, "left")
+      end
+    else
+      local input_string = "Choose audio input:\n"
+      for i,v in ipairs(devices_list) do
+        input_string = input_string..tostring(i)..") "..v:getName().."\n"
+      end
+      love.graphics.printf(input_string, graphics_width/80, graphics_height/2-2.5*love.graphics.getFont():getHeight(), graphics_width, "left")
+    end
 	end
   gui.overlay()
 
@@ -310,12 +320,24 @@ function love.keypressed(key, scancode, isrepeat)
 	gui.sleep(false)
 	sleep_counter = 0
 
-	if not audio.musicExists() then
-		appdata_music = audio.loadMusic()
-	else
-		local function catch_nil() end
-		(key_functions[key] or catch_nil)()
-	end
+  if not audio.musicExists() then
+    if microphone_init then
+      local key_int = tonumber(key)
+      if key_int ~= nil and key_int > 0 and key_int <= #devices_list then
+        audio.playMicrophone(devices_list[key_int])
+        audio.setSongName("Audio Input: "..devices_list[key_int]:getName())
+        microphone_init = false
+      end
+    elseif key == "1" then
+      microphone_init = true
+      devices_list = love.audio.getRecordingDevices()
+    elseif key == "2" then
+      appdata_music = audio.loadMusic()
+    else
+      local function catch_nil() end
+      (key_functions[key] or catch_nil)()
+    end
+  end
 end
 
 -- when window resizes, scale

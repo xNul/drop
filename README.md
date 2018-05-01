@@ -15,6 +15,7 @@ To add music, either drag and drop your music on the window or make sure you run
   - fully scaling ui
   - realtime ffi-implemented rfft calculations (really fast and efficient spectrum generation)
   - decoder/queueable audio support
+  - microphone and audio input support (with this you can visualize all audio output!)
   - keyboard music controls and now graphical music controls (with color accents!)
   - scrub bar, timestamps, and draggable scrub head with an updating visualization
   - frame-by-frame visualization navigation

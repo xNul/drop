@@ -381,7 +381,7 @@ function gui.playback:activate()
     audio.play()
     playback_quad = "pause"
     gui.scale()
-  elseif audio.isPlaying() then
+  elseif audio.isPlaying() or audio.isPlayingMicrophone() then
     audio.pause()
     playback_quad = "play"
     gui.scale()

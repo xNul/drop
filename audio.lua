@@ -2,7 +2,11 @@ local audio = {}
 local decoder_buffer = 2048
 local seconds_per_buffer = 0
 local queue_size = 0
-local decoder_array = {}
+local sample_sum = 0
+local decoder_array = {0,0,0,0,0,0,0}
+decoder_array[0] = 0
+local sample_count = {0,0,0,0,0,0,0}
+sample_count[0] = 0
 local check_old = 0
 local end_of_song = false
 if not love.filesystem.getInfo("music") then love.filesystem.createDirectory("music") end
@@ -14,6 +18,8 @@ local time_count = 0
 local music_list = nil
 local loop_toggle = false
 local shuffle_toggle = false
+local microphone_active = false
+local microphone_device
 
 function audio.update()
 	-- plays first song
@@ -21,7 +27,7 @@ function audio.update()
 		love.audio.setVolume(0.5)
 		audio.changeSong(1)
 	end
-
+  
 	-- when song finished, play next one
 	if decoder_array[queue_size] == nil then
 		audio.changeSong(1)
@@ -65,7 +71,37 @@ function audio.update()
 	end
 end
 
+function audio.updateMicrophone()
+  -- manage decoder processing and audio queue
+	local check = microphone_device:getSampleCount()
+	if check >= 448 and not is_paused then
+    sample_sum = sample_sum+check-sample_count[0]
+  
+    -- time to make room for new sounddata.  Shift everything.
+		for i=0, 2*queue_size-2 do
+			decoder_array[i] = decoder_array[i+1]
+      sample_count[i] = sample_count[i+1]
+		end
+
+    local tmp = microphone_device:getData()
+    decoder_array[2*queue_size-1] = tmp
+    sample_count[2*queue_size-1] = check
+    current_song:queue(tmp)
+    if not current_song:isPlaying() then current_song:play() end
+	end
+end
+
+function audio.isPlayingMicrophone()
+  return microphone_active
+end
+
+function audio.getSampleSum()
+  return sample_sum
+end
+
 function audio.loadMusic()
+  if microphone_active then return end
+
 	music_list = recursiveEnumerate("music")
 
 	local music_exists = true
@@ -78,6 +114,8 @@ function audio.loadMusic()
 end
 
 function audio.addSong(file)
+  if microphone_active then return end
+
   if music_list == nil then
     music_list = {}
   end
@@ -120,9 +158,16 @@ function audio.getSongName()
 	return song_name
 end
 
+function audio.setSongName(n)
+  song_name = n
+end
+
 function audio.play()
 	is_paused = false
-	current_song:play()
+  if microphone_active then
+    microphone_device:start(2048, 44100)
+  end
+  current_song:play()
 end
 
 function audio.toggleLoop()
@@ -147,6 +192,23 @@ end
 
 function audio.getDecoderBuffer()
 	return decoder_buffer
+end
+
+function audio.playMicrophone(device)
+  device:start(2048, 44100)
+  microphone_active = true
+  microphone_device = device
+  
+  -- setup sounddata info
+	sample_rate = device:getSampleRate()
+	bit_depth = device:getBitDepth()
+	channels = device:getChannelCount()
+  
+  queue_size = 4
+  current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
+  
+  gui.volume:activate("volume1")
+  love.audio.setVolume(0)
 end
 
 -- goes to position in song
@@ -212,7 +274,10 @@ end
 
 function audio.pause()
 	is_paused = true
-	current_song:pause()
+	if microphone_active then
+    microphone_device:stop()
+  end
+  current_song:pause()
 end
 
 function audio.getChannels()
@@ -241,6 +306,27 @@ function audio.getDecoderSample(buffer)
 	else
 		return 0
 	end
+end
+
+function audio.getSampleMicrophone(buffer)
+  local sample
+	local index
+  local found_flag = false
+  local sum = 0
+  for i=0, #decoder_array-1 do
+    sum = sum+sample_count[i]
+    if buffer < sum then
+      index = i
+      sample = buffer-(sum-sample_count[i])
+      found_flag = true
+      break
+    end
+  end
+  
+  if not found_flag then return 0 end
+  
+	-- finds sample using decoders
+  return decoder_array[index]:getSample(sample)
 end
 
 -- returns position in song
@@ -302,6 +388,8 @@ end
 -- Song Handling --
 -- only pass 0, 1, and -1 for now
 function audio.changeSong(number)
+  if microphone_active or not audio.musicExists() then return end
+
   if not loop_toggle then
     if shuffle_toggle then
       song_id = math.random(1, #music_list)

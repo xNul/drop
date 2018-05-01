@@ -41,6 +41,29 @@ function spectrum.generateWaveform()
 	return spectrum
 end
 
+function spectrum.generateMicrophoneWaveform()
+  local wave = {}
+  local channels = 1
+  
+	--[[ generates wave input for fft from audio. Optimized
+  to take any number of channels (ex: Mono, Stereo, 5.1, 7.1)
+  Not completely supported by Love2D yet ]]
+	for i=1, size do
+		local new_sample = 0
+		for j=0, channels-1 do
+			local x = math.min(audio.getSampleSum()-((i-size/2)*channels+j+size/2), audio.getSampleSum()-1) --calculates sample index and centers it
+			new_sample = new_sample+audio.getSampleMicrophone(math.max(x, 0)) --obtains samples and sums them
+		end
+		new_sample = new_sample/channels --averages sample
+		table.insert(wave, new_sample)
+	end
+
+	-- wave->normalized spectrum using ffi
+	local spectrum = fft.fft(ffi.new("float["..size.."]", wave), ffi.new("int", size), ffi.new("int", tick_count))
+
+	return spectrum
+end
+
 function spectrum.draw(waveform)
   local tick_distance
   local tick_width
