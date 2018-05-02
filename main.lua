@@ -320,7 +320,7 @@ function love.keypressed(key, scancode, isrepeat)
 	gui.sleep(false)
 	sleep_counter = 0
 
-  if not audio.musicExists() then
+  if not audio.musicExists() and not audio.isPlayingMicrophone() then
     if microphone_init then
       local key_int = tonumber(key)
       if key_int ~= nil and key_int > 0 and key_int <= #devices_list then
@@ -333,10 +333,10 @@ function love.keypressed(key, scancode, isrepeat)
       devices_list = love.audio.getRecordingDevices()
     elseif key == "2" then
       appdata_music = audio.loadMusic()
-    else
-      local function catch_nil() end
-      (key_functions[key] or catch_nil)()
     end
+  else
+    local function catch_nil() end
+    (key_functions[key] or catch_nil)()
   end
 end
 
