@@ -15,12 +15,14 @@ To add music, either drag and drop your music on the window or make sure you run
   - fully scaling ui
   - realtime ffi-implemented rfft calculations (really fast and efficient spectrum generation)
   - decoder/queueable audio support
+  - ID3 metadata support (gets song name/artist when stored in mp3)
   - microphone and audio input support (with this you can visualize all audio output!)
   - keyboard music controls and now graphical music controls (with color accents!)
   - scrub bar, timestamps, and draggable scrub head with an updating visualization
   - frame-by-frame visualization navigation
   - shuffle and loop functionality
   - volume and mute controls
+  - color fade mechanic
   - spectrum visualization
   - multiple colors
   - doesn't run fft calculations when minimized
@@ -35,6 +37,7 @@ To add music, either drag and drop your music on the window or make sure you run
   - Drag the scrub head to change time
   - r, g, and b: change visualization color
   - s and l: Shuffle and Loop
+  - i: toggle fade
   - m: toggle mute
   - f: Fullscreen Mode
   - 1, 2, 3, and 4: change visualization type
