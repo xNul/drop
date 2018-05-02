@@ -1,3 +1,5 @@
+id3 = require("id3")
+
 local audio = {}
 local decoder_buffer = 2048
 local seconds_per_buffer = 0
@@ -22,26 +24,26 @@ local microphone_active = false
 local microphone_device
 
 function audio.update()
-	-- plays first song
-	if current_song == nil then
-		love.audio.setVolume(0.5)
-		audio.changeSong(1)
-	end
+  -- plays first song
+  if current_song == nil then
+    love.audio.setVolume(0.5)
+    audio.changeSong(1)
+  end
   
-	-- when song finished, play next one
-	if decoder_array[queue_size] == nil then
-		audio.changeSong(1)
+  -- when song finished, play next one
+  if decoder_array[queue_size] == nil then
+    audio.changeSong(1)
   elseif decoder_array[0] == nil then
     audio.changeSong(-1)
     audio.decoderSeek(audio.getDuration())
-	elseif not is_paused and not current_song:isPlaying() then
-		audio.play()
-	end
+  elseif not is_paused and not current_song:isPlaying() then
+    audio.play()
+  end
 
 
-	-- manage decoder processing and audio queue
-	local check = current_song:getFreeBufferCount()
-	if check > 0 and not is_paused then
+  -- manage decoder processing and audio queue
+  local check = current_song:getFreeBufferCount()
+  if check > 0 and not is_paused then
     if end_of_song then
       -- update time_count for the last final miliseconds of the song
       time_count = time_count+(check-check_old)*seconds_per_buffer
@@ -51,44 +53,44 @@ function audio.update()
     end
 
     -- time to make room for new sounddata.  Shift everything.
-		for i=0, 2*queue_size-1 do
-			decoder_array[i] = decoder_array[i+check]
-		end
+    for i=0, 2*queue_size-1 do
+      decoder_array[i] = decoder_array[i+check]
+    end
 
     -- retrieve new sounddata
-		while check > 0 do
-			local tmp = decoder:decode()
-			if tmp ~= nil then
-				current_song:queue(tmp)
-				decoder_array[2*queue_size-check] = tmp
-				check = check-1
-			else
+    while check > 0 do
+      local tmp = decoder:decode()
+      if tmp ~= nil then
+        current_song:queue(tmp)
+        decoder_array[2*queue_size-check] = tmp
+        check = check-1
+      else
         end_of_song = true
-				decoder_array[2*queue_size-check] = tmp
-				check = check-1
-			end
-		end
-	end
+        decoder_array[2*queue_size-check] = tmp
+        check = check-1
+      end
+    end
+  end
 end
 
 function audio.updateMicrophone()
   -- manage decoder processing and audio queue
-	local check = microphone_device:getSampleCount()
-	if check >= 448 and not is_paused then
+  local check = microphone_device:getSampleCount()
+  if check >= 448 and not is_paused then
     sample_sum = sample_sum+check-sample_count[0]
   
     -- time to make room for new sounddata.  Shift everything.
-		for i=0, 2*queue_size-2 do
-			decoder_array[i] = decoder_array[i+1]
+    for i=0, 2*queue_size-2 do
+      decoder_array[i] = decoder_array[i+1]
       sample_count[i] = sample_count[i+1]
-		end
+    end
 
     local tmp = microphone_device:getData()
     decoder_array[2*queue_size-1] = tmp
     sample_count[2*queue_size-1] = check
     current_song:queue(tmp)
     if not current_song:isPlaying() then current_song:play() end
-	end
+  end
 end
 
 function audio.isPlayingMicrophone()
@@ -102,15 +104,15 @@ end
 function audio.loadMusic()
   if microphone_active then return end
 
-	music_list = recursiveEnumerate("music")
+  music_list = recursiveEnumerate("music")
 
-	local music_exists = true
-	if next(music_list) == nil then
-		music_exists = false
+  local music_exists = true
+  if next(music_list) == nil then
+    music_exists = false
     music_list = nil
-	end
+  end
 
-	return music_exists
+  return music_exists
 end
 
 function audio.addSong(file)
@@ -121,13 +123,13 @@ function audio.addSong(file)
   end
   
   local format_table = {
-		".mp3", ".wav", ".ogg", ".oga", ".ogv",
-		".699", ".amf", ".ams", ".dbm", ".dmf",
-		".dsm", ".far", ".pat", ".j2b", ".mdl",
-		".med", ".mod", ".mt2", ".mtm", ".okt",
-		".psm", ".s3m", ".stm", ".ult", ".umx",
-		".xm", ".abc", ".mid", ".it"
-	}
+    ".mp3", ".wav", ".ogg", ".oga", ".ogv",
+    ".699", ".amf", ".ams", ".dbm", ".dmf",
+    ".dsm", ".far", ".pat", ".j2b", ".mdl",
+    ".med", ".mod", ".mt2", ".mtm", ".okt",
+    ".psm", ".s3m", ".stm", ".ult", ".umx",
+    ".xm", ".abc", ".mid", ".it"
+  }
   
   local filename = file:getFilename()
   local valid_format = false
@@ -151,11 +153,11 @@ function audio.musicExists()
 end
 
 function audio.isPaused()
-	return is_paused
+  return is_paused
 end
 
 function audio.getSongName()
-	return song_name
+  return song_name
 end
 
 function audio.setSongName(n)
@@ -163,7 +165,7 @@ function audio.setSongName(n)
 end
 
 function audio.play()
-	is_paused = false
+  is_paused = false
   if microphone_active then
     microphone_device:start(2048, 44100)
   end
@@ -179,7 +181,7 @@ function audio.toggleShuffle()
 end
 
 function audio.isPlaying()
-	return ((current_song ~= nil) and current_song:isPlaying()) or false
+  return ((current_song ~= nil) and current_song:isPlaying()) or false
 end
 
 function audio.getDuration()
@@ -187,11 +189,11 @@ function audio.getDuration()
 end
 
 function audio.getQueueSize()
-	return queue_size
+  return queue_size
 end
 
 function audio.getDecoderBuffer()
-	return decoder_buffer
+  return decoder_buffer
 end
 
 function audio.playMicrophone(device)
@@ -200,9 +202,9 @@ function audio.playMicrophone(device)
   microphone_device = device
   
   -- setup sounddata info
-	sample_rate = device:getSampleRate()
-	bit_depth = device:getBitDepth()
-	channels = device:getChannelCount()
+  sample_rate = device:getSampleRate()
+  bit_depth = device:getBitDepth()
+  channels = device:getChannelCount()
   
   queue_size = 4
   current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
@@ -213,7 +215,7 @@ end
 
 -- goes to position in song
 function audio.decoderSeek(t)
-	time_count = t
+  time_count = t
   
   -- prevent errors at the beginning of the song
   -- generate nil data (indicates to change song)
@@ -240,7 +242,7 @@ function audio.decoderSeek(t)
     offset_time = queue_pos+offset_time
   end
   
-	decoder:seek(offset_time)
+  decoder:seek(offset_time)
   
   -- fill with new sounddata
   for i=start, queue_size-1 do
@@ -269,48 +271,48 @@ function audio.decoderSeek(t)
 end
 
 function audio.getBitDepth()
-	return bit_depth
+  return bit_depth
 end
 
 function audio.pause()
-	is_paused = true
-	if microphone_active then
+  is_paused = true
+  if microphone_active then
     microphone_device:stop()
   end
   current_song:pause()
 end
 
 function audio.getChannels()
-	return channels
+  return channels
 end
 
 function audio.getSampleRate()
-	return sample_rate
+  return sample_rate
 end
 
 -- finds sample using decoders
 function audio.getDecoderSample(buffer)
-	local sample_range = decoder_buffer/(bit_depth/8)
+  local sample_range = decoder_buffer/(bit_depth/8)
 
-	-- some defensive code..
-	if buffer < 0 or buffer >= 2*sample_range*queue_size then
-		love.errhand("buffer out of bounds "..buffer)
-	end
+  -- some defensive code..
+  if buffer < 0 or buffer >= 2*sample_range*queue_size then
+    love.errhand("buffer out of bounds "..buffer)
+  end
 
-	local sample = buffer/sample_range
-	local index = math.floor(sample)
+  local sample = buffer/sample_range
+  local index = math.floor(sample)
   
-	-- finds sample using decoders
-	if audio.decoderTell('samples')+buffer < decoder:getDuration()*sample_rate then
-		return decoder_array[index]:getSample((sample-index)*sample_range)
-	else
-		return 0
-	end
+  -- finds sample using decoders
+  if audio.decoderTell('samples')+buffer < decoder:getDuration()*sample_rate then
+    return decoder_array[index]:getSample((sample-index)*sample_range)
+  else
+    return 0
+  end
 end
 
 function audio.getSampleMicrophone(buffer)
   local sample
-	local index
+  local index
   local found_flag = false
   local sum = 0
   for i=0, #decoder_array-1 do
@@ -325,64 +327,71 @@ function audio.getSampleMicrophone(buffer)
   
   if not found_flag then return 0 end
   
-	-- finds sample using decoders
+  -- finds sample using decoders
   return decoder_array[index]:getSample(sample)
 end
 
 -- returns position in song
 function audio.decoderTell(unit)
-	if unit == 'samples' then
-		return time_count*sample_rate
-	else
-		return time_count
-	end
+  if unit == 'samples' then
+    return time_count*sample_rate
+  else
+    return time_count
+  end
 end
 
 -- File Handling --
 function recursiveEnumerate(folder)
-	local format_table = {
-		".mp3", ".wav", ".ogg", ".oga", ".ogv",
-		".699", ".amf", ".ams", ".dbm", ".dmf",
-		".dsm", ".far", ".pat", ".j2b", ".mdl",
-		".med", ".mod", ".mt2", ".mtm", ".okt",
-		".psm", ".s3m", ".stm", ".ult", ".umx",
-		".xm", ".abc", ".mid", ".it"
-	}
+  local format_table = {
+    ".mp3", ".wav", ".ogg", ".oga", ".ogv",
+    ".699", ".amf", ".ams", ".dbm", ".dmf",
+    ".dsm", ".far", ".pat", ".j2b", ".mdl",
+    ".med", ".mod", ".mt2", ".mtm", ".okt",
+    ".psm", ".s3m", ".stm", ".ult", ".umx",
+    ".xm", ".abc", ".mid", ".it"
+  }
 
-	local lfs = love.filesystem
-	local music_table = lfs.getDirectoryItems(folder)
-	local complete_music_table = {}
-	local valid_format = false
-	local index = 1
+  local lfs = love.filesystem
+  local music_table = lfs.getDirectoryItems(folder)
+  local complete_music_table = {}
+  local valid_format = false
+  local index = 1
 
-	for i,v in ipairs(music_table) do
-		local file = folder.."/"..v
-		for j,w in ipairs(format_table) do
-			if v:sub(-4) == w then
-				valid_format = true
-				break
-			end
-		end
-		if lfs.getInfo(file)["type"] == "file" and valid_format then
-			complete_music_table[index] = {}
-			complete_music_table[index][1] = lfs.newFile(file)
-			complete_music_table[index][2] = v:sub(1, -5)
+  for i,v in ipairs(music_table) do
+    local file = folder.."/"..v
+    for j,w in ipairs(format_table) do
+      if v:sub(-4) == w then
+        valid_format = true
+        break
+      end
+    end
+    if lfs.getInfo(file)["type"] == "file" and valid_format then
+      complete_music_table[index] = {}
+      complete_music_table[index][1] = lfs.newFile(file)
+      local song_title = v:sub(1, -5)
+      if v:sub(-4) == ".mp3" then
+        local tags = id3.readtags(complete_music_table[index][1])
+        if tags ~= nil and tags.title ~= nil and tags.title ~= "" and tags.artist ~= nil and tags.artist ~= "" then
+          song_title = tags.artist:gsub("[^\x20-\x7E]", '').." - "..tags.title:gsub("[^\x20-\x7E]", '')
+        end
+      end
+      complete_music_table[index][2] = song_title
 
-			index = index+1
-			valid_format = false
-		elseif lfs.getInfo(file)["type"] == "directory" then
-			local recursive_table = recursiveEnumerate(file)
-			for j,w in ipairs(recursive_table) do
-				complete_music_table[index] = {}
-				complete_music_table[index][1] = w[1]
-				complete_music_table[index][2] = w[2]
-				
-				index = index+1
-			end
-		end
-	end
+      index = index+1
+      valid_format = false
+    elseif lfs.getInfo(file)["type"] == "directory" then
+      local recursive_table = recursiveEnumerate(file)
+      for j,w in ipairs(recursive_table) do
+        complete_music_table[index] = {}
+        complete_music_table[index][1] = w[1]
+        complete_music_table[index][2] = w[2]
+        
+        index = index+1
+      end
+    end
+  end
 
-	return complete_music_table
+  return complete_music_table
 end
 
 -- Song Handling --
@@ -398,45 +407,45 @@ function audio.changeSong(number)
     end
   end
 
-	-- loops song table
-	if song_id < 1 then
-		song_id = #music_list
-	elseif song_id > #music_list then
-		song_id = 1
-	end
+  -- loops song table
+  if song_id < 1 then
+    song_id = #music_list
+  elseif song_id > #music_list then
+    song_id = 1
+  end
 
-	song_name = music_list[song_id][2]
+  song_name = music_list[song_id][2]
 
-	-- setup decoder info
-	decoder = love.sound.newDecoder(music_list[song_id][1], decoder_buffer)
-	sample_rate = decoder:getSampleRate()
-	bit_depth = decoder:getBitDepth()
-	channels = decoder:getChannelCount()
-	seconds_per_buffer = decoder_buffer/(sample_rate*channels*bit_depth/8)
+  -- setup decoder info
+  decoder = love.sound.newDecoder(music_list[song_id][1], decoder_buffer)
+  sample_rate = decoder:getSampleRate()
+  bit_depth = decoder:getBitDepth()
+  channels = decoder:getChannelCount()
+  seconds_per_buffer = decoder_buffer/(sample_rate*channels*bit_depth/8)
 
-	-- start song queue
+  -- start song queue
   end_of_song = false
   check_old = 0
   queue_size = 4+math.max(math.floor(2*spectrum.getSize()/(decoder_buffer/(bit_depth/8))), 1)
-	current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
-	local check = current_song:getFreeBufferCount()
-	time_count = 0
+  current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
+  local check = current_song:getFreeBufferCount()
+  time_count = 0
   gui.timestamp_end:setValue(audio.getDuration())
   local tmp = decoder:decode()
   for i=0, queue_size do
     decoder_array[i] = tmp
   end
   check = check-1
-	while check ~= 0 do
-		tmp = decoder:decode()
-		if tmp ~= nil then
-			current_song:queue(tmp)
-			decoder_array[2*queue_size-check] = tmp
-			check = check-1
-		end
-	end
+  while check ~= 0 do
+    tmp = decoder:decode()
+    if tmp ~= nil then
+      current_song:queue(tmp)
+      decoder_array[2*queue_size-check] = tmp
+      check = check-1
+    end
+  end
 
-	if is_paused then audio.pause() else audio.play() end
+  if is_paused then audio.pause() else audio.play() end
 end
 
 return audio
