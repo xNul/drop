@@ -61,6 +61,10 @@ function love.load()
     ["l"] = function ()
 			gui.loop:activate()
 		end,
+    ["i"] = function ()
+      fade_activated = not fade_activated
+      setColor(nil, 1)
+    end,
     ["m"] = function ()
       local current_volume = love.audio.getVolume()
       
@@ -134,6 +138,7 @@ function love.load()
   
 	fade_interval_counter = 1
 	fade_bool = false
+  fade_activated = false
 	color = "g"
 	fade_intensity = 1
 	setColor("g", 1)
@@ -153,13 +158,11 @@ function love.update(dt)
 
 		if (spectrum.wouldChange() or audio.isPlayingMicrophone()) and window_visible and not love.window.isMinimized() then
 			-- fft calculations (generates waveform for visualization)
-			if audio.isPlayingMicrophone() then waveform = spectrum.generateMicrophoneWaveform() else waveform = spectrum.generateWaveform() end
-
-			--fade timer: limits fade update every .2 sec
-			fade_interval_counter = fade_interval_counter+dt
-			if fade_interval_counter >= 0.2 then
-				fade_bool = true
-			end
+			if audio.isPlayingMicrophone() then
+        waveform = spectrum.generateMicrophoneWaveform()
+      else
+        waveform = spectrum.generateWaveform()
+      end
 		end
 
 		--overlay timer: puts overlay to sleep after 7 sec of inactivity
@@ -179,11 +182,8 @@ function love.draw()
   end
 
 	-- controls visualization fade
-	if fade_bool then
-		local fade = spectrum.getAverageTickAmplitude()*60+.2
-
-		setColor(nil, 1)--fade) --turned off atm
-		fade_bool = false
+	if fade_activated then
+		setColor(nil, spectrum.getAverageTickAmplitude()*120)
 	end
 
 	-- overlay/start_screen drawing
