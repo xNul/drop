@@ -36,12 +36,10 @@ local big_font
 
 function gui.load()
   -------------------------------------- Window --------------------------------------
-	local desktop_width
-  local desktop_height
-  desktop_width, desktop_height = love.window.getDesktopDimensions()
+  local desktop_width, desktop_height = love.window.getDesktopDimensions()
   
-	local window_width = desktop_width*(2/3)
-	local window_height = desktop_height*(2/3)
+	local window_width = 1280
+	local window_height = 720
 
 	local window_position_x = (desktop_width-window_width)/2
 	local window_position_y = (desktop_height-window_height)*(5/12) --5/12 to account for taskbar/dock
@@ -56,8 +54,7 @@ function gui.load()
 
 	--[[ modify default screen ratio <<TEST>>
 	goal is to optimize Drop for screen ratios other than 16/10 ]]
-	local ratio_width = 16
-	local ratio_height = 10
+	local ratio_width, ratio_height = 16, 10
 	scale_ratio_width = (10/ratio_height)*ratio_width
 
   graphics_width, graphics_height = love.graphics.getDimensions()
@@ -472,7 +469,11 @@ function gui.fullscreen:activate()
     ["fullscreen_exit"] = "fullscreen"
   }
   
+  local x, y = love.mouse.getPosition()
+  local win_x1, win_y1 = love.window.getPosition()
   love.window.setFullscreen(not love.window.getFullscreen())
+  local win_x2, win_y2 = love.window.getPosition()
+  love.mouse.setPosition(win_x1+x-win_x2, win_y1+y-win_y2)
   fullscreen_quad = fullscreen_rotation[fullscreen_quad]
   gui.scale()
 end
