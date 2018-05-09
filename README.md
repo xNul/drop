@@ -1,4 +1,4 @@
-Drop, a L�VE visualizer and music player
+Drop, a LÖVE visualizer and music player
 ==========
 
 I've always loved music and visualizations, but mainstream visualizers are frequently so packed with features
