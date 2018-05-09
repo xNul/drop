@@ -1,3 +1,6 @@
+# turn console on or off
+CONSOLE=0
+
 # obtain complete directory location
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -11,7 +14,12 @@ cd $DIR
 echo "cd $DIR" > tmp.sh
 echo "love.app/Contents/MacOS/love \"../..\"" >> tmp.sh
 chmod +x tmp.sh
-./tmp.sh &
+if [ $CONSOLE == 1 ]
+then
+  ./tmp.sh
+else
+  ./tmp.sh &
+fi
 rm tmp.sh
 
 # if TEMP and DIR are different, this script was opened using Finder.
