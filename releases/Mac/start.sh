@@ -31,7 +31,7 @@ then
 
   # if there's only 1 Terminal window, kill process.
   # if there's more than 1 Terminal window, only exit current window.
-  if [ $cnt == 1 ]
+  if [ $cnt <= 1 ]
   then
     osascript -e 'tell application "Terminal" to quit' & exit
   else
