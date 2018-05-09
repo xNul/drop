@@ -1,4 +1,4 @@
-Drop, a LÖVE visualizer and music player
+Drop, a Lï¿½VE visualizer and music player
 ==========
 
 I've always loved music and visualizations, but mainstream visualizers are frequently so packed with features
@@ -49,7 +49,7 @@ To add music, either drag and drop your music on the window or make sure you run
 2. Extract it and navigate to the drop-master folder
 
 For Windows, navigate to "releases", "Windows", and then double click "start.bat" to run Drop.    
-For Mac, navigate to "releases", "Mac", and then run `bash start.sh` from Terminal
+For Mac, navigate to "releases", "Mac", and then run `./start.sh` from Terminal.
 
 ### Credit:
 Drop uses the [drop-fft](https://github.com/nabakin/drop-fft) library which is a modified version of the [kissfft](https://github.com/bazaar-projects/kissfft) library.  All credit for the amazing fft implementation should go to its creator Mark Borgerding.
