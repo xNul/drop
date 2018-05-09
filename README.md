@@ -4,10 +4,8 @@ Drop, a LÖVE visualizer and music player
 I've always loved music and visualizations, but mainstream visualizers are frequently so packed with features
 that they feel cumbersome. They have some neat graphics, but aren't very good at reflecting the actual beat of
 the music. I think visualizers have a lot of potential integrated into music players and so, I decided to
-create Drop; a simple, efficient music player/visualizer.
-
-![music visualization](https://i.imgur.com/91ovSRE.png)
-
+create Drop; a simple, efficient music player/visualizer.    
+![music visualization](https://i.imgur.com/91ovSRE.png)    
 To add music, either drag and drop your music on the window or make sure you run the visualizer at least once, exit, navigate to your system's appdata directory, open "LOVE/Drop/music", and place your music files/folders in there.
 
 ### Features:
