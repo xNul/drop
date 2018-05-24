@@ -156,7 +156,7 @@ function love.update(dt)
 	if audio.musicExists() or audio.isPlayingMicrophone() then
 		if audio.isPlayingMicrophone() then audio.updateMicrophone() else audio.update() end
 
-		if (spectrum.wouldChange() or audio.isPlayingMicrophone()) and window_visible and not love.window.isMinimized() then
+		if spectrum.wouldChange() and window_visible and not love.window.isMinimized() then
 			-- fft calculations (generates waveform for visualization)
 			if audio.isPlayingMicrophone() then
         waveform = spectrum.generateMicrophoneWaveform()
@@ -265,6 +265,11 @@ function love.mousepressed(x, y, key, istouch)
   
 	-- detects if scrub bar clicked and moves to the corresponding point in time
 	if key == 1 and audio.musicExists() and gui.scrubbar:inBoundsX(x) and gui.scrubbar:inBoundsY(y) then
+    if audio.isPlaying() then
+			scrub_head_pause = true
+			audio.pause()
+		end
+  
 		audio.decoderSeek(gui.scrubbar:getProportion(x)*audio.getDuration())
 		scrub_head_pressed = true
 	end
@@ -296,15 +301,8 @@ function love.mousemoved(x, y, dx, dy, istouch)
   end
 
 	-- makes scrub bar draggable
-	if scrub_head_pressed then
-		if audio.isPlaying() then
-			scrub_head_pause = true
-			audio.pause()
-		end
-
-		if gui.scrubbar:inBoundsX(x) then
-			audio.decoderSeek(gui.scrubbar:getProportion(x)*audio.getDuration())
-		end
+	if scrub_head_pressed and gui.scrubbar:inBoundsX(x) then
+		audio.decoderSeek(gui.scrubbar:getProportion(x)*audio.getDuration())
 	end
 end
 
