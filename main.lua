@@ -353,6 +353,9 @@ function love.keypressed(key, scancode, isrepeat)
       devices_list = love.audio.getRecordingDevices()
     elseif key == "2" then
       appdata_music = audio.loadMusic()
+    else
+      local function catch_nil() end
+      (key_functions[key] or catch_nil)()
     end
   else
     local function catch_nil() end
