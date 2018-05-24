@@ -16,6 +16,18 @@ local visualizer_type = 3
 local tick_amplitude_average = 0
 local tick_count = 128
 
+function spectrum.reload()
+  -- fft gen
+  spectrum = {}
+  size = 2048
+  old_sample = 0
+
+  -- spectrum draw
+  visualizer_type = 3
+  tick_amplitude_average = 0
+  tick_count = 128
+end
+
 function spectrum.generateWaveform()
 	local wave = {}
   local channels = audio.getChannels()

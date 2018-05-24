@@ -16,6 +16,7 @@ local song_id = 0
 local song_name = nil
 local is_paused = false
 local current_song = nil
+local decoder = nil
 local time_count = 0
 local music_list = nil
 local loop_toggle = false
@@ -27,6 +28,7 @@ function audio.update()
   -- plays first song
   if current_song == nil then
     love.audio.setVolume(0.5)
+    gui.volume:activate("volume2")
     audio.changeSong(1)
   end
   
@@ -170,6 +172,39 @@ function audio.play()
     microphone_device:start(2048, 44100)
   end
   current_song:play()
+end
+
+function audio.stop()
+  current_song:stop()
+  if microphone_active then
+    microphone_device:stop()
+    microphone_active = false
+  end
+end
+
+function audio.reload()
+  if current_song ~= nil then audio.stop() end
+  
+  decoder_buffer = 2048
+  seconds_per_buffer = 0
+  queue_size = 0
+  sample_sum = 0
+  decoder_array = {0,0,0,0,0,0,0}
+  decoder_array[0] = 0
+  sample_count = {0,0,0,0,0,0,0}
+  sample_count[0] = 0
+  check_old = 0
+  end_of_song = false
+  song_id = 0
+  song_name = nil
+  is_paused = false
+  current_song = nil
+  time_count = 0
+  music_list = nil
+  decoder = nil
+  loop_toggle = false
+  shuffle_toggle = false
+  microphone_active = false
 end
 
 function audio.toggleLoop()

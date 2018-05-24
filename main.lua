@@ -152,6 +152,28 @@ function love.load()
 	------------------------------------------------------------------------------------
 end
 
+function reload()
+  waveform = {}
+	scrub_head_pause = false
+	scrub_head_pressed = false
+
+	appdata_music = true
+  
+	fade_interval_counter = 1
+	fade_bool = false
+  fade_activated = false
+	color = "g"
+	fade_intensity = 1
+	setColor("g", 1)
+	sleep_counter = 0
+	window_visible = true
+  last_frame_time = 0
+  cursor_hand_activated = false
+  previous_volume = 0
+  microphone_init = false
+  devices_list = nil
+end
+
 function love.update(dt)
 	if audio.musicExists() or audio.isPlayingMicrophone() then
 		if audio.isPlayingMicrophone() then audio.updateMicrophone() else audio.update() end
@@ -251,7 +273,7 @@ function love.mousepressed(x, y, key, istouch)
 	gui.sleep(false)
 	sleep_counter = 0
   
-  local button_table = {"left", "playback", "right", "shuffle", "loop", "volume", "fullscreen"}
+  local button_table = {"left", "playback", "right", "shuffle", "loop", "volume", "fullscreen", "menu"}
   
   local button
   for i,v in ipairs(button_table) do
@@ -292,7 +314,7 @@ function love.mousemoved(x, y, dx, dy, istouch)
 	gui.sleep(false)
 	sleep_counter = 0
   
-  if gui.left:inBoundsY(y) and ((gui.scrubbar:inBoundsY(y) and gui.scrubbar:inBoundsX(x)) or gui.leftPanel:inBoundsX(x) or gui.rightPanel:inBoundsX(x)) then
+  if (gui.left:inBoundsY(y) and ((gui.scrubbar:inBoundsY(y) and gui.scrubbar:inBoundsX(x)) or gui.leftPanel:inBoundsX(x) or gui.rightPanel:inBoundsX(x))) or (gui.menu:inBoundsX(x) and gui.menu:inBoundsY(y)) then
     if not cursor_hand_activated then love.mouse.setCursor(love.mouse.getSystemCursor("hand")) end
     cursor_hand_activated = true
   elseif cursor_hand_activated then

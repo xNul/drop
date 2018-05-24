@@ -1,4 +1,4 @@
-local gui = {leftPanel = {}, rightPanel = {}, scrubbar = {}, left = {}, playback = {}, right = {}, shuffle = {}, loop = {}, volume = {}, fullscreen = {}, graphics = {}, timestamp_start = {}, timestamp_end = {}, scrubhead = {}}
+local gui = {leftPanel = {}, rightPanel = {}, scrubbar = {}, left = {}, playback = {}, right = {}, shuffle = {}, loop = {}, volume = {}, fullscreen = {}, menu = {}, graphics = {}, timestamp_start = {}, timestamp_end = {}, scrubhead = {}}
 local scrubbar_x1 = 0
 local scrubbar_y1 = 0
 local scrubbar_x2 = 0
@@ -17,6 +17,8 @@ local volume_quad = "volume2"
 local fullscreen_x = 0
 local fullscreen_quad = "fullscreen"
 local click_area_y = 0
+local menu_x = 0
+local menu_y = 0
 local scrubhead_radius = 0
 local timestamp_start_x = 0
 local timestamp_start_y = 0
@@ -76,10 +78,11 @@ function gui.load()
   sprite_quads["volume1"] = love.graphics.newQuad(480, 240, 240, 240, mc_image_width, mc_image_height)
   sprite_quads["volume2"] = love.graphics.newQuad(720, 240, 240, 240, mc_image_width, mc_image_height)
   sprite_quads["volume3"] = love.graphics.newQuad(0, 480, 240, 240, mc_image_width, mc_image_height)
+  sprite_quads["menu"] = love.graphics.newQuad(240, 480, 240, 240, mc_image_width, mc_image_height)
   sprite_quads["loop"] = love.graphics.newQuad(0, 0, 300, 240, loop_image:getWidth(), loop_image:getHeight())
   sprite_quads["shuffle"] = love.graphics.newQuad(0, 0, 300, 240, shuffle_image:getWidth(), shuffle_image:getHeight())
 
-  sprite_batch = love.graphics.newSpriteBatch(music_control_image, 9)
+  sprite_batch = love.graphics.newSpriteBatch(music_control_image, 10)
   shuffle_sprite = love.graphics.newSpriteBatch(shuffle_image, 1)
   loop_sprite = love.graphics.newSpriteBatch(loop_image, 1)
   local gui_scaling_multiplier = math.max(graphics_height, 480)
@@ -120,7 +123,9 @@ function gui.load()
 
   offset = graphics_width-sprite_square_side_length-medium_spacing-small_spacing
   fullscreen_x = offset-medium_spacing
+  menu_x = offset-large_spacing
   sprites["fullscreen"] = sprite_batch:add(sprite_quads[fullscreen_quad], offset, right_height, 0, scale_x*.93)
+  sprites["menu"] = sprite_batch:add(sprite_quads["menu"], offset, 10, 0, scale_x)
   offset = offset-sprite_square_side_length-large_spacing-small_spacing/2
   volume_x = offset-3*small_spacing/2
   sprites["volume"] = sprite_batch:add(sprite_quads[volume_quad], offset, right_height, 0, scale_x)
@@ -147,6 +152,7 @@ function gui.load()
   scrubbar_y2 = ui_height
 
   click_area_y = graphics_height-gui_scaling_multiplier/16
+  menu_y = scale_x*240+10+medium_spacing
   ------------------------------------------------------------------------------------
 end
 
@@ -188,7 +194,9 @@ function gui.scale()
 
   offset = graphics_width-sprite_square_side_length-medium_spacing-small_spacing
   fullscreen_x = offset-medium_spacing
+  menu_x = offset-large_spacing
   sprite_batch:set(sprites["fullscreen"], sprite_quads[fullscreen_quad], offset, right_height, 0, scale_x*.93)
+  sprite_batch:set(sprites["menu"], sprite_quads["menu"], offset, 10, 0, scale_x)
   offset = offset-sprite_square_side_length-large_spacing-small_spacing/2
   volume_x = offset-3*small_spacing/2
   sprite_batch:set(sprites["volume"], sprite_quads[volume_quad], offset, right_height, 0, scale_x)
@@ -215,6 +223,7 @@ function gui.scale()
   scrubbar_y2 = ui_height
 
   click_area_y = graphics_height-gui_scaling_multiplier/16
+  menu_y = scale_x*240+10+medium_spacing
   ------------------------------------------------------------------------------------
 end
 
@@ -479,6 +488,23 @@ end
 
 function gui.rightPanel:inBoundsX(x)
   return x >= volume_x
+end
+
+function gui.menu:inBoundsX(x)
+  return x <= graphics_width and x >= menu_x
+end
+
+function gui.menu:inBoundsY(y)
+  return y >= 0 and y <= menu_y
+end
+
+function gui.menu:activate()
+  audio.reload()
+  spectrum.reload()
+  reload()
+  
+  playback_quad = "pause"
+  gui.scale()
 end
 
 function gui.graphics:setHeight(height)
