@@ -51,7 +51,3 @@ For Mac, navigate to "releases", "Mac", and then run `./start.sh` from Terminal.
 
 ### Credit:
 Drop uses the [drop-fft](https://github.com/nabakin/drop-fft) library which is a modified version of the [kissfft](https://github.com/bazaar-projects/kissfft) library.  All credit for the amazing fft implementation should go to its creator Mark Borgerding.
-
-### Researched/unfinished features:
-  - when behind windows disable visualizer calcs NOTE: can't do this atm (0.11.0) bc love uses SDL which has issues implementing this.  Currently implemented, but likely error-prone need to test further on other computers
-  - fix background detection on windows: can't because Love uses SDL to handle these things and it's bugged
