@@ -380,13 +380,29 @@ end
 function gui.playback:activate()
   if audio.isPaused() then
     audio.play()
-    playback_quad = "pause"
-    gui.scale()
+    gui.playback:scale("pause")
   elseif audio.isPlaying() or audio.isPlayingMicrophone() then
     audio.pause()
-    playback_quad = "play"
-    gui.scale()
+    gui.playback:scale("play")
   end
+end
+
+function gui.playback:scale(pquad)
+  playback_quad = pquad
+  
+  local gui_scaling_multiplier = math.max(graphics_height, 480)
+  
+  local icon_height = 40
+  local scale_x = gui_scaling_multiplier/(960/(icon_height/240))
+  local sprite_square_side_length = gui_scaling_multiplier/(960/icon_height)
+  
+  local small_spacing = (icon_height/240)*5*gui_scaling_multiplier/120
+  
+  local left_height = graphics_height-sprite_square_side_length-11*small_spacing/8
+  
+  local offset = small_spacing+sprite_square_side_length+small_spacing/2
+  
+  sprite_batch:set(sprites["playback"], sprite_quads[pquad], offset, left_height, 0, scale_x)
 end
 
 function gui.right:inBoundsX(x)
@@ -436,27 +452,57 @@ function gui.volume:inBoundsY(y)
 end
 
 function gui.volume:activate(v)
+  local vquad
+  
   if v == nil then
     local volume_rotation = {
       ["volume1"] = function ()
-        volume_quad = "volume2"
+        vquad = "volume2"
         love.audio.setVolume(0.5)
       end,
       ["volume2"] = function ()
-        volume_quad = "volume3"
+        vquad = "volume3"
         love.audio.setVolume(1)
       end,
       ["volume3"] = function ()
-        volume_quad = "volume1"
+        vquad = "volume1"
         love.audio.setVolume(0)
       end
     }
 
     volume_rotation[volume_quad]()
   else
-    volume_quad = v
+    vquad = v
   end
-  gui.scale()
+  
+  gui.volume:scale(vquad)
+end
+
+function gui.volume:scale(vquad)
+  volume_quad = vquad
+
+  local gui_scaling_multiplier = math.max(graphics_height, 480)
+
+  local icon_height = 40
+  local scale_x = gui_scaling_multiplier/(960/(icon_height/240))
+  local sprite_square_side_length = gui_scaling_multiplier/(960/icon_height)
+  local sprite_rectangle_side_length = gui_scaling_multiplier/(960/(300*(icon_height/240)))
+
+  local small_spacing = (icon_height/240)*5*gui_scaling_multiplier/120
+  local medium_spacing = (icon_height/240)*5*gui_scaling_multiplier/96
+  local large_spacing = (icon_height/240)*5*gui_scaling_multiplier/60
+
+  local right_height = graphics_height-sprite_square_side_length-medium_spacing
+
+  local offset = small_spacing
+  offset = offset+sprite_square_side_length+small_spacing/2
+  offset = offset+sprite_square_side_length+small_spacing/2
+  offset = offset+sprite_square_side_length+small_spacing+small_spacing/2
+  offset = offset+sprite_rectangle_side_length+large_spacing+small_spacing/2
+  offset = graphics_width-sprite_square_side_length-medium_spacing-small_spacing
+  offset = offset-sprite_square_side_length-large_spacing-small_spacing/2
+  
+  sprite_batch:set(sprites["volume"], sprite_quads[vquad], offset, right_height, 0, scale_x)
 end
 
 function gui.fullscreen:inBoundsX(x)
@@ -478,8 +524,34 @@ function gui.fullscreen:activate()
   love.window.setFullscreen(not love.window.getFullscreen())
   local win_x2, win_y2 = love.window.getPosition()
   love.mouse.setPosition(win_x1+x-win_x2, win_y1+y-win_y2)
-  fullscreen_quad = fullscreen_rotation[fullscreen_quad]
-  gui.scale()
+  
+  gui.fullscreen:scale(fullscreen_rotation[fullscreen_quad])
+end
+
+function gui.fullscreen:scale(fquad)
+  fullscreen_quad = fquad
+
+  local gui_scaling_multiplier = math.max(graphics_height, 480)
+
+  local icon_height = 40
+  local scale_x = gui_scaling_multiplier/(960/(icon_height/240))
+  local sprite_square_side_length = gui_scaling_multiplier/(960/icon_height)
+  local sprite_rectangle_side_length = gui_scaling_multiplier/(960/(300*(icon_height/240)))
+
+  local small_spacing = (icon_height/240)*5*gui_scaling_multiplier/120
+  local medium_spacing = (icon_height/240)*5*gui_scaling_multiplier/96
+  local large_spacing = (icon_height/240)*5*gui_scaling_multiplier/60
+
+  local right_height = graphics_height-sprite_square_side_length-medium_spacing
+
+  local offset = small_spacing
+  offset = offset+sprite_square_side_length+small_spacing/2
+  offset = offset+sprite_square_side_length+small_spacing/2
+  offset = offset+sprite_square_side_length+small_spacing+small_spacing/2
+  offset = offset+sprite_rectangle_side_length+large_spacing+small_spacing/2
+  offset = graphics_width-sprite_square_side_length-medium_spacing-small_spacing
+  
+  sprite_batch:set(sprites["fullscreen"], sprite_quads[fquad], offset, right_height, 0, scale_x*.93)
 end
 
 function gui.leftPanel:inBoundsX(x)
@@ -501,10 +573,10 @@ end
 function gui.menu:activate()
   audio.reload()
   spectrum.reload()
+  -- gui.reload() may need to be a thing later on
   reload()
   
-  playback_quad = "pause"
-  gui.scale()
+  gui.playback:scale("pause")
 end
 
 function gui.graphics:setHeight(height)
