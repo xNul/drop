@@ -8,10 +8,10 @@ local playback_x = 0
 local playback_quad = "pause"
 local right_x = 0
 local shuffle_x = 0
-local shuffle_activate = false
+local shuffle_activate = config.shuffle
 local loop_x = 0
 local loop_x_end = 0
-local loop_activate = false
+local loop_activate = config.loop
 local volume_x = 0
 local volume_quad = "volume3"
 local fullscreen_x = 0
@@ -40,22 +40,22 @@ function gui.load()
   -------------------------------------- Window --------------------------------------
   local desktop_width, desktop_height = love.window.getDesktopDimensions()
 
-	local window_width = 1280
-	local window_height = 720
+  local window_width = config.window_size[1]
+  local window_height = config.window_size[2]
 
-	local window_position_x = (desktop_width-window_width)/2
-	local window_position_y = (desktop_height-window_height)*(5/12) --5/12 to account for taskbar/dock
-	love.window.setMode(
-		window_width, window_height,
-		{x=window_position_x, y=window_position_y,
-		resizable=true, highdpi=true}
-	)
-	love.window.setIcon(love.image.newImageData("images/icon.png"))
-	love.window.setTitle("Drop - by nabakin")
-	-- see love.resize for new variables
+  local window_position_x = (desktop_width-window_width)/2
+  local window_position_y = (desktop_height-window_height)*(5/12) --5/12 to account for taskbar/dock
+  love.window.setMode(
+    window_width, window_height,
+    {x=window_position_x, y=window_position_y,
+    resizable=true, highdpi=true, fullscreen=config.fullscreen}
+  )
+  love.window.setIcon(love.image.newImageData("images/icon.png"))
+  love.window.setTitle("Drop - by nabakin")
+  -- see love.resize for new variables
 
   graphics_width, graphics_height = love.graphics.getDimensions()
-	------------------------------------------------------------------------------------
+  ------------------------------------------------------------------------------------
 
 
   --------------------------------- Sprites/Scaling ----------------------------------
@@ -134,8 +134,8 @@ function gui.load()
 
   ------------------------------------- Scaling --------------------------------------
   normal_font = love.graphics.newFont(math.max(graphics_height/30, 16))
-	big_font = love.graphics.newFont(math.max(graphics_height/20, 24))
-	love.graphics.setFont(big_font)
+  big_font = love.graphics.newFont(math.max(graphics_height/20, 24))
+  love.graphics.setFont(big_font)
 
   offset_x = offset_x+sprite_rectangle_side_length+3*large_spacing
   offset = offset-3*large_spacing-normal_font:getWidth("00:00")
@@ -146,7 +146,7 @@ function gui.load()
   timestamp_end_x = offset
   timestamp_end_y = ui_height-normal_font:getHeight("00:00")/2
 
-	scrubbar_x1 = offset_x+normal_font:getWidth("00:00")+large_spacing
+  scrubbar_x1 = offset_x+normal_font:getWidth("00:00")+large_spacing
   scrubbar_y1 = ui_height
   scrubbar_x2 = offset-large_spacing
   scrubbar_y2 = ui_height
@@ -158,7 +158,7 @@ end
 
 function gui.scale()
   -------------------------------------- Sprites -------------------------------------
-	graphics_width, graphics_height = love.graphics.getDimensions()
+  graphics_width, graphics_height = love.graphics.getDimensions()
   local gui_scaling_multiplier = math.max(graphics_height, 480)
 
   local icon_height = 40
@@ -205,7 +205,7 @@ function gui.scale()
 
   ------------------------------------- Scrubbar -------------------------------------
   normal_font = love.graphics.newFont(math.max(graphics_height/30, 16))
-	big_font = love.graphics.newFont(math.max(graphics_height/20, 24))
+  big_font = love.graphics.newFont(math.max(graphics_height/20, 24))
 
   offset_x = offset_x+sprite_rectangle_side_length+3*large_spacing
   offset = offset-3*large_spacing-normal_font:getWidth("00:00")
@@ -228,28 +228,28 @@ function gui.scale()
 end
 
 function gui.overlay()
-	if not gui.sleep() then
-		love.graphics.setColor(1, 1, 1)
-		love.graphics.setFont(normal_font)
-		if audio.getSongName() ~= nil then
-			love.graphics.print(audio.getSongName(), 10, 10)
-		end
+  if not gui.sleep() then
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.setFont(normal_font)
+    if audio.getSongName() ~= nil then
+      love.graphics.print(audio.getSongName(), 10, 10)
+    end
 
-		timestamp_start_value = secondsToString(audio.decoderTell())
+    timestamp_start_value = secondsToString(audio.decoderTell())
 
-		-- draw ui elements
-		love.graphics.line(
-			scrubbar_x1, scrubbar_y1,
-			scrubbar_x2, scrubbar_y2
-		)
-		love.graphics.print(
-			timestamp_start_value, timestamp_start_x,
-			timestamp_start_y
-		)
-		love.graphics.print(
-			timestamp_end_value, timestamp_end_x,
-			timestamp_end_y
-		)
+    -- draw ui elements
+    love.graphics.line(
+      scrubbar_x1, scrubbar_y1,
+      scrubbar_x2, scrubbar_y2
+    )
+    love.graphics.print(
+      timestamp_start_value, timestamp_start_x,
+      timestamp_start_y
+    )
+    love.graphics.print(
+      timestamp_end_value, timestamp_end_x,
+      timestamp_end_y
+    )
 
     love.graphics.draw(sprite_batch)
 
@@ -268,28 +268,28 @@ function gui.overlay()
     if not loop_activate then
       setColor()
     end
-		local scrubhead_x = (audio.decoderTell()/audio.getDuration())*(scrubbar_x2-scrubbar_x1)+scrubbar_x1
+    local scrubhead_x = (audio.decoderTell()/audio.getDuration())*(scrubbar_x2-scrubbar_x1)+scrubbar_x1
     love.graphics.line(
-			scrubbar_x1, scrubbar_y1,
-			scrubhead_x, scrubbar_y1
-		)
-		love.graphics.circle(
-			"fill", scrubhead_x,
-			scrubbar_y1, scrubhead_radius, math.max(3*scrubhead_radius, 3)
-		)
-	end
+      scrubbar_x1, scrubbar_y1,
+      scrubhead_x, scrubbar_y1
+    )
+    love.graphics.circle(
+      "fill", scrubhead_x,
+      scrubbar_y1, scrubhead_radius, math.max(3*scrubhead_radius, 3)
+    )
+  end
 end
 
 function gui.sleep(bool)
-	if bool ~= nil then
-		if bool then
-			love.mouse.setVisible(false)
-		else
-			love.mouse.setVisible(true)
-		end
-	end
+  if bool ~= nil then
+    if bool then
+      love.mouse.setVisible(false)
+    else
+      love.mouse.setVisible(true)
+    end
+  end
 
-	return not love.mouse.isVisible()
+  return not love.mouse.isVisible()
 end
 
 function gui.scrubhead:setRadius(r)
@@ -335,14 +335,14 @@ function gui.timestamp_end:getPosition()
 end
 
 function gui.scrubbar:setPosition(x1, y1, x2, y2)
-	scrubbar_x1 = x1
+  scrubbar_x1 = x1
   scrubbar_y1 = y1
   scrubbar_x2 = x2
   scrubbar_y2 = y2
 end
 
 function gui.scrubbar:getPosition()
-	return scrubbar_x1, scrubbar_y1, scrubbar_x2, scrubbar_y2
+  return scrubbar_x1, scrubbar_y1, scrubbar_x2, scrubbar_y2
 end
 
 function gui.scrubbar:inBoundsX(x)
@@ -354,7 +354,7 @@ function gui.scrubbar:inBoundsY(y)
 end
 
 function gui.scrubbar:getProportion(x)
-	return (x-scrubbar_x1)/(scrubbar_x2-scrubbar_x1)
+  return (x-scrubbar_x1)/(scrubbar_x2-scrubbar_x1)
 end
 
 function gui.left:inBoundsX(x)
@@ -471,8 +471,18 @@ function gui.volume:activate(v)
     }
 
     volume_rotation[volume_quad]()
-  else
+  elseif type(v) == "string" then
     vquad = v
+  elseif type(v) == "number" then
+    if v >= 0 and v <= 1 then
+      if v == 0 then
+        vquad = "volume1"
+      elseif v <= 0.5 then
+        vquad = "volume2"
+      else
+        vquad = "volume3"
+      end
+    end
   end
   
   gui.volume:scale(vquad)
@@ -580,19 +590,19 @@ function gui.menu:activate()
 end
 
 function gui.graphics:setHeight(height)
-	graphics_height = height
+  graphics_height = height
 end
 
 function gui.graphics:getHeight()
-	return graphics_height
+  return graphics_height
 end
 
 function gui.graphics:setWidth(width)
-	graphics_width = width
+  graphics_width = width
 end
 
 function gui.graphics:getWidth()
-	return graphics_width
+  return graphics_width
 end
 
 function gui.graphics:getBigFont()
@@ -604,11 +614,11 @@ function gui.graphics:getNormalFont()
 end
 
 function secondsToString(sec)
-	local minute = math.floor(sec/60)
-	local second = math.floor(((sec/60)-minute)*60)
-	local second_string = string.format("%02d:%02d", minute, second)
+  local minute = math.floor(sec/60)
+  local second = math.floor(((sec/60)-minute)*60)
+  local second_string = string.format("%02d:%02d", minute, second)
 
-	return second_string, minute, second
+  return second_string, minute, second
 end
 
 return gui

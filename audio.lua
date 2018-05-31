@@ -1,34 +1,68 @@
 id3 = require("id3")
 
 local audio = {}
-local decoder_buffer = 2048
-local seconds_per_buffer = 0
-local queue_size = 0
-local sample_sum = 0
-local decoder_array = {0,0,0,0,0,0,0}
-decoder_array[0] = 0
-local sample_count = {0,0,0,0,0,0,0}
-sample_count[0] = 0
-local check_old = 0
-local end_of_song = false
-if not love.filesystem.getInfo("music") then love.filesystem.createDirectory("music") end
-local song_id = 0
-local song_name = nil
-local is_paused = false
-local current_song = nil
-local decoder = nil
-local time_count = 0
-local music_list = nil
-local loop_toggle = false
-local shuffle_toggle = false
-local microphone_active = false
+local decoder_buffer
+local seconds_per_buffer
+local queue_size
+local sample_sum
+local decoder_array
+local sample_count
+local check_old
+local end_of_song
+local song_id
+local song_name
+local is_paused
+local current_song
+local decoder
+local time_count
+local music_list
+local loop_toggle
+local shuffle_toggle
+local microphone_active
 local microphone_device
+local previous_volume
+
+function audio.reload()
+  if current_song ~= nil then audio.stop() end
+  
+  decoder_buffer = 2048
+  seconds_per_buffer = 0
+  queue_size = 0
+  sample_sum = 0
+  decoder_array = {0,0,0,0,0,0,0}
+  decoder_array[0] = 0
+  sample_count = {0,0,0,0,0,0,0}
+  sample_count[0] = 0
+  check_old = 0
+  end_of_song = false
+  song_id = 0
+  song_name = nil
+  is_paused = false
+  current_song = nil
+  decoder = nil
+  time_count = 0
+  music_list = nil
+  loop_toggle = config.loop
+  shuffle_toggle = config.shuffle
+  microphone_active = false
+  microphone_device = nil
+  previous_volume = 0
+end
+
+if not love.filesystem.getInfo("music") then love.filesystem.createDirectory("music") end
+audio.reload()
 
 function audio.update()
   -- plays first song
   if current_song == nil then
-    love.audio.setVolume(0.5)
-    gui.volume:activate("volume2")
+    if config.mute then
+      previous_volume = config.volume
+      love.audio.setVolume(0)
+      gui.volume:activate("volume1")
+    else
+      gui.volume:activate(config.volume)
+      love.audio.setVolume(config.volume)
+    end
     audio.changeSong(1)
   end
   
@@ -174,37 +208,26 @@ function audio.play()
   current_song:play()
 end
 
+function audio.mute()
+  local current_volume = love.audio.getVolume()
+  
+  if current_volume == 0 and previous_volume ~= 0 then
+    gui.volume:activate(previous_volume)
+    love.audio.setVolume(previous_volume)
+    previous_volume = 0
+  else
+    gui.volume:activate("volume1")
+    love.audio.setVolume(0)
+    previous_volume = current_volume
+  end
+end
+
 function audio.stop()
   current_song:stop()
   if microphone_active then
     microphone_device:stop()
     microphone_active = false
   end
-end
-
-function audio.reload()
-  if current_song ~= nil then audio.stop() end
-  
-  decoder_buffer = 2048
-  seconds_per_buffer = 0
-  queue_size = 0
-  sample_sum = 0
-  decoder_array = {0,0,0,0,0,0,0}
-  decoder_array[0] = 0
-  sample_count = {0,0,0,0,0,0,0}
-  sample_count[0] = 0
-  check_old = 0
-  end_of_song = false
-  song_id = 0
-  song_name = nil
-  is_paused = false
-  current_song = nil
-  time_count = 0
-  music_list = nil
-  decoder = nil
-  loop_toggle = false
-  shuffle_toggle = false
-  microphone_active = false
 end
 
 function audio.toggleLoop()
