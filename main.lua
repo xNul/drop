@@ -329,7 +329,7 @@ function love.draw()
 
   --[[ manual love.window.isVisible for behind windows and minimized.  Only works on Mac.
   Saves a lot of cpu.  Likely error-prone because it's a bad implementation (no other way) ]]
-  if love.timer.getFPS() > MONITOR_REFRESH_RATE+6 and operating_system == "OS X" then
+  if operating_system == "OS X" and love.timer.getFPS() > MONITOR_REFRESH_RATE+6 then
     -- manual fps limiter (fixes background fps/CPU leak) it's 70 instead of 60 so we can detect when behind windows
     if window_visible then last_frame_time = love.timer.getTime() end
     local slack = 1/(MONITOR_REFRESH_RATE+10) - (love.timer.getTime()-last_frame_time)
@@ -445,7 +445,7 @@ function love.keypressed(key, scancode, isrepeat)
     if microphone_init then
       local key_int = tonumber(key)
       if key_int ~= nil and key_int > 0 and key_int <= #devices_list then
-        audio.playMicrophone(devices_list[key_int])
+        audio.loadMicrophone(devices_list[key_int])
         audio.setSongName("Audio Input: "..devices_list[key_int]:getName())
         microphone_init = false
       end

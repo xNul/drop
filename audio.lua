@@ -254,7 +254,7 @@ function audio.getDecoderBuffer()
   return decoder_buffer
 end
 
-function audio.playMicrophone(device)
+function audio.loadMicrophone(device)
   device:start(2048, 44100)
   microphone_active = true
   microphone_device = device
