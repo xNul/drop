@@ -1,4 +1,4 @@
-ffi = require("ffi")
+local ffi = require("ffi")
 
 -- initialize ffi
 ffi.cdef[[
@@ -10,6 +10,7 @@ fft = ffi.load(ffi.os == "Windows" and "fft" or "./libfft.dylib")
 local spectrum = {}
 local size
 local old_sample
+local samples_ptr
 
 -- spectrum draw
 local visualizer_type
@@ -20,6 +21,7 @@ function spectrum.reload()
   -- fft gen
   size = config.sampling_size
   old_sample = 0
+  samples_ptr = nil
 
   -- spectrum draw
   visualizer_type = config.visualization
@@ -49,9 +51,11 @@ function spectrum.generateWaveform()
   old_sample = audio.decoderTell('samples')
 
   -- wave->normalized spectrum using ffi
-  local spectrum = fft.fft(ffi.new("float["..size.."]", wave), ffi.new("int", size), ffi.new("int", tick_count))
+  samples_ptr = ffi.new("float["..size.."]", wave) -- keeps ffi memory allocated, don't destroy
+  local sample_count_ptr = ffi.new("int", size)
+  local tick_count_ptr = ffi.new("int", tick_count)
 
-  return spectrum
+  return fft.fft(samples_ptr, sample_count_ptr, tick_count_ptr)
 end
 
 function spectrum.generateMicrophoneWaveform()
@@ -72,9 +76,11 @@ function spectrum.generateMicrophoneWaveform()
   end
 
   -- wave->normalized spectrum using ffi
-  local spectrum = fft.fft(ffi.new("float["..size.."]", wave), ffi.new("int", size), ffi.new("int", tick_count))
+  samples_ptr = ffi.new("float["..size.."]", wave) -- keeps ffi memory allocated, don't destroy
+  local sample_count_ptr = ffi.new("int", size)
+  local tick_count_ptr = ffi.new("int", tick_count)
 
-  return spectrum
+  return fft.fft(samples_ptr, sample_count_ptr, tick_count_ptr)
 end
 
 function spectrum.draw(waveform)

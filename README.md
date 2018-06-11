@@ -24,7 +24,7 @@ To add music, either drag and drop your music on the window or make sure you run
   - configurable
   - spectrum visualization
   - custom colors
-  - doesn't run fft calculations when minimized
+  - doesn't run fft calculations when minimized or paused
 
 ### Controls:
   - Left Arrow: Previous Song
