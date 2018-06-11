@@ -29,7 +29,7 @@ function love.load()
   -- Mac only and if not 60hz
   MONITOR_REFRESH_RATE = 60
 
-  local CURRENT_VERSION = 0
+  local CURRENT_VERSION = 1
   local DEFAULT_CONFIG = {
     version = CURRENT_VERSION, -- every time config format changes 1 is added
     visualization = 3, -- visualization to show on start (session persistent)
@@ -48,6 +48,8 @@ function love.load()
     sampling_size = 2048, -- number of audio samples to generate spectrum from (maintain a power of 2)
     window_size_persistence = true, -- window size restored from previous session
     window_size = {1280, 720}, -- size of window on start (window_size_persistence)
+    window_location_persistence = false, -- window position restored from previous session
+    window_location = {420, 340, 1}, -- location of window on persistence (window_location_persistence)
     init_location = "menu", -- [NOT DONE] where to go on start.  Options: "menu", "sysaudio", or "appdata"
     init_sysaudio_option = 0 -- [NOT DONE] which system audio input to automatically select. Options: 0=show options, 1-infinity=audio input
   }
@@ -103,6 +105,12 @@ function love.load()
     window_size = function (v)
       return type(v) == "table" and #v == 2 and type(v[1]) == "number" and type(v[2]) == "number"
     end,
+    window_location_persistence = function (v)
+      return type(v) == "boolean"
+    end,
+    window_location = function (v)
+      return type(v) == "table" and #v == 3 and type(v[1]) == "number" and type(v[2]) == "number" and type(v[3]) == "number"
+    end,
     init_location = function (v)
       return type(v) == "string" and (v == "menu" or v == "sysaudio" or v == "appdata")
     end,
@@ -121,12 +129,8 @@ function love.load()
     local dconfig = DEFAULT_CONFIG
     
     for key, value in pairs(config) do
-      if dconfig[key] ~= nil then -- and check values
-        if CHECK_VALUES[key](value) then
-          dconfig[key] = value
-        else
-          dconfig[key] = DEFAULT_CONFIG[key]
-        end
+      if dconfig[key] ~= nil and CHECK_VALUES[key](value) then -- and check values
+        dconfig[key] = value
       end
     end
     
@@ -484,9 +488,24 @@ end
 
 -- when exiting drop, save config (for persistence)
 function love.quit()
-  local new_window_size = {love.graphics.getDimensions()}
-  if config.window_size_persistence and (config.window_size[1] ~= new_window_size[1] or config.window_size[2] ~= new_window_size[2]) then
-    config.window_size = new_window_size
+  local write_config = false
+  if config.window_size_persistence then
+    local new_window_size = {love.graphics.getDimensions()}
+    if config.window_size[1] ~= new_window_size[1] or config.window_size[2] ~= new_window_size[2] then
+      config.window_size = new_window_size
+      write_config = true
+    end
+  end
+  
+  if config.window_location_persistence then
+    local new_window_location = {love.window.getPosition()}
+    if config.window_location[1] ~= new_window_location[1] or config.window_location[2] ~= new_window_location[2] or config.window_location[3] ~= new_window_location[3] then
+      config.window_location = new_window_location
+      write_config = true
+    end
+  end
+  
+  if write_config then
     love.filesystem.write("config.lua", Tserial.pack(config, false, true))
   end
   

@@ -43,11 +43,21 @@ function gui.load()
   local window_width = config.window_size[1]
   local window_height = config.window_size[2]
 
-  local window_position_x = (desktop_width-window_width)/2
-  local window_position_y = (desktop_height-window_height)*(5/12) --5/12 to account for taskbar/dock
+  local window_position_x
+  local window_position_y
+  local display_location
+  if config.window_location_persistence then
+    window_position_x = config.window_location[1]
+    window_position_y = config.window_location[2]
+    display_location = config.window_location[3]
+  else
+    window_position_x = (desktop_width-window_width)/2
+    window_position_y = (desktop_height-window_height)*(5/12) --5/12 to account for taskbar/dock
+    display_location = 1
+  end
   love.window.setMode(
     window_width, window_height,
-    {x=window_position_x, y=window_position_y,
+    {x=window_position_x, y=window_position_y, display=display_location,
     resizable=true, highdpi=true, fullscreen=config.fullscreen}
   )
   love.window.setIcon(love.image.newImageData("images/icon.png"))
