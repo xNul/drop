@@ -46,7 +46,7 @@ function love.load()
     sleep_time = 7, -- seconds until overlay is put to sleep
     visualization_update = true, -- [NOT DONE] update visualization when dragging scrubhead
     sampling_size = 2048, -- number of audio samples to generate spectrum from (maintain a power of 2)
-    window_size_persistence = true, -- [NOT DONE] window size restored from previous session
+    window_size_persistence = true, -- window size restored from previous session
     window_size = {1280, 720}, -- size of window on start (window_size_persistence)
     init_location = "menu", -- [NOT DONE] where to go on start.  Options: "menu", "sysaudio", or "appdata"
     init_sysaudio_option = 0 -- [NOT DONE] which system audio input to automatically select. Options: 0=show options, 1-infinity=audio input
@@ -484,6 +484,11 @@ end
 
 -- when exiting drop, save config (for persistence)
 function love.quit()
-  --love.filesystem.write("config.lua", Tserial.pack(config, false, true))
+  local new_window_size = {love.graphics.getDimensions()}
+  if config.window_size_persistence and (config.window_size[1] ~= new_window_size[1] or config.window_size[2] ~= new_window_size[2]) then
+    config.window_size = new_window_size
+    love.filesystem.write("config.lua", Tserial.pack(config, false, true))
+  end
+  
   return false
 end
