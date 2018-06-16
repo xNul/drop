@@ -44,7 +44,7 @@ function love.load()
     color = {0, 1, 0}, -- color of visualization/music controls.  Format: {r, g, b} [0-1]
     fps_cap = 0, -- places cap on fps (looks worse, but less cpu intensive).  0 for vsync
     sleep_time = 7, -- seconds until overlay is put to sleep
-    visualization_update = true, -- [NOT DONE] update visualization when dragging scrubhead
+    visualization_update = true, -- update visualization when dragging scrubhead (false=less cpu intensive)
     sampling_size = 2048, -- number of audio samples to generate spectrum from (maintain a power of 2)
     window_size_persistence = true, -- window size restored from previous session
     window_size = {1280, 720}, -- size of window on start (window size persistent)
@@ -417,7 +417,12 @@ function love.mousepressed(x, y, key, istouch)
       audio.pause()
     end
   
-    audio.decoderSeek(gui.scrubbar:getProportion(x)*audio.getDuration())
+    if config.visualization_update then
+      audio.decoderSeek(gui.scrubbar:getProportion(x)*audio.getDuration())
+    else
+      gui.scrubhead:setPressed(true)
+      gui.scrubhead:setPosition(x)
+    end
     scrub_head_pressed = true
   end
 end
@@ -431,6 +436,10 @@ function love.mousereleased(x, y, key, istouch)
   if scrub_head_pause then
     audio.play()
     scrub_head_pause = false
+  end
+  if not config.visualization_update and scrub_head_pressed then
+    gui.scrubhead:setPressed(false)
+    audio.decoderSeek(gui.scrubbar:getProportion(x)*audio.getDuration())
   end
   scrub_head_pressed = false
 end
@@ -449,7 +458,11 @@ function love.mousemoved(x, y, dx, dy, istouch)
 
   -- makes scrub bar draggable
   if scrub_head_pressed and gui.scrubbar:inBoundsX(x) then
-    audio.decoderSeek(gui.scrubbar:getProportion(x)*audio.getDuration())
+    if config.visualization_update then
+      audio.decoderSeek(gui.scrubbar:getProportion(x)*audio.getDuration())
+    else
+      gui.scrubhead:setPosition(x)
+    end
   end
 end
 
@@ -457,6 +470,10 @@ function love.mousefocus(focus)
   if scrub_head_pause then
     audio.play()
     scrub_head_pause = false
+  end
+  if not config.visualization_update and scrub_head_pressed then
+    gui.scrubhead:setPressed(false)
+    audio.decoderSeek(gui.scrubbar:getProportion(gui.scrubhead:getPosition())*audio.getDuration())
   end
   scrub_head_pressed = false
 end

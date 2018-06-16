@@ -3,6 +3,9 @@ local scrubbar_x1 = 0
 local scrubbar_y1 = 0
 local scrubbar_x2 = 0
 local scrubbar_y2 = 0
+local scrubhead_radius = 0
+local scrubhead_position = 0
+local scrubhead_pressed = false
 local left_x = 0
 local playback_x = 0
 local playback_quad = "pause"
@@ -24,7 +27,6 @@ local windowed_height
 local click_area_y = 0
 local menu_x = 0
 local menu_y = 0
-local scrubhead_radius = 0
 local timestamp_start_x = 0
 local timestamp_start_y = 0
 local timestamp_start_value = "00:00"
@@ -254,8 +256,15 @@ function gui.overlay()
     if audio.getSongName() ~= nil then
       love.graphics.print(audio.getSongName(), 10, 10)
     end
-
-    timestamp_start_value = secondsToString(audio.decoderTell())
+    
+    local scrubhead_x
+    if config.visualization_update or not scrubhead_pressed then
+      scrubhead_x = (audio.decoderTell()/audio.getDuration())*(scrubbar_x2-scrubbar_x1)+scrubbar_x1
+      timestamp_start_value = secondsToString(audio.decoderTell())
+    else
+      scrubhead_x = gui.scrubbar:getProportion(scrubhead_position)*(scrubbar_x2-scrubbar_x1)+scrubbar_x1
+      timestamp_start_value = secondsToString(gui.scrubbar:getProportion(scrubhead_position)*audio.getDuration())
+    end
 
     -- draw ui elements
     love.graphics.line(
@@ -288,7 +297,7 @@ function gui.overlay()
     if not loop_activate then
       setColor()
     end
-    local scrubhead_x = (audio.decoderTell()/audio.getDuration())*(scrubbar_x2-scrubbar_x1)+scrubbar_x1
+    
     love.graphics.line(
       scrubbar_x1, scrubbar_y1,
       scrubhead_x, scrubbar_y1
@@ -318,6 +327,18 @@ end
 
 function gui.scrubhead:getRadius()
   return scrubhead_radius
+end
+
+function gui.scrubhead:setPosition(x)
+  scrubhead_position = x
+end
+
+function gui.scrubhead:getPosition()
+  return scrubhead_position
+end
+
+function gui.scrubhead:setPressed(pressed)
+  scrubhead_pressed = pressed
 end
 
 function gui.timestamp_start:setValue(value)
