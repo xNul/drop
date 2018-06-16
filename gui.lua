@@ -61,6 +61,10 @@ function gui.load()
     display_num = 1
   end
   
+  windowed_x = window_position_x
+  windowed_y = window_position_y
+  display_location = display_num
+  
   love.window.setMode(
     window_width, window_height,
     {x=window_position_x, y=window_position_y, display=display_num,
@@ -572,7 +576,15 @@ function gui.fullscreen:activate()
   
   local x, y = love.mouse.getPosition()
   love.window.setFullscreen(not fullscreen)
-  local win_x2, win_y2 = love.window.getPosition()
+  
+  local win_x2, win_y2
+  if fullscreen then
+    -- have to do this bc window position wont be correct if starting Drop with fullscreen
+    love.window.setPosition(windowed_x, windowed_y, display_location)
+    win_x2, win_y2 = windowed_x, windowed_y
+  else
+    win_x2, win_y2 = love.window.getPosition()
+  end
   love.mouse.setPosition(win_x1+x-win_x2, win_y1+y-win_y2)
   
   gui.fullscreen:scale(fullscreen_rotation[fullscreen_quad])

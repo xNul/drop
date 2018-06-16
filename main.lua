@@ -195,7 +195,7 @@ function love.load()
     end,
     ["i"] = function ()
       fade_activated = not fade_activated
-      setColor(nil, 0)
+      setColor(nil, 1)
     end,
     ["m"] = function ()
       audio.mute()
