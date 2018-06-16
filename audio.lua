@@ -42,8 +42,6 @@ function audio.reload()
   decoder = nil
   time_count = 0
   music_list = nil
-  loop_toggle = config.loop
-  shuffle_toggle = config.shuffle
   microphone_active = false
   microphone_device = nil
   previous_volume = 0
@@ -51,6 +49,8 @@ end
 
 if not love.filesystem.getInfo("music") then love.filesystem.createDirectory("music") end
 audio.reload()
+loop_toggle = config.loop
+shuffle_toggle = config.shuffle
 
 function audio.update()
   -- plays first song

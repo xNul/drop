@@ -19,17 +19,17 @@ local tick_count
 
 function spectrum.reload()
   -- fft gen
-  size = config.sampling_size
   old_sample = 0
   samples_ptr = nil
 
   -- spectrum draw
-  visualizer_type = config.visualization
   tick_amplitude_average = 0
   tick_count = 128
 end
 
 spectrum.reload()
+visualizer_type = config.visualization
+size = config.sampling_size
 
 function spectrum.generateWaveform()
   local wave = {}

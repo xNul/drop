@@ -22,6 +22,7 @@ To add music, either drag and drop your music on the window or make sure you run
   - volume and mute controls
   - fade-visual sync
   - configurable
+  - quick start
   - spectrum visualization
   - custom colors
   - doesn't run fft calculations when minimized or paused

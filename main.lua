@@ -13,15 +13,14 @@ local fade_interval_counter
 local fade_activated
 local color
 local fade_intensity
-local fade_intensity_multiplier
 local sleep_counter
-local sleep_time
 local window_visible
 local last_frame_time
 local cursor_hand_activated
 local microphone_init
 local devices_list
-local visualization_update
+local menu_location
+local device_option
 
 function love.load()  
   Tserial = require 'Tserial'
@@ -49,9 +48,9 @@ function love.load()
     window_size_persistence = true, -- window size restored from previous session
     window_size = {1280, 720}, -- size of window on start (window_size_persistence)
     window_location_persistence = false, -- window position restored from previous session
-    window_location = {420, 340, 1}, -- location of window on persistence (window_location_persistence)
-    init_location = "menu", -- [NOT DONE] where to go on start.  Options: "menu", "sysaudio", or "appdata"
-    init_sysaudio_option = 0 -- [NOT DONE] which system audio input to automatically select. Options: 0=show options, 1-infinity=audio input
+    window_location = {420, 340, 1}, -- location of window when persistent (window_location_persistence)
+    init_location = "menu", -- where to go on start.  Options: "menu", "dragndrop", "sysaudio", or "appdata"
+    init_sysaudio_option = 0 -- which system audio input to automatically select. Options: 0=show options, 1-infinity=audio input
   }
   local CHECK_VALUES = {
     version = function (v)
@@ -112,7 +111,7 @@ function love.load()
       return type(v) == "table" and #v == 3 and type(v[1]) == "number" and type(v[2]) == "number" and type(v[3]) == "number"
     end,
     init_location = function (v)
-      return type(v) == "string" and (v == "menu" or v == "sysaudio" or v == "appdata")
+      return type(v) == "string" and (v == "menu" or v == "sysaudio" or v == "appdata"  or v == "dragndrop")
     end,
     init_sysaudio_option = function (v)
       return type(v) == "number" and v >= 0 and v == math.floor(v)
@@ -244,6 +243,23 @@ function love.load()
   love.graphics.setLineStyle('smooth')
   
   reload()
+  menu_location = config.init_location
+  device_option = config.init_sysaudio_option
+  fade_activated = config.fade
+  color = config.color
+  
+  if menu_location == "sysaudio" then
+    microphone_init = true
+    devices_list = love.audio.getRecordingDevices()
+  elseif menu_location == "appdata" then
+    appdata_music = audio.loadMusic()
+  end
+  
+  if microphone_init and device_option > 0 and device_option <= #devices_list then
+    audio.loadMicrophone(devices_list[device_option])
+    audio.setSongName("Audio Input: "..devices_list[device_option]:getName())
+    microphone_init = false
+  end
   ------------------------------------------------------------------------------------
 end
 
@@ -257,18 +273,15 @@ function reload()
   button_pressed = ""
   
   fade_interval_counter = 1
-  fade_activated = config.fade
-  color = config.color
   fade_intensity = 0
-  fade_intensity_multiplier = config.fade_intensity_multiplier
   sleep_counter = 0
-  sleep_time = config.sleep_time
   window_visible = true
   last_frame_time = 0
   cursor_hand_activated = false
   microphone_init = false
   devices_list = nil
-  visualization_update = config.visualization_update
+  menu_location = "menu"
+  device_option = 0 -- not attached to config.init_sysaudio_option bc init location should only work on init, not after
   
   setColor(config.color)
 end
@@ -289,7 +302,7 @@ function love.update(dt)
     --overlay timer: puts overlay to sleep after sleep_time sec of inactivity
     if not gui.sleep() then
       sleep_counter = sleep_counter+dt
-      if sleep_counter > sleep_time then
+      if sleep_counter > config.sleep_time then
         gui.sleep(true)
         sleep_counter = 0
       end
@@ -304,7 +317,7 @@ function love.draw()
 
   -- controls visualization fade
   if fade_activated then
-    setColor(nil, spectrum.getAverageTickAmplitude()*fade_intensity_multiplier)
+    setColor(nil, spectrum.getAverageTickAmplitude()*config.fade_intensity_multiplier)
   end
 
   -- overlay/start_screen drawing
@@ -316,8 +329,10 @@ function love.draw()
     local graphics_height = gui.graphics:getHeight()
 
     if not microphone_init then
-      if appdata_music then
-        love.graphics.printf("Drop music here or press the corresponding number:\n1) Play system audio\n2) Play music in appdata", graphics_width/80, graphics_height/2-5*love.graphics.getFont():getHeight()/2, graphics_width, "left")
+      if menu_location == "dragndrop" then
+        love.graphics.printf("Drag and drop music files/folders here", graphics_width/80, graphics_height/2-5*love.graphics.getFont():getHeight()/2, graphics_width, "center")
+      elseif appdata_music then
+        love.graphics.printf("Drop music files/folders here or press the corresponding number:\n1) Play system audio\n2) Play music in appdata", graphics_width/80, graphics_height/2-5*love.graphics.getFont():getHeight()/2, graphics_width, "left")
       else
         love.graphics.printf("You just tried to play music from your appdata.  Copy songs to \""..appdata_path.."/LOVE/Drop/music\" to make this work or just drag and drop music onto this window.", graphics_width/80, graphics_height/2-5*love.graphics.getFont():getHeight()/2, graphics_width, "left")
       end
@@ -445,7 +460,7 @@ function love.keypressed(key, scancode, isrepeat)
   gui.sleep(false)
   sleep_counter = 0
 
-  if not audio.musicExists() and not audio.isPlayingMicrophone() then
+  if not audio.musicExists() and not audio.isPlayingMicrophone() and not (menu_location == "dragndrop") then
     if microphone_init then
       local key_int = tonumber(key)
       if key_int ~= nil and key_int > 0 and key_int <= #devices_list then
@@ -456,6 +471,12 @@ function love.keypressed(key, scancode, isrepeat)
     elseif key == "1" then
       microphone_init = true
       devices_list = love.audio.getRecordingDevices()
+      
+      if device_option > 0 and device_option <= #devices_list then
+        audio.loadMicrophone(devices_list[device_option])
+        audio.setSongName("Audio Input: "..devices_list[device_option]:getName())
+        microphone_init = false
+      end
     elseif key == "2" then
       appdata_music = audio.loadMusic()
     else
