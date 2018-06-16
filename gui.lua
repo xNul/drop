@@ -67,8 +67,8 @@ function gui.load()
   
   love.window.setMode(
     window_width, window_height,
-    {x=window_position_x, y=window_position_y, display=display_num,
-    resizable=true, highdpi=true, fullscreen=config.fullscreen}
+    {x=window_position_x, y=window_position_y, display=display_num, resizable=true,
+    highdpi=true, fullscreen=config.fullscreen, vsync=(config.fps_cap == 0)}
   )
   love.window.setIcon(love.image.newImageData("images/icon.png"))
   love.window.setTitle("Drop - by nabakin")

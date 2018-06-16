@@ -1,4 +1,4 @@
-id3 = require("id3")
+local id3 = require("id3")
 
 local audio = {}
 local decoder_buffer

@@ -23,6 +23,7 @@ To add music, either drag and drop your music on the window or make sure you run
   - fade-visual sync
   - configurable
   - quick start
+  - fps capping
   - optional session persistence
   - spectrum visualization
   - custom colors

@@ -1,3 +1,5 @@
+local Tserial = require 'Tserial'
+
 local appdata_path = love.filesystem.getAppdataDirectory()
 local operating_system = love.system.getOS()
 
@@ -22,8 +24,7 @@ local devices_list
 local menu_location
 local device_option
 
-function love.load()  
-  Tserial = require 'Tserial'
+function love.load()
 
   -- Mac only and if not 60hz
   MONITOR_REFRESH_RATE = 60
@@ -41,7 +42,7 @@ function love.load()
     fade_intensity_multiplier = 60, -- degree of fading
     session_persistence = false, -- options restored from previous session
     color = {0, 1, 0}, -- color of visualization/music controls.  Format: {r, g, b} [0-1]
-    fps_cap = 0, -- [NOT DONE] places cap on fps.  0 for no limit
+    fps_cap = 0, -- places cap on fps (looks worse, but less cpu intensive).  0 for vsync
     sleep_time = 7, -- seconds until overlay is put to sleep
     visualization_update = true, -- [NOT DONE] update visualization when dragging scrubhead
     sampling_size = 2048, -- number of audio samples to generate spectrum from (maintain a power of 2)
@@ -356,6 +357,12 @@ function love.draw()
     window_visible = false
   else
     window_visible = true
+  end
+  
+  if config.fps_cap > 0 then
+    local slack = 1/config.fps_cap - (love.timer.getTime()-last_frame_time)
+    if slack > 0 then love.timer.sleep(slack) end
+    last_frame_time = love.timer.getTime()
   end
 end
 

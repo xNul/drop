@@ -1,5 +1,6 @@
---- Tserial v1.5, a simple table serializer which turns tables into Lua script
--- @author Taehl (SelfMadeSpirit@gmail.com)
+--- TSerial v1.5.1, a simple table serializer which turns tables into Lua script
+-- @author Taehl (SelfMadeSpirit@gmail.com) and nabakin
+-- update v1.5 -> v1.5.1 fixes bugs
 local TSerial = {}
 
 --- Serializes a table into a string, in form of Lua script.
@@ -10,7 +11,7 @@ local TSerial = {}
 -- @param indent if true, output "human readable" mode with newlines and indentation (for debug)
 -- @return string recreating given table
 function TSerial.pack(t, drop, indent)
-	assert(type(t) == "table", "Can only Tserial.pack tables.")
+	assert(type(t) == "table", "Can only TSerial.pack tables.")
 	local s, empty, indent = "{"..(indent and "\n" or ""), true, indent and math.max(type(indent)=="number" and indent or 0,0)
 	local function proc(k,v, omitKey)	-- encode a key/value pair
 		empty = nil	-- helps ensure empty tables return as "{}"
@@ -19,19 +20,19 @@ function TSerial.pack(t, drop, indent)
 		elseif tk == "boolean" then k = k and "[true]" or "[false]"
 		elseif tk == "string" then local f = string.format("%q",k) if f ~= '"'..k..'"' then k = '['..f..']' end
 		elseif tk == "number" then k = "["..k.."]"
-		elseif tk == "table" then k = "["..Tserial.pack(k, drop, indent and indent+1).."]"
+		elseif tk == "table" then k = "["..TSerial.pack(k, drop, indent and indent+1).."]"
 		elseif type(drop) == "function" then k = "["..string.format("%q",drop(k)).."]"
 		elseif drop then skip = true
-		else error("Attempted to Tserial.pack a table with an invalid key: "..tostring(k))
+		else error("Attempted to TSerial.pack a table with an invalid key: "..tostring(k))
 		end
 		if type(drop)=="table" and drop[v] then v = drop[v]
 		elseif tv == "boolean" then v = v and "true" or "false"
 		elseif tv == "string" then v = string.format("%q", v)
 		elseif tv == "number" then	-- no change needed
-		elseif tv == "table" then v = Tserial.pack(v, drop, indent and indent+1)
+		elseif tv == "table" then v = TSerial.pack(v, drop, indent and indent+1)
 		elseif type(drop) == "function" then v = string.format("%q",drop(v))
 		elseif drop then skip = true
-		else error("Attempted to Tserial.pack a table with an invalid value: "..tostring(v))
+		else error("Attempted to TSerial.pack a table with an invalid value: "..tostring(v))
 		end
 		if not skip then return string.rep("\t",indent or 0)..(omitKey and "" or k.."=")..v..","..(indent and "\n" or "") end
 		return ""
@@ -44,19 +45,19 @@ function TSerial.pack(t, drop, indent)
 	return s..string.rep("\t",(indent or 1)-1).."}"
 end
 
---- Loads a table into memory from a string (like those output by Tserial.pack)
+--- Loads a table into memory from a string (like those output by TSerial.pack)
 -- @param s a string of Lua defining a table, such as "{2,4,8,ex='ample'}"
 -- @param safe if true, all extraneous parts of the string will be removed, leaving only a table (prevents running anomalous code when unpacking untrusted strings). Will also cause malformed tables to quietly return nil and an error message, instead of throwing an error (so your program can't be crashed with a bad string)
 -- @return a table recreated from the given string.
 function TSerial.unpack(s, safe)
   if s == nil then return nil, nil end
 	if safe then s = string.match(s, "(%b{})") end
-	assert(type(s) == "string", "Can only Tserial.unpack strings.")
-	local f, result = loadstring("Tserial.table="..s)
+	assert(type(s) == "string", "Can only TSerial.unpack strings.")
+	local f, result = loadstring("data="..s)
 	if not safe then assert(f,result) elseif not f then return nil, result end
 	result = f()
-	local t = Tserial.table
-	Tserial.table = nil
+	local t = data
+	data = nil
 	return t, result
 end
 
