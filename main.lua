@@ -164,13 +164,11 @@ function love.load()
       -- round to nearest 1st decimal place
       local new_volume = math.floor((love.audio.getVolume()+.1) * 10 + 0.5) / 10
       gui.volume:activate(new_volume)
-      love.audio.setVolume(new_volume)
     end,
     ["down"] = function ()
       -- round to nearest 1st decimal place
       local new_volume = math.floor((love.audio.getVolume()-.1) * 10 + 0.5) / 10
       gui.volume:activate(new_volume)
-      love.audio.setVolume(new_volume)
     end,
     ["right"] = function ()
       gui.right:activate()

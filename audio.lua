@@ -57,11 +57,9 @@ function audio.update()
   if current_song == nil then
     if config.mute then
       previous_volume = config.volume
-      love.audio.setVolume(0)
       gui.volume:activate("volume1")
     else
       gui.volume:activate(config.volume)
-      love.audio.setVolume(config.volume)
     end
     audio.changeSong(1)
   end
@@ -213,11 +211,9 @@ function audio.mute()
   
   if current_volume == 0 and previous_volume ~= 0 then
     gui.volume:activate(previous_volume)
-    love.audio.setVolume(previous_volume)
     previous_volume = 0
   else
     gui.volume:activate("volume1")
-    love.audio.setVolume(0)
     previous_volume = current_volume
   end
 end
@@ -280,7 +276,6 @@ function audio.loadMicrophone(device)
   current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
   
   gui.volume:activate("volume1")
-  love.audio.setVolume(0)
 end
 
 -- goes to position in song

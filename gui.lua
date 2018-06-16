@@ -469,6 +469,7 @@ end
 
 function gui.volume:activate(v)
   local vquad
+  local scale = true
   
   if v == nil then
     local volume_rotation = {
@@ -488,6 +489,19 @@ function gui.volume:activate(v)
 
     volume_rotation[volume_quad]()
   elseif type(v) == "string" then
+    local volume_set = {
+      ["volume1"] = function ()
+        love.audio.setVolume(0)
+      end,
+      ["volume2"] = function ()
+        love.audio.setVolume(0.5)
+      end,
+      ["volume3"] = function ()
+        love.audio.setVolume(1)
+      end
+    }
+  
+    volume_set[v]()
     vquad = v
   elseif type(v) == "number" then
     if v >= 0 and v <= 1 then
@@ -498,10 +512,14 @@ function gui.volume:activate(v)
       else
         vquad = "volume3"
       end
+      
+      love.audio.setVolume(v)
+    else
+      scale = false
     end
   end
   
-  gui.volume:scale(vquad)
+  if scale then gui.volume:scale(vquad) end
 end
 
 function gui.volume:scale(vquad)
