@@ -16,6 +16,11 @@ local volume_x = 0
 local volume_quad = "volume3"
 local fullscreen_x = 0
 local fullscreen_quad = "fullscreen"
+local windowed_x
+local windowed_y
+local display_location
+local windowed_width
+local windowed_height
 local click_area_y = 0
 local menu_x = 0
 local menu_y = 0
@@ -45,19 +50,20 @@ function gui.load()
 
   local window_position_x
   local window_position_y
-  local display_location
+  local display_num
   if config.window_location_persistence then
     window_position_x = config.window_location[1]
     window_position_y = config.window_location[2]
-    display_location = config.window_location[3]
+    display_num = config.window_location[3]
   else
     window_position_x = (desktop_width-window_width)/2
     window_position_y = (desktop_height-window_height)*(5/12) --5/12 to account for taskbar/dock
-    display_location = 1
+    display_num = 1
   end
+  
   love.window.setMode(
     window_width, window_height,
-    {x=window_position_x, y=window_position_y, display=display_location,
+    {x=window_position_x, y=window_position_y, display=display_num,
     resizable=true, highdpi=true, fullscreen=config.fullscreen}
   )
   love.window.setIcon(love.image.newImageData("images/icon.png"))
@@ -534,14 +540,20 @@ function gui.fullscreen:inBoundsY(y)
 end
 
 function gui.fullscreen:activate()
+  local fullscreen = love.window.getFullscreen()
   local fullscreen_rotation = {
     ["fullscreen"] = "fullscreen_exit",
     ["fullscreen_exit"] = "fullscreen"
   }
-
+  
+  local win_x1, win_y1, display = love.window.getPosition()
+  if not fullscreen then
+    windowed_width, windowed_height = love.graphics.getDimensions()
+    windowed_x, windowed_y, display_location = win_x1, win_y1, display
+  end
+  
   local x, y = love.mouse.getPosition()
-  local win_x1, win_y1 = love.window.getPosition()
-  love.window.setFullscreen(not love.window.getFullscreen())
+  love.window.setFullscreen(not fullscreen)
   local win_x2, win_y2 = love.window.getPosition()
   love.mouse.setPosition(win_x1+x-win_x2, win_y1+y-win_y2)
   
@@ -613,6 +625,14 @@ end
 
 function gui.graphics:getWidth()
   return graphics_width
+end
+
+function gui.graphics:getWindowedDimensions()
+  return windowed_width, windowed_height
+end
+
+function gui.graphics:getWindowedPosition()
+  return windowed_x, windowed_y, display_location
 end
 
 function gui.graphics:getBigFont()

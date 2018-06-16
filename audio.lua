@@ -222,6 +222,10 @@ function audio.mute()
   end
 end
 
+function audio.getPreviousVolume()
+  return previous_volume
+end
+
 function audio.stop()
   current_song:stop()
   if microphone_active then
@@ -236,6 +240,14 @@ end
 
 function audio.toggleShuffle()
   shuffle_toggle = not shuffle_toggle
+end
+
+function audio.isLooping()
+  return loop_toggle
+end
+
+function audio.isShuffling()
+  return shuffle_toggle
 end
 
 function audio.isPlaying()

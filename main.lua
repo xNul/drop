@@ -39,16 +39,16 @@ function love.load()
     fullscreen = false, -- enable/disable fullscreen on start (session persistent)
     fade = false, -- enable/disable fade on start (session persistent)
     fade_intensity_multiplier = 60, -- degree of fading
-    session_persistence = false, -- [NOT DONE] options restored from previous session
+    session_persistence = false, -- options restored from previous session
     color = {0, 1, 0}, -- color of visualization/music controls.  Format: {r, g, b} [0-1]
     fps_cap = 0, -- [NOT DONE] places cap on fps.  0 for no limit
     sleep_time = 7, -- seconds until overlay is put to sleep
     visualization_update = true, -- [NOT DONE] update visualization when dragging scrubhead
     sampling_size = 2048, -- number of audio samples to generate spectrum from (maintain a power of 2)
     window_size_persistence = true, -- window size restored from previous session
-    window_size = {1280, 720}, -- size of window on start (window_size_persistence)
+    window_size = {1280, 720}, -- size of window on start (window size persistent)
     window_location_persistence = false, -- window position restored from previous session
-    window_location = {420, 340, 1}, -- location of window when persistent (window_location_persistence)
+    window_location = {420, 340, 1}, -- location of window when persistent (window location persistent)
     init_location = "menu", -- where to go on start.  Options: "menu", "dragndrop", "sysaudio", or "appdata"
     init_sysaudio_option = 0 -- which system audio input to automatically select. Options: 0=show options, 1-infinity=audio input
   }
@@ -460,7 +460,7 @@ function love.keypressed(key, scancode, isrepeat)
   gui.sleep(false)
   sleep_counter = 0
 
-  if not audio.musicExists() and not audio.isPlayingMicrophone() and not (menu_location == "dragndrop") then
+  if not audio.musicExists() and not audio.isPlayingMicrophone() and menu_location ~= "dragndrop" then
     if microphone_init then
       local key_int = tonumber(key)
       if key_int ~= nil and key_int > 0 and key_int <= #devices_list then
@@ -511,7 +511,12 @@ end
 function love.quit()
   local write_config = false
   if config.window_size_persistence then
-    local new_window_size = {love.graphics.getDimensions()}
+    local new_window_size
+    if love.window.getFullscreen() then
+      new_window_size = {gui.graphics:getWindowedDimensions()}
+    else
+      new_window_size = {love.graphics.getDimensions()}
+    end
     if config.window_size[1] ~= new_window_size[1] or config.window_size[2] ~= new_window_size[2] then
       config.window_size = new_window_size
       write_config = true
@@ -519,9 +524,36 @@ function love.quit()
   end
   
   if config.window_location_persistence then
-    local new_window_location = {love.window.getPosition()}
+    local new_window_location
+    if love.window.getFullscreen() then
+      new_window_location = {gui.graphics:getWindowedPosition()}
+    else
+      new_window_location = {love.window.getPosition()}
+    end
     if config.window_location[1] ~= new_window_location[1] or config.window_location[2] ~= new_window_location[2] or config.window_location[3] ~= new_window_location[3] then
       config.window_location = new_window_location
+      write_config = true
+    end
+  end
+  
+  if config.session_persistence then
+    local visualization = spectrum.getVisualization()
+    local shuffle = audio.isShuffling()
+    local loop = audio.isLooping()
+    local mute = (love.audio.getVolume() == 0) and (audio.getPreviousVolume() ~= 0)
+    local volume = mute and audio.getPreviousVolume() or love.audio.getVolume()
+    local fullscreen = love.window.getFullscreen()
+    local fade = fade_activated
+    
+    if config.visualization ~= visualization or config.shuffle ~= shuffle or config.loop ~= loop or config.volume ~= volume or config.mute ~= mute or config.fullscreen ~= fullscreen or config.fade ~= fade then
+      config.visualization = visualization
+      config.shuffle = shuffle
+      config.loop = loop
+      config.volume = volume
+      config.mute = mute
+      config.fullscreen = fullscreen
+      config.fade = fade
+      
       write_config = true
     end
   end
