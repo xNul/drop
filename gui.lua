@@ -178,6 +178,13 @@ function gui.load()
   ------------------------------------------------------------------------------------
 end
 
+function gui.reload()
+  timestamp_start_value = "00:00"
+  timestamp_end_value = "00:00"
+  
+  -- also retain volume from dnd
+end
+
 function gui.scale()
   -------------------------------------- Sprites -------------------------------------
   graphics_width, graphics_height = love.graphics.getDimensions()
@@ -656,7 +663,7 @@ end
 function gui.menu:activate()
   audio.reload()
   spectrum.reload()
-  -- gui.reload() may need to be a thing later on
+  gui.reload()
   reload()
   
   gui.playback:scale("pause")

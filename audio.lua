@@ -228,6 +228,9 @@ function audio.stop()
     microphone_device:stop()
     microphone_active = false
   end
+  
+  gui.timestamp_start:setValue(0)
+  gui.timestamp_end:setValue(0)
 end
 
 function audio.toggleLoop()
