@@ -58,7 +58,7 @@ function love.load()
       return type(v) == "number" and v >= 0
     end,
     visualization = function (v)
-      return type(v) == "number" and v > 0 and v < 5
+      return type(v) == "number" and v >= 1 and v <= 4 and v == math.floor(v)
     end,
     shuffle = function (v)
       return type(v) == "boolean"
@@ -97,7 +97,7 @@ function love.load()
       return type(v) == "boolean"
     end,
     sampling_size = function (v)
-      return type(v) == "number" and v%2 == 0
+      return type(v) == "number" and v == math.floor(v) and v%2 == 0
     end,
     window_size_persistence = function (v)
       return type(v) == "boolean"
@@ -115,7 +115,7 @@ function love.load()
       return type(v) == "string" and (v == "menu" or v == "sysaudio" or v == "appdata"  or v == "dragndrop")
     end,
     init_sysaudio_option = function (v)
-      return type(v) == "number" and v >= 0 and v == math.floor(v)
+      return type(v) == "number" and v >= 0 and v == math.floor(v) and v <= #(love.audio.getRecordingDevices())
     end
   }
   
@@ -563,7 +563,7 @@ function love.quit()
     local shuffle = audio.isShuffling()
     local loop = audio.isLooping()
     local mute = (love.audio.getVolume() == 0) and (audio.getPreviousVolume() ~= 0)
-    local volume = mute and audio.getPreviousVolume() or love.audio.getVolume()
+    local volume = math.floor((mute and audio.getPreviousVolume() or not audio.musicExists() and audio.getMusicVolume() or love.audio.getVolume()) * 10 + 0.5) / 10
     local fullscreen = love.window.getFullscreen()
     local fade = fade_activated
     

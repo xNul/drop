@@ -21,6 +21,7 @@ local shuffle_toggle
 local microphone_active
 local microphone_device
 local previous_volume
+local music_volume
 
 function audio.reload()
   if current_song ~= nil then audio.stop() end
@@ -51,6 +52,7 @@ if not love.filesystem.getInfo("music") then love.filesystem.createDirectory("mu
 audio.reload()
 loop_toggle = config.loop
 shuffle_toggle = config.shuffle
+music_volume = config.volume
 
 function audio.update()
   -- plays first song
@@ -59,7 +61,7 @@ function audio.update()
       previous_volume = config.volume
       gui.volume:activate("volume1")
     else
-      gui.volume:activate(config.volume)
+      gui.volume:activate(music_volume)
     end
     audio.changeSong(1)
   end
@@ -196,6 +198,14 @@ end
 
 function audio.setSongName(n)
   song_name = n
+end
+
+function audio.setMusicVolume(v)
+  music_volume = v
+end
+
+function audio.getMusicVolume()
+  return music_volume
 end
 
 function audio.play()

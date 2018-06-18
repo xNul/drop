@@ -661,11 +661,14 @@ function gui.menu:inBoundsY(y)
 end
 
 function gui.menu:activate()
+  if audio.musicExists() then audio.setMusicVolume(love.audio.getVolume()) end
+  
   audio.reload()
   spectrum.reload()
   gui.reload()
   reload()
   
+  gui.volume:activate(1)
   gui.playback:scale("pause")
 end
 
