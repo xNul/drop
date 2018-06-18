@@ -18,6 +18,7 @@ local time_count
 local music_list
 local loop_toggle
 local shuffle_toggle
+local shuffle_history
 local microphone_active
 local microphone_device
 local previous_volume
@@ -43,6 +44,7 @@ function audio.reload()
   decoder = nil
   time_count = 0
   music_list = nil
+  shuffle_history = {}
   microphone_active = false
   microphone_device = nil
   previous_volume = 0
@@ -479,7 +481,18 @@ function audio.changeSong(number)
 
   if not loop_toggle then
     if shuffle_toggle then
-      song_id = math.random(1, #music_list)
+      if number == -1 then
+        if #shuffle_history > 1 then
+          song_id = shuffle_history[#shuffle_history-1]
+          shuffle_history[#shuffle_history] = nil
+        end
+      else
+        song_id = math.random(1, #music_list)
+        if #shuffle_history >= 10 then
+          table.remove(shuffle_history, 1)
+        end
+        shuffle_history[#shuffle_history+1] = song_id
+      end
     else
       song_id = song_id+number
     end
