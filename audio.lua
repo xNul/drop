@@ -142,6 +142,7 @@ end
 function audio.loadMusic()
   if microphone_active then return end
 
+  shuffle_past = {}
   music_list = recursiveEnumerate("music")
 
   local music_exists = true
