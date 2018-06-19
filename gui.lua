@@ -672,6 +672,10 @@ function gui.menu:activate()
   gui.playback:scale("pause")
 end
 
+function gui.menu:isActive()
+  return not audio.musicExists() and not audio.isPlayingMicrophone()
+end
+
 function gui.graphics:setHeight(height)
   graphics_height = height
 end

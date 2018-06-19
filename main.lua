@@ -21,7 +21,7 @@ local sleep_counter
 local window_visible
 local last_frame_time
 local cursor_hand_activated
-local microphone_init
+local microphone_option_pressed
 local devices_list
 local menu_location
 local device_option
@@ -38,7 +38,7 @@ function love.load()
     mute = false, -- enable/disable mute on start (session persistent)
     fullscreen = false, -- enable/disable fullscreen on start (session persistent)
     fade = false, -- enable/disable fade on start (session persistent)
-    fade_intensity_multiplier = 60, -- degree of fading
+    fade_intensity_multiplier = 30, -- degree of fading
     session_persistence = false, -- options restored from previous session
     color = {0, 1, 0}, -- color of visualization/music controls.  Format: {r, g, b} [0-1]
     fps_cap = 0, -- places cap on fps (looks worse, but less cpu intensive).  0 for vsync
@@ -197,7 +197,7 @@ function love.load()
     end,
     ["i"] = function ()
       fade_activated = not fade_activated
-      setColor(nil, 1)
+      setColor(nil, 0)
     end,
     ["m"] = function ()
       audio.mute()
@@ -249,16 +249,16 @@ function love.load()
   color = config.color
   
   if menu_location == "sysaudio" then
-    microphone_init = true
+    microphone_option_pressed = true
     devices_list = love.audio.getRecordingDevices()
   elseif menu_location == "appdata" then
     appdata_music = audio.loadMusic()
   end
   
-  if microphone_init and device_option > 0 and device_option <= #devices_list then
+  if microphone_option_pressed and device_option > 0 and device_option <= #devices_list then
     audio.loadMicrophone(devices_list[device_option])
     audio.setSongName("Audio Input: "..devices_list[device_option]:getName())
-    microphone_init = false
+    microphone_option_pressed = false
   end
   ------------------------------------------------------------------------------------
 end
@@ -278,7 +278,7 @@ function reload()
   window_visible = true
   last_frame_time = 0
   cursor_hand_activated = false
-  microphone_init = false
+  microphone_option_pressed = false
   devices_list = nil
   menu_location = "menu"
   device_option = 0 -- not attached to config.init_sysaudio_option bc init location should only work on init, not after
@@ -311,24 +311,21 @@ function love.update(dt)
 end
 
 function love.draw()
-  if not love.window.isMinimized() then
-    spectrum.draw(waveform)
-  end
-
-  -- controls visualization fade
-  if fade_activated then
-    setColor(nil, spectrum.getAverageTickAmplitude()*config.fade_intensity_multiplier)
-  end
-
   -- overlay/start_screen drawing
-  if not audio.musicExists() and not audio.isPlayingMicrophone() then
+  if gui.menu:isActive() then
     love.graphics.setColor(1, 1, 1)
     love.graphics.setFont(gui.graphics:getBigFont())
 
     local graphics_width = gui.graphics:getWidth()
     local graphics_height = gui.graphics:getHeight()
 
-    if not microphone_init then
+    if microphone_option_pressed then
+      local input_string = "Choose audio input:\n"
+      for i,v in ipairs(devices_list) do
+        input_string = input_string..tostring(i)..") "..v:getName().."\n"
+      end
+      love.graphics.printf(input_string, graphics_width/80, graphics_height/2-2.5*love.graphics.getFont():getHeight(), graphics_width, "left")
+    else
       if menu_location == "dragndrop" then
         love.graphics.printf("Drag and drop music files/folders here", graphics_width/80, graphics_height/2-5*love.graphics.getFont():getHeight()/2, graphics_width, "center")
       elseif appdata_music then
@@ -336,15 +333,16 @@ function love.draw()
       else
         love.graphics.printf("You just tried to play music from your appdata.  Copy songs to \""..appdata_path.."/LOVE/Drop/music\" to make this work or just drag and drop music onto this window.", graphics_width/80, graphics_height/2-5*love.graphics.getFont():getHeight()/2, graphics_width, "left")
       end
-    else
-      local input_string = "Choose audio input:\n"
-      for i,v in ipairs(devices_list) do
-        input_string = input_string..tostring(i)..") "..v:getName().."\n"
-      end
-      love.graphics.printf(input_string, graphics_width/80, graphics_height/2-2.5*love.graphics.getFont():getHeight(), graphics_width, "left")
     end
+  elseif not love.window.isMinimized() then
+    spectrum.draw(waveform)
   end
   gui.overlay()
+  
+  -- controls visualization fade
+  if fade_activated then
+    setColor(nil, (.03-spectrum.getAverageTickAmplitude())*config.fade_intensity_multiplier)
+  end
 
   --[[ manual love.window.isVisible for behind windows and minimized.  Only works on Mac.
   Saves a lot of cpu.  Likely error-prone because it's a bad implementation (no other way) ]]
@@ -369,7 +367,7 @@ end
 
 function setColor(c, f)
   if f then
-    fade_intensity = 1-math.min(math.max(f, 0), 1)
+    fade_intensity = math.min(math.max(f, 0), 1)
   end
   if type(c) == "table" then
     color = c
@@ -484,21 +482,21 @@ function love.keypressed(key, scancode, isrepeat)
   sleep_counter = 0
 
   if not audio.musicExists() and not audio.isPlayingMicrophone() and menu_location ~= "dragndrop" then
-    if microphone_init then
+    if microphone_option_pressed then
       local key_int = tonumber(key)
       if key_int ~= nil and key_int > 0 and key_int <= #devices_list then
         audio.loadMicrophone(devices_list[key_int])
         audio.setSongName("Audio Input: "..devices_list[key_int]:getName())
-        microphone_init = false
+        microphone_option_pressed = false
       end
     elseif key == "1" then
-      microphone_init = true
+      microphone_option_pressed = true
       devices_list = love.audio.getRecordingDevices()
       
       if device_option > 0 and device_option <= #devices_list then
         audio.loadMicrophone(devices_list[device_option])
         audio.setSongName("Audio Input: "..devices_list[device_option]:getName())
-        microphone_init = false
+        microphone_option_pressed = false
       end
     elseif key == "2" then
       appdata_music = audio.loadMusic()
