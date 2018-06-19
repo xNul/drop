@@ -53,12 +53,9 @@ function TSerial.unpack(s, safe)
   if s == nil then return nil, nil end
 	if safe then s = string.match(s, "(%b{})") end
 	assert(type(s) == "string", "Can only TSerial.unpack strings.")
-	local f, result = loadstring("data="..s)
+	local f, result = loadstring("local data="..s.."\nreturn data")
 	if not safe then assert(f,result) elseif not f then return nil, result end
-	result = f()
-	local t = data
-	data = nil
-	return t, result
+	return f(), nil
 end
 
 return TSerial

@@ -396,6 +396,7 @@ function audio.getSampleMicrophone(buffer)
   local index
   local found_flag = false
   local sum = 0
+  
   for i=0, #decoder_array-1 do
     sum = sum+sample_count[i]
     if buffer < sum then
