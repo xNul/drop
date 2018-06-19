@@ -1,5 +1,7 @@
 local Tserial = require 'Tserial'
 
+local MONITOR_REFRESH_RATE
+
 local appdata_path = love.filesystem.getAppdataDirectory()
 local operating_system = love.system.getOS()
 
@@ -25,9 +27,6 @@ local menu_location
 local device_option
 
 function love.load()
-
-  -- Mac only and if not 60hz
-  MONITOR_REFRESH_RATE = 60
 
   local CURRENT_VERSION = 1
   local DEFAULT_CONFIG = {
@@ -158,6 +157,8 @@ function love.load()
   
   -- load/scale gui
   gui.load()
+  
+  MONITOR_REFRESH_RATE = ({love.window.getMode()})[3].refreshrate
   
   --------------------------------- Keyboard Actions ---------------------------------
   key_functions = {
