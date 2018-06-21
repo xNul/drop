@@ -357,7 +357,7 @@ function love.mousepressed(x, y, key, istouch)
 end
 
 function love.mousereleased(x, y, key, istouch)
-  if key == 1 and button_pressed ~= nil and button_pressed:inBoundsX(x) and button_pressed:inBoundsY(y) then
+  if key == 1 and button_pressed ~= nil and button_pressed.inBoundsX(x) and button_pressed.inBoundsY(y) then
     button_pressed:activate()
   end
   button_pressed = nil
