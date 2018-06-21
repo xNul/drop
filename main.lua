@@ -220,10 +220,10 @@ function love.load()
 
     -- moves slowly through the visualization by the length of a frame.  Used to compare visualizations
     [","] = function ()
-      audio.decoderSeek(audio.decoderTell()-spectrum.getSize()/(audio.getSampleRate()*audio.getChannels()))
+      audio.music.seekSong(audio.music.tellSong()-spectrum.getSize()/(audio.getSampleRate()*audio.getChannels()))
     end,
     ["."] = function ()
-      audio.decoderSeek(audio.decoderTell()+spectrum.getSize()/(audio.getSampleRate()*audio.getChannels()))
+      audio.music.seekSong(audio.music.tellSong()+spectrum.getSize()/(audio.getSampleRate()*audio.getChannels()))
     end
   }
   ------------------------------------------------------------------------------------
@@ -247,7 +247,7 @@ function love.load()
     devices_list = love.audio.getRecordingDevices()
     
     if device_option > 0 and device_option <= #devices_list then
-      audio.loadMicrophone(devices_list[device_option])
+      audio.microphone.load(devices_list[device_option])
       microphone_option_pressed = false
     else
       devices_string = "Choose audio input:\n"
@@ -256,7 +256,7 @@ function love.load()
       end
     end
   elseif config.init_location == "appdata" then
-    appdata_music_possible = audio.loadMusic()
+    appdata_music_possible = audio.music.load()
   elseif config.init_location == "dragndrop" then
     dragndrop = true
   end
@@ -265,14 +265,14 @@ end
 
 function love.update(dt)
 
-  if audio.musicExists() or audio.isMicrophoneActive() then
-    if audio.isMicrophoneActive() then audio.updateMicrophone() else audio.update() end
+  if audio.music.exists() or audio.microphone.isActive() then
+    if audio.microphone.isActive() then audio.microphone.update() else audio.music.update() end
 
     if spectrum.wouldChange() and not love.window.isMinimized() then
     
       -- fft calculations (generates waveform for visualization)
-      if audio.isMicrophoneActive() then
-        if spectrum.isMicrophoneReady() then
+      if audio.microphone.isActive() then
+        if audio.microphone.isReady() then
           waveform = spectrum.generateMicrophoneWaveform()
         end
       else
@@ -350,7 +350,7 @@ function love.mousepressed(x, y, key, istouch)
     button_pressed = gui.buttons.getButton(x, y)
     
     -- detects if scrub bar clicked and moves to the corresponding point in time
-    if audio.musicExists() and gui.buttons.scrubbar.inBoundsX(x) and gui.buttons.scrubbar.inBoundsY(y) then
+    if audio.music.exists() and gui.buttons.scrubbar.inBoundsX(x) and gui.buttons.scrubbar.inBoundsY(y) then
       gui.buttons.scrubbar.activate(x)
     end
   end
@@ -391,7 +391,7 @@ function love.keypressed(key, scancode, isrepeat)
   if gui.buttons.menu.isActive() and key_int ~= nil and not dragndrop then
     if microphone_option_pressed then
       if key_int > 0 and key_int <= #devices_list then
-        audio.loadMicrophone(devices_list[key_int])
+        audio.microphone.load(devices_list[key_int])
         microphone_option_pressed = false
       end
     else
@@ -400,7 +400,7 @@ function love.keypressed(key, scancode, isrepeat)
         devices_list = love.audio.getRecordingDevices()
         
         if device_option > 0 and device_option <= #devices_list then
-          audio.loadMicrophone(devices_list[device_option])
+          audio.microphone.load(devices_list[device_option])
           microphone_option_pressed = false
         else
           devices_string = "Choose audio input:\n"
@@ -409,7 +409,7 @@ function love.keypressed(key, scancode, isrepeat)
           end
         end
       elseif key_int == 2 then
-        appdata_music_possible = audio.loadMusic()
+        appdata_music_possible = audio.music.load()
       end
     end
   else
@@ -425,11 +425,11 @@ end
 
 function love.directorydropped(path)
   love.filesystem.mount(path, "music")
-  audio.loadMusic()
+  audio.music.load()
 end
 
 function love.filedropped(file)
-  audio.addSong(file)
+  audio.music.addSong(file)
 end
 
 -- when exiting drop, save config (for persistence)
@@ -467,7 +467,7 @@ function love.quit()
     local shuffle = audio.isShuffling()
     local loop = audio.isLooping()
     local mute = audio.isMuted()
-    local volume = math.floor((mute and audio.getPreviousVolume() or not audio.musicExists() and audio.getMusicVolume() or love.audio.getVolume()) * 10 + 0.5) / 10
+    local volume = math.floor((mute and audio.getPreviousVolume() or not audio.music.exists() and audio.music.getVolume() or love.audio.getVolume()) * 10 + 0.5) / 10
     local fullscreen = love.window.getFullscreen()
     local fade = spectrum.isFading()
     

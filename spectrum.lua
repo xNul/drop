@@ -39,12 +39,12 @@ function spectrum.generateWaveform()
     local new_sample = 0
     for j=0, channels-1 do
       local x = range/2-size*channels/2+(i-1)*channels+j --calculates sample index and centers it
-      new_sample = new_sample+audio.getDecoderSample(x) --obtains samples and sums them
+      new_sample = new_sample+audio.music.getSample(x) --obtains samples and sums them
     end
     new_sample = new_sample/channels --averages sample
     table.insert(wave, new_sample)
   end
-  old_sample = audio.decoderTell('samples')
+  old_sample = audio.music.tellSong('samples')
 
   -- wave->normalized spectrum using ffi
   samples_ptr = ffi.new("float["..size.."]", wave) -- keeps ffi memory allocated, don't destroy
@@ -64,8 +64,8 @@ function spectrum.generateMicrophoneWaveform()
   for i=1, size do
     local new_sample = 0
     for j=0, channels-1 do
-      local x = audio.getSampleSum()-size*channels+(i-1)*channels+j --calculates sample index and centers it
-      new_sample = new_sample+audio.getMicrophoneSample(x) --obtains samples and sums them
+      local x = audio.microphone.getSampleSum()-size*channels+(i-1)*channels+j --calculates sample index and centers it
+      new_sample = new_sample+audio.microphone.getSample(x) --obtains samples and sums them
     end
     new_sample = new_sample/channels --averages sample
     table.insert(wave, new_sample)
@@ -156,17 +156,13 @@ function spectrum.isFading()
   return fade_activated
 end
 
-function spectrum.isMicrophoneReady()
-  return audio.getSampleSum() >= size*audio.getChannels() and audio.isMicrophoneActive()
-end
-
 function spectrum.getAverageTickAmplitude()
   return tick_amplitude_average
 end
 
 -- determine if sample position has changed
 function spectrum.wouldChange()
-  return (audio.decoderTell('samples') ~= old_sample) or (audio.isMicrophoneActive() and not audio.isPaused())
+  return (audio.music.tellSong('samples') ~= old_sample) or (audio.microphone.isActive() and not audio.isPaused())
 end
 
 function spectrum.getSize()

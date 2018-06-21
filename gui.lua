@@ -282,17 +282,17 @@ end
 function gui.overlay()
   love.graphics.setColor(1, 1, 1)
   love.graphics.setFont(normal_font)
-  if audio.getSongName() ~= nil then
-    love.graphics.print(audio.getSongName(), 10, 10)
+  if audio.getTitle() ~= nil then
+    love.graphics.print(audio.getTitle(), 10, 10)
   end
   
   local scrubhead_x
   if config.visualization_update or not scrubbar_active then
-    scrubhead_x = (audio.decoderTell()/audio.getDuration())*(scrubbar_x2-scrubbar_x1)+scrubbar_x1
-    timestamp_start_time = gui.extra.secondsToString(audio.decoderTell())
+    scrubhead_x = (audio.music.tellSong()/audio.music.getDuration())*(scrubbar_x2-scrubbar_x1)+scrubbar_x1
+    timestamp_start_time = gui.extra.secondsToString(audio.music.tellSong())
   else
     scrubhead_x = gui.buttons.scrubbar.getProportion(scrubhead_position)*(scrubbar_x2-scrubbar_x1)+scrubbar_x1
-    timestamp_start_time = gui.extra.secondsToString(gui.buttons.scrubbar.getProportion(scrubhead_position)*audio.getDuration())
+    timestamp_start_time = gui.extra.secondsToString(gui.buttons.scrubbar.getProportion(scrubhead_position)*audio.music.getDuration())
   end
 
   -- draw ui elements
@@ -453,7 +453,7 @@ function gui.buttons.menu.inBoundsY(y)
 end
 
 function gui.buttons.menu.isActive()
-  return not audio.musicExists() and not audio.isMicrophoneActive() and not audio.isPlaying()
+  return not audio.music.exists() and not audio.microphone.isActive() and not audio.isPlaying()
 end
 
 function gui.buttons.menu.activate()
@@ -474,7 +474,7 @@ function gui.buttons.left.inBoundsY(y)
 end
 
 function gui.buttons.left.activate()
-  audio.changeSong(-1)
+  audio.music.changeSong(-1)
 end
 
 function gui.buttons.playback.inBoundsX(x)
@@ -503,7 +503,7 @@ function gui.buttons.playback.activate()
   if audio.isPaused() then
     audio.play()
     gui.buttons.playback.scale("pause")
-  elseif audio.isPlaying() or audio.isMicrophoneActive() then
+  elseif audio.isPlaying() or audio.microphone.isActive() then
     audio.pause()
     gui.buttons.playback.scale("play")
   end
@@ -518,7 +518,7 @@ function gui.buttons.right.inBoundsY(y)
 end
 
 function gui.buttons.right.activate()
-  audio.changeSong(1)
+  audio.music.changeSong(1)
 end
 
 function gui.buttons.shuffle.inBoundsX(x)
@@ -584,7 +584,7 @@ function gui.buttons.scrubbar.activate(x)
   end
 
   if config.visualization_update then
-    audio.decoderSeek(gui.buttons.scrubbar.getProportion(x)*audio.getDuration())
+    audio.music.seekSong(gui.buttons.scrubbar.getProportion(x)*audio.music.getDuration())
   else
     scrubhead_position = x
   end
@@ -601,7 +601,7 @@ function gui.buttons.scrubbar.deactivate(x)
   end
   
   if not config.visualization_update and scrubbar_active then
-    audio.decoderSeek(gui.buttons.scrubbar.getProportion(x)*audio.getDuration())
+    audio.music.seekSong(gui.buttons.scrubbar.getProportion(x)*audio.music.getDuration())
   end
   
   scrubbar_active = false
