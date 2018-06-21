@@ -1,30 +1,36 @@
-local Tserial = require 'Tserial'
+main = {}
 
-local MONITOR_REFRESH_RATE
+local TSerial = require 'TSerial'
+
+local MONITOR_REFRESH_RATE = 60
+local KEY_FUNCTIONS = {}
 
 local appdata_path = love.filesystem.getAppdataDirectory()
 local operating_system = love.system.getOS()
+local waveform = {}
+local sleep_counter = 0
+local last_frame_time = 0
+local button_pressed = nil
+local appdata_music_possible = true
+local microphone_option_pressed = false
+local devices_list = nil
+local devices_string = ""
+local device_option = 0
+local dragndrop = false
 
-local waveform
-local scrub_head_pause
-local scrub_head_pressed
+function main.reload()
 
-local appdata_music
-
-local button_pressed
-
-local fade_interval_counter
-local fade_activated
-local color
-local fade_intensity
-local sleep_counter
-local window_visible
-local last_frame_time
-local cursor_hand_activated
-local microphone_option_pressed
-local devices_list
-local menu_location
-local device_option
+  waveform = {}
+  sleep_counter = 0
+  button_pressed = nil
+  appdata_music_possible = true
+  microphone_option_pressed = false
+  devices_list = nil
+  devices_string = ""
+  device_option = 0 -- not attached to config.init_sysaudio_option bc init location should only work on init, not after
+  dragndrop = false
+  
+end
 
 function love.load()
 
@@ -118,13 +124,11 @@ function love.load()
     end
   }
   
-  config = Tserial.unpack(love.filesystem.read("config.lua"), true)
+  config = TSerial.unpack(love.filesystem.read("config.lua"), true)
   if not config or CURRENT_VERSION < config.version then -- if config.lua doesnt exist, or if config.lua has invalid settings, or if config version is higher than current then replace it
     config = DEFAULT_CONFIG
-    love.filesystem.write("config.lua", Tserial.pack(config, false, true))
-  end
-  
-  if CURRENT_VERSION > config.version then
+    love.filesystem.write("config.lua", TSerial.pack(config, false, true))
+  elseif CURRENT_VERSION > config.version then
     local dconfig = DEFAULT_CONFIG
     
     for key, value in pairs(config) do
@@ -135,69 +139,57 @@ function love.load()
     
     dconfig.version = CURRENT_VERSION
     config = dconfig
-    love.filesystem.write("config.lua", Tserial.pack(config, false, true))
+    love.filesystem.write("config.lua", TSerial.pack(config, false, true))
   else
-    if config ~= DEFAULT_CONFIG then
-      local invalid = false
-      
-      for key, value in pairs(config) do
-        if not CHECK_VALUES[key](value) then
-          config[key] = DEFAULT_CONFIG[key]
-          invalid = true
-        end
+    local invalid = false
+    
+    for key, value in pairs(config) do
+      if not CHECK_VALUES[key](value) then
+        config[key] = DEFAULT_CONFIG[key]
+        invalid = true
       end
-      
-      if invalid then love.filesystem.write("config.lua", Tserial.pack(config, false, true)) end
     end
+    
+    if invalid then love.filesystem.write("config.lua", TSerial.pack(config, false, true)) end
   end
   
-  audio = require 'audio'
-  spectrum = require 'spectrum'
-  gui = require 'gui'
-  
-  -- load/scale gui
-  gui.load()
-  
-  MONITOR_REFRESH_RATE = ({love.window.getMode()})[3].refreshrate
-  
   --------------------------------- Keyboard Actions ---------------------------------
-  key_functions = {
+  KEY_FUNCTIONS = {
     ["up"] = function ()
       -- round to nearest 1st decimal place
       local new_volume = math.floor((love.audio.getVolume()+.1) * 10 + 0.5) / 10
-      gui.volume:activate(new_volume)
+      gui.buttons.volume.activate(new_volume)
     end,
     ["down"] = function ()
       -- round to nearest 1st decimal place
       local new_volume = math.floor((love.audio.getVolume()-.1) * 10 + 0.5) / 10
-      gui.volume:activate(new_volume)
+      gui.buttons.volume.activate(new_volume)
     end,
     ["right"] = function ()
-      gui.right:activate()
+      gui.buttons.right.activate()
     end,
     ["left"] = function ()
-      gui.left:activate()
+      gui.buttons.left.activate()
     end,
 
     -- rgb keys are being used as a test atm.  Not finished
     ["r"] = function ()
-      setColor("r")
+      gui.graphics.setColor("r")
     end,
     ["g"] = function ()
-      setColor("g")
+      gui.graphics.setColor("g")
     end,
     ["b"] = function ()
-      setColor("b")
+      gui.graphics.setColor("b")
     end,
     ["s"] = function ()
-      gui.shuffle:activate()
+      gui.buttons.shuffle.activate()
     end,
     ["l"] = function ()
-      gui.loop:activate()
+      gui.buttons.loop.activate()
     end,
     ["i"] = function ()
-      fade_activated = not fade_activated
-      setColor(nil, 0)
+      spectrum.setFade(not spectrum.isFading())
     end,
     ["m"] = function ()
       audio.mute()
@@ -216,14 +208,14 @@ function love.load()
     end,
     ["escape"] = function ()
       if love.window.getFullscreen() then
-        gui.fullscreen:activate()
+        gui.buttons.fullscreen.activate()
       end
     end,
     ["f"] = function ()
-      gui.fullscreen:activate()
+      gui.buttons.fullscreen.activate()
     end,
     ["space"] = function ()
-      gui.playback:activate()
+      gui.buttons.playback.activate()
     end,
 
     -- moves slowly through the visualization by the length of a frame.  Used to compare visualizations
@@ -234,159 +226,116 @@ function love.load()
       audio.decoderSeek(audio.decoderTell()+spectrum.getSize()/(audio.getSampleRate()*audio.getChannels()))
     end
   }
-
-  love.keyboard.setKeyRepeat(true)
   ------------------------------------------------------------------------------------
 
+  
   ----------------------------------- Main -------------------------------------------
-  love.graphics.setLineWidth(1)
-  love.graphics.setLineStyle('smooth')
+  audio = require 'audio'
+  spectrum = require 'spectrum'
+  gui = require 'gui'
   
-  reload()
-  menu_location = config.init_location
   device_option = config.init_sysaudio_option
-  fade_activated = config.fade
-  color = config.color
+  love.keyboard.setKeyRepeat(true)
   
-  if menu_location == "sysaudio" then
+  -- load/scale gui
+  gui.load()
+  
+  MONITOR_REFRESH_RATE = ({love.window.getMode()})[3].refreshrate
+  
+  if config.init_location == "sysaudio" then
     microphone_option_pressed = true
     devices_list = love.audio.getRecordingDevices()
-  elseif menu_location == "appdata" then
-    appdata_music = audio.loadMusic()
-  end
-  
-  if microphone_option_pressed and device_option > 0 and device_option <= #devices_list then
-    audio.loadMicrophone(devices_list[device_option])
-    audio.setSongName("Audio Input: "..devices_list[device_option]:getName())
-    microphone_option_pressed = false
+    
+    if device_option > 0 and device_option <= #devices_list then
+      audio.loadMicrophone(devices_list[device_option])
+      microphone_option_pressed = false
+    else
+      devices_string = "Choose audio input:\n"
+      for i,v in ipairs(devices_list) do
+        devices_string = devices_string..tostring(i)..") "..v:getName().."\n"
+      end
+    end
+  elseif config.init_location == "appdata" then
+    appdata_music_possible = audio.loadMusic()
+  elseif config.init_location == "dragndrop" then
+    dragndrop = true
   end
   ------------------------------------------------------------------------------------
-end
-
-function reload()
-  waveform = {}
-  scrub_head_pause = false
-  scrub_head_pressed = false
-
-  appdata_music = true
-  
-  button_pressed = ""
-  
-  fade_interval_counter = 1
-  fade_intensity = 0
-  sleep_counter = 0
-  window_visible = true
-  last_frame_time = 0
-  cursor_hand_activated = false
-  microphone_option_pressed = false
-  devices_list = nil
-  menu_location = "menu"
-  device_option = 0 -- not attached to config.init_sysaudio_option bc init location should only work on init, not after
-  
-  setColor(config.color)
 end
 
 function love.update(dt)
-  if audio.musicExists() or audio.isPlayingMicrophone() then
-    if audio.isPlayingMicrophone() then audio.updateMicrophone() else audio.update() end
 
-    if spectrum.wouldChange() and window_visible and not love.window.isMinimized() then
+  if audio.musicExists() or audio.isMicrophoneActive() then
+    if audio.isMicrophoneActive() then audio.updateMicrophone() else audio.update() end
+
+    if spectrum.wouldChange() and not love.window.isMinimized() then
+    
       -- fft calculations (generates waveform for visualization)
-      if audio.isPlayingMicrophone() then
-        waveform = spectrum.generateMicrophoneWaveform()
+      if audio.isMicrophoneActive() then
+        if spectrum.isMicrophoneReady() then
+          waveform = spectrum.generateMicrophoneWaveform()
+        end
       else
         waveform = spectrum.generateWaveform()
       end
     end
 
     --overlay timer: puts overlay to sleep after sleep_time sec of inactivity
-    if not gui.sleep() then
+    if not gui.extra.sleep() then
       sleep_counter = sleep_counter+dt
+      
       if sleep_counter > config.sleep_time then
-        gui.sleep(true)
+        gui.extra.sleep(true)
         sleep_counter = 0
       end
     end
   end
+  
 end
 
 function love.draw()
-  -- overlay/start_screen drawing
-  if gui.menu:isActive() then
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.setFont(gui.graphics:getBigFont())
 
-    local graphics_width = gui.graphics:getWidth()
-    local graphics_height = gui.graphics:getHeight()
+  -- overlay/start_screen drawing
+  if gui.buttons.menu.isActive() then
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.setFont(gui.graphics.getBigFont())
+
+    local graphics_width = gui.graphics.getWidth()
+    local graphics_height = gui.graphics.getHeight()
 
     if microphone_option_pressed then
-      local input_string = "Choose audio input:\n"
-      for i,v in ipairs(devices_list) do
-        input_string = input_string..tostring(i)..") "..v:getName().."\n"
-      end
-      love.graphics.printf(input_string, graphics_width/80, graphics_height/2-2.5*love.graphics.getFont():getHeight(), graphics_width, "left")
+      love.graphics.printf(devices_string, graphics_width/80, graphics_height/2-2.5*love.graphics.getFont():getHeight(), graphics_width, "left")
     else
-      if menu_location == "dragndrop" then
+      if dragndrop then
         love.graphics.printf("Drag and drop music files/folders here", graphics_width/80, graphics_height/2-5*love.graphics.getFont():getHeight()/2, graphics_width, "center")
-      elseif appdata_music then
+      elseif appdata_music_possible then
         love.graphics.printf("Drop music files/folders here or press the corresponding number:\n1) Play system audio\n2) Play music in appdata", graphics_width/80, graphics_height/2-5*love.graphics.getFont():getHeight()/2, graphics_width, "left")
       else
-        love.graphics.printf("You just tried to play music from your appdata.  Copy songs to \""..appdata_path.."/LOVE/Drop/music\" to make this work or just drag and drop music onto this window.", graphics_width/80, graphics_height/2-5*love.graphics.getFont():getHeight()/2, graphics_width, "left")
+        love.graphics.printf("Failed to play music from your appdata.  Copy songs to \""..appdata_path.."/LOVE/Drop/music\" to make this work or just drag and drop music onto this window.", graphics_width/80, graphics_height/2-5*love.graphics.getFont():getHeight()/2, graphics_width, "left")
       end
     end
   elseif not love.window.isMinimized() then
     spectrum.draw(waveform)
   end
-  gui.overlay()
   
-  -- controls visualization fade
-  if fade_activated then
-    setColor(nil, (.03-spectrum.getAverageTickAmplitude())*config.fade_intensity_multiplier)
-  end
-
-  --[[ manual love.window.isVisible for behind windows and minimized.  Only works on Mac.
-  Saves a lot of cpu.  Likely error-prone because it's a bad implementation (no other way) ]]
-  if operating_system == "OS X" and love.timer.getFPS() > MONITOR_REFRESH_RATE+6 then
-    -- manual fps limiter (fixes background fps/CPU leak) it's 70 instead of 60 so we can detect when behind windows
-    if window_visible then last_frame_time = love.timer.getTime() end
-    local slack = 1/(MONITOR_REFRESH_RATE+10) - (love.timer.getTime()-last_frame_time)
-    if slack > 0 then love.timer.sleep(slack) end
-    last_frame_time = love.timer.getTime()
-
-    window_visible = false
-  else
-    window_visible = true
+  if not gui.extra.sleep() then
+    gui.overlay()
   end
   
   if config.fps_cap > 0 then
     local slack = 1/config.fps_cap - (love.timer.getTime()-last_frame_time)
     if slack > 0 then love.timer.sleep(slack) end
     last_frame_time = love.timer.getTime()
-  end
-end
-
-function setColor(c, f)
-  if f then
-    fade_intensity = math.min(math.max(f, 0), 1)
-  end
-  if type(c) == "table" then
-    color = c
-  elseif c == "r" then
-    color = {1, 0, 0}
-  elseif c == "g" then
-    color = {0, 1, 0}
-  elseif c == "b" then
-    color = {0, 0, 1}
+  
+  --[[ manual love.window.isVisible for behind windows and minimized.  Only works on Mac.
+  Saves a lot of cpu.  Likely error-prone because it's a bad implementation (no other way) ]]
+  elseif operating_system == "OS X" and love.timer.getFPS() > MONITOR_REFRESH_RATE+6 then
+    local slack = 1/(MONITOR_REFRESH_RATE+10) - (love.timer.getTime()-last_frame_time)
+    if slack > 0 then love.timer.sleep(slack) end
+    last_frame_time = love.timer.getTime()
   end
   
-  local faded_color = {}
-  faded_color[1] = math.max(0, color[1]-fade_intensity)
-  faded_color[2] = math.max(0, color[2]-fade_intensity)
-  faded_color[3] = math.max(0, color[3]-fade_intensity)
-  
-  love.graphics.setColor(faded_color)
 end
-
 
 
 
@@ -394,119 +343,78 @@ end
 
 -- Input Callbacks --
 function love.mousepressed(x, y, key, istouch)
-  gui.sleep(false)
+  gui.extra.sleep(false)
   sleep_counter = 0
   
-  local button_table = {"left", "playback", "right", "shuffle", "loop", "volume", "fullscreen", "menu"}
-  
-  local button
-  for i,v in ipairs(button_table) do
-    button = gui[v]
+  if key == 1 then
+    button_pressed = gui.buttons.getButton(x, y)
     
-    if button:inBoundsX(x) and button:inBoundsY(y) then
-      button_pressed = v
-      break
+    -- detects if scrub bar clicked and moves to the corresponding point in time
+    if audio.musicExists() and gui.buttons.scrubbar.inBoundsX(x) and gui.buttons.scrubbar.inBoundsY(y) then
+      gui.buttons.scrubbar.activate(x)
     end
-  end
-  
-  -- detects if scrub bar clicked and moves to the corresponding point in time
-  if key == 1 and audio.musicExists() and gui.scrubbar:inBoundsX(x) and gui.scrubbar:inBoundsY(y) then
-    if audio.isPlaying() then
-      scrub_head_pause = true
-      audio.pause()
-    end
-  
-    if config.visualization_update then
-      audio.decoderSeek(gui.scrubbar:getProportion(x)*audio.getDuration())
-    else
-      gui.scrubhead:setPressed(true)
-      gui.scrubhead:setPosition(x)
-    end
-    scrub_head_pressed = true
   end
 end
 
 function love.mousereleased(x, y, key, istouch)
-  if button_pressed ~= "" and gui[button_pressed]:inBoundsX(x) and gui[button_pressed]:inBoundsY(y) then
-    gui[button_pressed]:activate()
+  if key == 1 and button_pressed ~= nil and button_pressed:inBoundsX(x) and button_pressed:inBoundsY(y) then
+    button_pressed:activate()
   end
-  button_pressed = ""
+  button_pressed = nil
 
-  if scrub_head_pause then
-    audio.play()
-    scrub_head_pause = false
-  end
-  if not config.visualization_update and scrub_head_pressed then
-    gui.scrubhead:setPressed(false)
-    audio.decoderSeek(gui.scrubbar:getProportion(x)*audio.getDuration())
-  end
-  scrub_head_pressed = false
+  if gui.buttons.scrubbar.isActive() then gui.buttons.scrubbar.deactivate(x) end
 end
 
 function love.mousemoved(x, y, dx, dy, istouch)
-  gui.sleep(false)
+  gui.extra.sleep(false)
   sleep_counter = 0
   
-  if (gui.left:inBoundsY(y) and ((gui.scrubbar:inBoundsY(y) and gui.scrubbar:inBoundsX(x)) or gui.leftPanel:inBoundsX(x) or gui.rightPanel:inBoundsX(x))) or (gui.menu:inBoundsX(x) and gui.menu:inBoundsY(y)) then
-    if not cursor_hand_activated then love.mouse.setCursor(love.mouse.getSystemCursor("hand")) end
-    cursor_hand_activated = true
-  elseif cursor_hand_activated then
-    love.mouse.setCursor(love.mouse.getSystemCursor("arrow"))
-    cursor_hand_activated = false
-  end
+  gui.buttons.setCursor(x, y)
 
   -- makes scrub bar draggable
-  if scrub_head_pressed and gui.scrubbar:inBoundsX(x) then
-    if config.visualization_update then
-      audio.decoderSeek(gui.scrubbar:getProportion(x)*audio.getDuration())
-    else
-      gui.scrubhead:setPosition(x)
-    end
+  if gui.buttons.scrubbar.isActive() and gui.buttons.scrubbar.inBoundsX(x) then
+    gui.buttons.scrubbar.activate(x)
   end
 end
 
 function love.mousefocus(focus)
-  if scrub_head_pause then
-    audio.play()
-    scrub_head_pause = false
+  if gui.buttons.scrubbar.isActive() then
+    gui.buttons.scrubbar.deactivate(gui.buttons.scrubbar.getScrubheadPosition())
   end
-  if not config.visualization_update and scrub_head_pressed then
-    gui.scrubhead:setPressed(false)
-    audio.decoderSeek(gui.scrubbar:getProportion(gui.scrubhead:getPosition())*audio.getDuration())
-  end
-  scrub_head_pressed = false
 end
 
 function love.keypressed(key, scancode, isrepeat)
-  gui.sleep(false)
+  gui.extra.sleep(false)
   sleep_counter = 0
 
-  if not audio.musicExists() and not audio.isPlayingMicrophone() and menu_location ~= "dragndrop" then
+  local key_int = tonumber(key)
+  if gui.buttons.menu.isActive() and key_int ~= nil and not dragndrop then
     if microphone_option_pressed then
-      local key_int = tonumber(key)
-      if key_int ~= nil and key_int > 0 and key_int <= #devices_list then
+      if key_int > 0 and key_int <= #devices_list then
         audio.loadMicrophone(devices_list[key_int])
-        audio.setSongName("Audio Input: "..devices_list[key_int]:getName())
         microphone_option_pressed = false
       end
-    elseif key == "1" then
-      microphone_option_pressed = true
-      devices_list = love.audio.getRecordingDevices()
-      
-      if device_option > 0 and device_option <= #devices_list then
-        audio.loadMicrophone(devices_list[device_option])
-        audio.setSongName("Audio Input: "..devices_list[device_option]:getName())
-        microphone_option_pressed = false
-      end
-    elseif key == "2" then
-      appdata_music = audio.loadMusic()
     else
-      local function catch_nil() end
-      (key_functions[key] or catch_nil)()
+      if key_int == 1 then
+        microphone_option_pressed = true
+        devices_list = love.audio.getRecordingDevices()
+        
+        if device_option > 0 and device_option <= #devices_list then
+          audio.loadMicrophone(devices_list[device_option])
+          microphone_option_pressed = false
+        else
+          devices_string = "Choose audio input:\n"
+          for i,v in ipairs(devices_list) do
+            devices_string = devices_string..tostring(i)..") "..v:getName().."\n"
+          end
+        end
+      elseif key_int == 2 then
+        appdata_music_possible = audio.loadMusic()
+      end
     end
   else
     local function catch_nil() end
-    (key_functions[key] or catch_nil)()
+    (KEY_FUNCTIONS[key] or catch_nil)()
   end
 end
 
@@ -524,17 +432,14 @@ function love.filedropped(file)
   audio.addSong(file)
 end
 
-function love.visible(v)
-  window_visible = v
-end
-
 -- when exiting drop, save config (for persistence)
 function love.quit()
   local write_config = false
+  
   if config.window_size_persistence then
     local new_window_size
     if love.window.getFullscreen() then
-      new_window_size = {gui.graphics:getWindowedDimensions()}
+      new_window_size = {gui.graphics.getWindowedDimensions()}
     else
       new_window_size = {love.graphics.getDimensions()}
     end
@@ -547,7 +452,7 @@ function love.quit()
   if config.window_location_persistence then
     local new_window_location
     if love.window.getFullscreen() then
-      new_window_location = {gui.graphics:getWindowedPosition()}
+      new_window_location = {gui.graphics.getWindowedPosition()}
     else
       new_window_location = {love.window.getPosition()}
     end
@@ -561,10 +466,10 @@ function love.quit()
     local visualization = spectrum.getVisualization()
     local shuffle = audio.isShuffling()
     local loop = audio.isLooping()
-    local mute = (love.audio.getVolume() == 0) and (audio.getPreviousVolume() ~= 0)
+    local mute = audio.isMuted()
     local volume = math.floor((mute and audio.getPreviousVolume() or not audio.musicExists() and audio.getMusicVolume() or love.audio.getVolume()) * 10 + 0.5) / 10
     local fullscreen = love.window.getFullscreen()
-    local fade = fade_activated
+    local fade = spectrum.isFading()
     
     if config.visualization ~= visualization or config.shuffle ~= shuffle or config.loop ~= loop or config.volume ~= volume or config.mute ~= mute or config.fullscreen ~= fullscreen or config.fade ~= fade then
       config.visualization = visualization
@@ -580,7 +485,7 @@ function love.quit()
   end
   
   if write_config then
-    love.filesystem.write("config.lua", Tserial.pack(config, false, true))
+    love.filesystem.write("config.lua", TSerial.pack(config, false, true))
   end
   
   return false
