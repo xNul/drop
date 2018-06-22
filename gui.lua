@@ -456,6 +456,7 @@ function gui.buttons.menu.isActive()
 end
 
 function gui.buttons.menu.activate()
+  print("Reloading Drop...")
 
   audio.reload()
   spectrum.reload()

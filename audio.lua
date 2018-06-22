@@ -70,21 +70,27 @@ end
 
 function audio.music.load()
   if rd_active then return end
+  
+  print("Attempting to load music in AppData.")
 
   shuffle_history = {}
   music_list = audio.music.recursiveEnumerate("music")
 
   if next(music_list) == nil then
     music_list = nil
+    print("Failed to load AppData music.")
     return false
   end
 
+  print("Successfully loaded AppData music.")
   return true
 end
 
 function audio.music.addSong(file)
   if rd_active then return end
 
+  print("Attempting to add song to music.")
+  
   if music_list == nil then
     music_list = {}
   end
@@ -95,7 +101,7 @@ function audio.music.addSong(file)
     ".dsm", ".far", ".pat", ".j2b", ".mdl",
     ".med", ".mod", ".mt2", ".mtm", ".okt",
     ".psm", ".s3m", ".stm", ".ult", ".umx",
-    ".xm", ".abc", ".mid", ".it"
+    ".abc", ".mid"
   }
   
   local filename = file:getFilename()
@@ -112,6 +118,9 @@ function audio.music.addSong(file)
     music_list[index] = {}
     music_list[index][1] = file
     music_list[index][2] = filename:sub((string.find(filename, "\\[^\\]*$") or string.find(filename, "/[^/]*$") or 0)+1, -5)
+    print("Song successfully added to music.")
+  else
+    print("Failed to add song to music.  Invalid format "..filename:sub(-3)..".")
   end
 end
 
@@ -188,6 +197,8 @@ end
 function audio.music.changeSong(number)
   if rd_active or not audio.music.exists() then return end
 
+  print("Playing next song...")
+  
   if not loop_toggle then
     if shuffle_toggle then
       if number == -1 then
@@ -315,7 +326,7 @@ function audio.music.recursiveEnumerate(folder)
     ".dsm", ".far", ".pat", ".j2b", ".mdl",
     ".med", ".mod", ".mt2", ".mtm", ".okt",
     ".psm", ".s3m", ".stm", ".ult", ".umx",
-    ".xm", ".abc", ".mid", ".it"
+    ".abc", ".mid"
   }
 
   local lfs = love.filesystem
@@ -389,6 +400,8 @@ end
 
 
 function audio.recordingdevice.load(device)
+  print("Now loading Audio Input Device "..rd_list[key_int]:getName()..".")
+
   device:start(2048, rd_sample_rate, rd_bit_depth, rd_channels)
   rd_active = true
   recording_device = device

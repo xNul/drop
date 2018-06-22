@@ -36,6 +36,8 @@ end
 
 function love.load()
 
+  print("Starting Drop...")
+
   local CURRENT_VERSION = 2
   local DEFAULT_CONFIG = {
     version = CURRENT_VERSION, -- every time config format changes 1 is added
@@ -140,9 +142,11 @@ function love.load()
   
   config = TSerial.unpack(love.filesystem.read("config.lua"), true)
   if not config or CURRENT_VERSION < config.version then -- if config.lua doesnt exist, or if config.lua has invalid settings, or if config version is higher than current then replace it
+    print("Error: config.lua is either missing, corrupt, or from a later version.  Recreating...")
     config = DEFAULT_CONFIG
     love.filesystem.write("config.lua", TSerial.pack(config, false, true))
   elseif CURRENT_VERSION > config.version then
+    print("Old config.lua found.  Updating it to the latest version.")
     local dconfig = DEFAULT_CONFIG
     
     for key, value in pairs(config) do
@@ -161,11 +165,14 @@ function love.load()
       if not CHECK_VALUES[key](value) then
         config[key] = DEFAULT_CONFIG[key]
         invalid = true
+        print("Error: Invalid "..key.." value detected.  Resetting to default.")
       end
     end
     
     if invalid then love.filesystem.write("config.lua", TSerial.pack(config, false, true)) end
   end
+  
+  print("Successfully loaded config.lua.")
   
   --------------------------------- Keyboard Actions ---------------------------------
   KEY_FUNCTIONS = {
@@ -246,6 +253,8 @@ function love.load()
   gui.load()
   
   MONITOR_REFRESH_RATE = ({love.window.getMode()})[3].refreshrate
+  
+  if config.init_location ~= "menu" then print("Init Location detected.  Now jumping to "..config.init_location..".") end
   
   if config.init_location == "sysaudio" then
     rd_option_pressed = true
@@ -439,6 +448,8 @@ end
 
 -- when exiting drop, save config (for persistence)
 function love.quit()
+  print("Quit attempt detected...")
+  
   local write_config = false
   
   if config.window_size_persistence then
@@ -491,7 +502,10 @@ function love.quit()
   
   if write_config then
     love.filesystem.write("config.lua", TSerial.pack(config, false, true))
+    print("Updated config.lua.")
   end
+  
+  print("Quitting Drop...")
   
   return false
 end
