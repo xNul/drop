@@ -14,10 +14,10 @@ local fps_cap = 0
 local last_frame_time = 0
 local button_pressed = nil
 local appdata_music_possible = true
-local microphone_option_pressed = false
-local devices_list = nil
-local devices_string = ""
-local device_option = 0
+local rd_option_pressed = false
+local rd_list = nil
+local rd_string = ""
+local rd_option = 0
 local dragndrop = false
 
 function main.reload()
@@ -26,17 +26,17 @@ function main.reload()
   sleep_counter = 0
   button_pressed = nil
   appdata_music_possible = true
-  microphone_option_pressed = false
-  devices_list = nil
-  devices_string = ""
-  device_option = 0 -- not attached to config.init_sysaudio_option bc init location should only work on init, not after
+  rd_option_pressed = false
+  rd_list = nil
+  rd_string = ""
+  rd_option = 0 -- not attached to config.init_sysaudio_option bc init location should only work on init, not after
   dragndrop = false
   
 end
 
 function love.load()
 
-  local CURRENT_VERSION = 1
+  local CURRENT_VERSION = 2
   local DEFAULT_CONFIG = {
     version = CURRENT_VERSION, -- every time config format changes 1 is added
     visualization = 3, -- visualization to show on start (session persistent)
@@ -58,7 +58,10 @@ function love.load()
     window_location_persistence = false, -- window position restored from previous session
     window_location = {420, 340, 1}, -- location of window when persistent (window location persistent)
     init_location = "menu", -- where to go on start.  Options: "menu", "dragndrop", "sysaudio", or "appdata"
-    init_sysaudio_option = 0 -- which system audio input to automatically select. Options: 0=show options, 1-infinity=audio input
+    init_sysaudio_option = 0, -- which system audio input to automatically select. Options: 0=show options, 1-infinity=audio input
+    rd_sample_rate = 44100, -- audio input device's sample rate (in hz). Change only if having issues visualizing audio
+    rd_bit_depth = 16, -- audio input device's bit depth. Change only if having issues visualizing audio
+    rd_channels = 1 -- audio input device's number of channels. Change only if having issues visualizing audio
   }
   local CHECK_VALUES = {
     version = function (v)
@@ -123,6 +126,15 @@ function love.load()
     end,
     init_sysaudio_option = function (v)
       return type(v) == "number" and v >= 0 and v == math.floor(v) and v <= #(love.audio.getRecordingDevices())
+    end,
+    rd_sample_rate = function (v)
+      return type(v) == "number" and v > 0 and v == math.floor(v)
+    end,
+    rd_bit_depth = function (v)
+      return type(v) == "number" and v > 0 and v == math.floor(v) and v%2 == 0
+    end,
+    rd_channels = function (v)
+      return type(v) == "number" and v > 0 and v <= 2 and v == math.floor(v)
     end
   }
   
@@ -227,7 +239,7 @@ function love.load()
   
   sleep_time = config.sleep_time
   fps_cap = config.fps_cap
-  device_option = config.init_sysaudio_option
+  rd_option = config.init_sysaudio_option
   love.keyboard.setKeyRepeat(true)
   
   -- load/scale gui
@@ -236,16 +248,16 @@ function love.load()
   MONITOR_REFRESH_RATE = ({love.window.getMode()})[3].refreshrate
   
   if config.init_location == "sysaudio" then
-    microphone_option_pressed = true
-    devices_list = love.audio.getRecordingDevices()
+    rd_option_pressed = true
+    rd_list = love.audio.getRecordingDevices()
     
-    if device_option > 0 and device_option <= #devices_list then
-      audio.microphone.load(devices_list[device_option])
-      microphone_option_pressed = false
+    if rd_option > 0 and rd_option <= #rd_list then
+      audio.recordingdevice.load(rd_list[rd_option])
+      rd_option_pressed = false
     else
-      devices_string = "Choose audio input:\n"
-      for i,v in ipairs(devices_list) do
-        devices_string = devices_string..tostring(i)..") "..v:getName().."\n"
+      rd_string = "Choose audio input:\n"
+      for i,v in ipairs(rd_list) do
+        rd_string = rd_string..tostring(i)..") "..v:getName().."\n"
       end
     end
   elseif config.init_location == "appdata" then
@@ -258,14 +270,14 @@ end
 
 function love.update(dt)
 
-  if audio.music.exists() or audio.microphone.isActive() then
-    if audio.microphone.isActive() then audio.microphone.update() else audio.music.update() end
+  if audio.music.exists() or audio.recordingdevice.isActive() then
+    if audio.recordingdevice.isActive() then audio.recordingdevice.update() else audio.music.update() end
 
     if spectrum.wouldChange() and not love.window.isMinimized() then
     
       -- fft calculations (generates waveform for visualization)
-      if audio.microphone.isActive() then
-        if audio.microphone.isReady() then
+      if audio.recordingdevice.isActive() then
+        if audio.recordingdevice.isReady() then
           waveform = spectrum.generateMicrophoneWaveform()
         end
       else
@@ -296,8 +308,8 @@ function love.draw()
     local graphics_width = gui.graphics.getWidth()
     local graphics_height = gui.graphics.getHeight()
 
-    if microphone_option_pressed then
-      love.graphics.printf(devices_string, graphics_width/80, graphics_height/2-2.5*love.graphics.getFont():getHeight(), graphics_width, "left")
+    if rd_option_pressed then
+      love.graphics.printf(rd_string, graphics_width/80, graphics_height/2-2.5*love.graphics.getFont():getHeight(), graphics_width, "left")
     else
       if dragndrop then
         love.graphics.printf("Drag and drop music files/folders here", graphics_width/80, graphics_height/2-5*love.graphics.getFont():getHeight()/2, graphics_width, "center")
@@ -382,23 +394,23 @@ function love.keypressed(key, scancode, isrepeat)
 
   local key_int = tonumber(key)
   if gui.buttons.menu.isActive() and key_int ~= nil and not dragndrop then
-    if microphone_option_pressed then
-      if key_int > 0 and key_int <= #devices_list then
-        audio.microphone.load(devices_list[key_int])
-        microphone_option_pressed = false
+    if rd_option_pressed then
+      if key_int > 0 and key_int <= #rd_list then
+        audio.recordingdevice.load(rd_list[key_int])
+        rd_option_pressed = false
       end
     else
       if key_int == 1 then
-        microphone_option_pressed = true
-        devices_list = love.audio.getRecordingDevices()
+        rd_option_pressed = true
+        rd_list = love.audio.getRecordingDevices()
         
-        if device_option > 0 and device_option <= #devices_list then
-          audio.microphone.load(devices_list[device_option])
-          microphone_option_pressed = false
+        if rd_option > 0 and rd_option <= #rd_list then
+          audio.recordingdevice.load(rd_list[rd_option])
+          rd_option_pressed = false
         else
-          devices_string = "Choose audio input:\n"
-          for i,v in ipairs(devices_list) do
-            devices_string = devices_string..tostring(i)..") "..v:getName().."\n"
+          rd_string = "Choose audio input:\n"
+          for i,v in ipairs(rd_list) do
+            rd_string = rd_string..tostring(i)..") "..v:getName().."\n"
           end
         end
       elseif key_int == 2 then

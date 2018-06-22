@@ -33,7 +33,6 @@ local visualization_update = config.visualization_update
 local fade_intensity = 0
 local color = config.color
 
-
 local cursor_hand_activated = false
 local click_area_y = 0
 local menu_x = 0
@@ -453,7 +452,7 @@ function gui.buttons.menu.inBoundsY(y)
 end
 
 function gui.buttons.menu.isActive()
-  return not audio.music.exists() and not audio.microphone.isActive() and not audio.isPlaying()
+  return not audio.music.exists() and not audio.recordingdevice.isActive() and not audio.isPlaying()
 end
 
 function gui.buttons.menu.activate()
@@ -503,7 +502,7 @@ function gui.buttons.playback.activate()
   if audio.isPaused() then
     audio.play()
     gui.buttons.playback.scale("pause")
-  elseif audio.isPlaying() or audio.microphone.isActive() then
+  elseif audio.isPlaying() or audio.recordingdevice.isActive() then
     audio.pause()
     gui.buttons.playback.scale("play")
   end

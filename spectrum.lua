@@ -65,8 +65,8 @@ function spectrum.generateMicrophoneWaveform()
   for i=1, size do
     local new_sample = 0
     for j=0, channels-1 do
-      local x = audio.microphone.getSampleSum()-size*channels+(i-1)*channels+j --calculates sample index and centers it
-      new_sample = new_sample+audio.microphone.getSample(x) --obtains samples and sums them
+      local x = audio.recordingdevice.getSampleSum()-size*channels+(i-1)*channels+j --calculates sample index and centers it
+      new_sample = new_sample+audio.recordingdevice.getSample(x) --obtains samples and sums them
     end
     new_sample = new_sample/channels --averages sample
     table.insert(wave, new_sample)
@@ -163,7 +163,7 @@ end
 
 -- determine if sample position has changed
 function spectrum.wouldChange()
-  return (audio.music.tellSong('samples') ~= old_sample) or (audio.microphone.isActive() and not audio.isPaused())
+  return (audio.music.tellSong('samples') ~= old_sample) or (audio.recordingdevice.isActive() and not audio.isPaused())
 end
 
 function spectrum.getSize()

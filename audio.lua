@@ -1,6 +1,6 @@
 local audio = {
   music = {},
-  microphone = {}
+  recordingdevice = {}
 }
 
 local id3 = require("id3")
@@ -23,8 +23,11 @@ local music_list = nil
 local song_id = 0
 local audio_title = nil
 local time_count = 0
-local microphone_device = nil
-local microphone_active = false
+local recording_device = nil
+local rd_active = false
+local rd_sample_rate = config.rd_sample_rate
+local rd_bit_depth = config.rd_bit_depth
+local rd_channels = config.rd_channels
 local music_volume = config.volume
 local init_mute = config.mute
 local init_volume = config.volume
@@ -59,14 +62,14 @@ function audio.reload()
   song_id = 0
   audio_title = nil
   time_count = 0
-  microphone_device = nil
-  microphone_active = false
+  recording_device = nil
+  rd_active = false
   is_paused = false
   shuffle_history = {}
 end
 
 function audio.music.load()
-  if microphone_active then return end
+  if rd_active then return end
 
   shuffle_history = {}
   music_list = audio.music.recursiveEnumerate("music")
@@ -80,7 +83,7 @@ function audio.music.load()
 end
 
 function audio.music.addSong(file)
-  if microphone_active then return end
+  if rd_active then return end
 
   if music_list == nil then
     music_list = {}
@@ -183,7 +186,7 @@ end
 -- Song Handling --
 -- only pass 0, 1, and -1 for now
 function audio.music.changeSong(number)
-  if microphone_active or not audio.music.exists() then return end
+  if rd_active or not audio.music.exists() then return end
 
   if not loop_toggle then
     if shuffle_toggle then
@@ -385,10 +388,10 @@ end
 
 
 
-function audio.microphone.load(device)
-  device:start(2048, 44100, 16, 1)
-  microphone_active = true
-  microphone_device = device
+function audio.recordingdevice.load(device)
+  device:start(2048, rd_sample_rate, rd_bit_depth, rd_channels)
+  rd_active = true
+  recording_device = device
   
   audio_title = "Audio Input: "..device:getName()
   
@@ -403,9 +406,9 @@ function audio.microphone.load(device)
   gui.buttons.volume.activate("volume1")
 end
 
-function audio.microphone.update()
+function audio.recordingdevice.update()
   -- manage decoder processing and audio queue
-  local current_sample_count = microphone_device:getSampleCount()
+  local current_sample_count = recording_device:getSampleCount()
   if current_sample_count >= 448 and not is_paused then
     sample_sum = sample_sum+current_sample_count-sample_counts[1]
   
@@ -415,7 +418,7 @@ function audio.microphone.update()
       sample_counts[i] = sample_counts[i+1]
     end
 
-    local sounddata = microphone_device:getData()
+    local sounddata = recording_device:getData()
     sounddata_array[queue_size] = sounddata
     sample_counts[queue_size] = current_sample_count
     current_song:queue(sounddata)
@@ -424,7 +427,7 @@ function audio.microphone.update()
   end
 end
 
-function audio.microphone.getSample(buffer)
+function audio.recordingdevice.getSample(buffer)
   local sample
   local index
   local found_flag = false
@@ -446,15 +449,15 @@ function audio.microphone.getSample(buffer)
   return sounddata_array[index]:getSample(sample)
 end
 
-function audio.microphone.isReady()
-  return sample_sum >= spectrum.getSize()*channels and microphone_active
+function audio.recordingdevice.isReady()
+  return sample_sum >= spectrum.getSize()*channels and rd_active
 end
 
-function audio.microphone.isActive()
-  return microphone_active
+function audio.recordingdevice.isActive()
+  return rd_active
 end
 
-function audio.microphone.getSampleSum()
+function audio.recordingdevice.getSampleSum()
   return sample_sum
 end
 
@@ -470,8 +473,8 @@ end
 
 function audio.play()
   is_paused = false
-  if microphone_active then
-    microphone_device:start(2048, 44100, 16, 1)
+  if rd_active then
+    recording_device:start(2048, rd_sample_rate, rd_bit_depth, rd_channels)
   end
   current_song:play()
 end
@@ -482,8 +485,8 @@ end
 
 function audio.pause()
   is_paused = true
-  if microphone_active then
-    microphone_device:stop()
+  if rd_active then
+    recording_device:stop()
   end
   current_song:pause()
 end
@@ -508,9 +511,9 @@ end
 
 function audio.stop()
   current_song:stop()
-  if microphone_active then
-    microphone_device:stop()
-    microphone_active = false
+  if rd_active then
+    recording_device:stop()
+    rd_active = false
   end
   
   gui.buttons.scrubbar.setTimestampStart(0)
