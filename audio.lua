@@ -26,6 +26,8 @@ local time_count = 0
 local microphone_device = nil
 local microphone_active = false
 local music_volume = config.volume
+local init_mute = config.mute
+local init_volume = config.volume
 local previous_volume = 0
 local is_paused = false
 local loop_toggle = config.loop
@@ -113,8 +115,8 @@ end
 function audio.music.update()
   -- plays first song
   if current_song == nil then
-    if config.mute then
-      previous_volume = config.volume
+    if init_mute then
+      previous_volume = init_volume
       gui.buttons.volume.activate("volume1")
     else
       gui.buttons.volume.activate(music_volume)

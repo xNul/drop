@@ -17,6 +17,7 @@ local visualizer_type = config.visualization
 local tick_amplitude_average = 0
 local tick_count = 128
 local fade_activated = config.fade
+local fade_intensity_multiplier = config.fade_intensity_multiplier
 
 function spectrum.reload()
   -- fft gen
@@ -108,7 +109,7 @@ function spectrum.draw(waveform)
 
   -- visualization fade
   if fade_activated then
-    gui.graphics.setColor(nil, (.03-spectrum.getAverageTickAmplitude())*config.fade_intensity_multiplier)
+    gui.graphics.setColor(nil, (.03-spectrum.getAverageTickAmplitude())*fade_intensity_multiplier)
   else
     gui.graphics.setColor()
   end

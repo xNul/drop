@@ -25,10 +25,14 @@ local graphics_height = 0
 local window_position_x = 0
 local window_position_y = 0
 local display_location = 0
-local window_width = 0
-local window_height = 0
+local window_width = config.window_size[1]
+local window_height = config.window_size[2]
+local init_fullscreen = config.fullscreen
+local fps_cap = config.fps_cap
+local visualization_update = config.visualization_update
 local fade_intensity = 0
 local color = config.color
+
 
 local cursor_hand_activated = false
 local click_area_y = 0
@@ -64,6 +68,17 @@ local volume_quad = "volume3"
 local fullscreen_x = 0
 local fullscreen_quad = "fullscreen"
 
+local desktop_width, desktop_height = love.window.getDesktopDimensions()
+if config.window_location_persistence then
+  window_position_x = config.window_location[1]
+  window_position_y = config.window_location[2]
+  display_location = config.window_location[3]
+else
+  window_position_x = (desktop_width-window_width)/2
+  window_position_y = (desktop_height-window_height)*(5/12) --5/12 to account for taskbar/dock
+  display_location = 1
+end
+
 function gui.reload()
   fade_intensity = 0
 
@@ -82,25 +97,10 @@ end
 
 function gui.load()
   -------------------------------------- Window --------------------------------------
-  local desktop_width, desktop_height = love.window.getDesktopDimensions()
-
-  local window_width = config.window_size[1]
-  local window_height = config.window_size[2]
-
-  if config.window_location_persistence then
-    window_position_x = config.window_location[1]
-    window_position_y = config.window_location[2]
-    display_location = config.window_location[3]
-  else
-    window_position_x = (desktop_width-window_width)/2
-    window_position_y = (desktop_height-window_height)*(5/12) --5/12 to account for taskbar/dock
-    display_location = 1
-  end
-  
   love.window.setMode(
     window_width, window_height,
     {x=window_position_x, y=window_position_y, display=display_location, resizable=true,
-    highdpi=true, fullscreen=config.fullscreen, vsync=(config.fps_cap == 0)}
+    highdpi=true, fullscreen=init_fullscreen, vsync=(fps_cap == 0)}
   )
   love.window.setIcon(love.image.newImageData("images/icon.png"))
   love.window.setTitle("Drop - by nabakin")
@@ -287,7 +287,7 @@ function gui.overlay()
   end
   
   local scrubhead_x
-  if config.visualization_update or not scrubbar_active then
+  if visualization_update or not scrubbar_active then
     scrubhead_x = (audio.music.tellSong()/audio.music.getDuration())*(scrubbar_x2-scrubbar_x1)+scrubbar_x1
     timestamp_start_time = gui.extra.secondsToString(audio.music.tellSong())
   else
@@ -583,7 +583,7 @@ function gui.buttons.scrubbar.activate(x)
     scrubhead_pause = true
   end
 
-  if config.visualization_update then
+  if visualization_update then
     audio.music.seekSong(gui.buttons.scrubbar.getProportion(x)*audio.music.getDuration())
   else
     scrubhead_position = x
@@ -600,7 +600,7 @@ function gui.buttons.scrubbar.deactivate(x)
     scrubhead_pause = false
   end
   
-  if not config.visualization_update and scrubbar_active then
+  if not visualization_update and scrubbar_active then
     audio.music.seekSong(gui.buttons.scrubbar.getProportion(x)*audio.music.getDuration())
   end
   

@@ -9,6 +9,8 @@ local appdata_path = love.filesystem.getAppdataDirectory()
 local operating_system = love.system.getOS()
 local waveform = {}
 local sleep_counter = 0
+local sleep_time = 0
+local fps_cap = 0
 local last_frame_time = 0
 local button_pressed = nil
 local appdata_music_possible = true
@@ -234,6 +236,8 @@ function love.load()
   spectrum = require 'spectrum'
   gui = require 'gui'
   
+  sleep_time = config.sleep_time
+  fps_cap = config.fps_cap
   device_option = config.init_sysaudio_option
   love.keyboard.setKeyRepeat(true)
   
@@ -284,7 +288,7 @@ function love.update(dt)
     if not gui.extra.sleep() then
       sleep_counter = sleep_counter+dt
       
-      if sleep_counter > config.sleep_time then
+      if sleep_counter > sleep_time then
         gui.extra.sleep(true)
         sleep_counter = 0
       end
@@ -322,8 +326,8 @@ function love.draw()
     gui.overlay()
   end
   
-  if config.fps_cap > 0 then
-    local slack = 1/config.fps_cap - (love.timer.getTime()-last_frame_time)
+  if fps_cap > 0 then
+    local slack = 1/fps_cap - (love.timer.getTime()-last_frame_time)
     if slack > 0 then love.timer.sleep(slack) end
     last_frame_time = love.timer.getTime()
   
