@@ -24,7 +24,7 @@ To add music, either drag and drop your music on the window or make sure you run
   - configurable
   - quick start
   - fps capping
-  - optional session persistence
+  - session persistence
   - spectrum visualization
   - custom colors
   - doesn't run fft calculations when minimized or paused
@@ -37,21 +37,20 @@ To add music, either drag and drop your music on the window or make sure you run
   - Space bar: Pause/Play
   - Click the scrub bar to change time
   - Drag the scrub head to change time
-  - r, g, and b: change visualization color
   - s and l: Shuffle and Loop
   - i: toggle fade
   - m: toggle mute
-  - f: Fullscreen Mode
+  - f: fullscreen mode
   - 1, 2, 3, and 4: change visualization type
-  - Escape: exit Fullscreen Mode
+  - Escape: exit fullscreen mode
   - Comma and Period: move frame-by-frame through the visualization
 
 ### Setup:
 1. Download Drop with [this link](https://github.com/nabakin/drop/archive/master.zip)
 2. Extract it and navigate to the drop-master folder
 
-For Windows, navigate to "releases", "Windows", and then double click "start.bat" to run Drop.    
-For Mac, navigate to "releases", "Mac", and then run `./start.sh` from Terminal.
+For Windows, navigate to "releases", "Windows", and then double click `start.bat` to start Drop.    
+For Mac, navigate to "releases", "Mac", and then enter `bash start.sh` in Terminal to start Drop.
 
 ### Credit:
-Drop uses the [drop-fft](https://github.com/nabakin/drop-fft) library which is a modified version of the [kissfft](https://github.com/bazaar-projects/kissfft) library.  All credit for the amazing fft implementation should go to its creator Mark Borgerding.
+Drop uses the [drop-fft](https://github.com/nabakin/drop-fft) library which is a modified version of the [kissfft](https://sourceforge.net/projects/kissfft/) library.  All credit for the amazing fft implementation should go to its creator Mark Borgerding.

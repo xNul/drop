@@ -173,17 +173,6 @@ function love.load()
     ["left"] = function ()
       gui.buttons.left.activate()
     end,
-
-    -- rgb keys are being used as a test atm.  Not finished
-    ["r"] = function ()
-      gui.graphics.setColor("r")
-    end,
-    ["g"] = function ()
-      gui.graphics.setColor("g")
-    end,
-    ["b"] = function ()
-      gui.graphics.setColor("b")
-    end,
     ["s"] = function ()
       gui.buttons.shuffle.activate()
     end,
