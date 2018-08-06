@@ -10,7 +10,7 @@ To add music, either drag and drop your music on the window or make sure you run
 
 ### Features:
   - drag and drop
-  - fully scaling ui
+  - scalable ui
   - realtime ffi-implemented rfft calculations (really fast and efficient spectrum generation)
   - decoder/queueable audio support
   - ID3 metadata support (gets song name/artist when stored in mp3)
