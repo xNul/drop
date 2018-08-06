@@ -400,7 +400,7 @@ end
 
 
 function audio.recordingdevice.load(device)
-  print("Now loading Audio Input Device "..rd_list[key_int]:getName()..".")
+  print("Now loading Audio Input Device: "..device:getName()..".")
 
   device:start(2048, rd_sample_rate, rd_bit_depth, rd_channels)
   rd_active = true
