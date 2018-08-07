@@ -54,7 +54,7 @@ function love.load()
     fps_cap = 0, -- places cap on fps (looks worse, but less cpu intensive).  0 for vsync
     sleep_time = 7, -- seconds until overlay is put to sleep
     visualization_update = true, -- update visualization when dragging scrubhead (false=less cpu intensive)
-    sampling_size = 2048, -- number of audio samples to generate spectrum from (maintain a power of 2)
+    sampling_size = 2048, -- number of audio samples to generate waveform from (maintain a power of 2)
     window_size_persistence = true, -- window size restored from previous session
     window_size = {1280, 720}, -- size of window on start (window size persistent)
     window_location_persistence = false, -- window position restored from previous session
@@ -199,22 +199,22 @@ function love.load()
       gui.buttons.loop.activate()
     end,
     ["i"] = function ()
-      spectrum.setFade(not spectrum.isFading())
+      visualization.setFade(not visualization.isFading())
     end,
     ["m"] = function ()
       audio.mute()
     end,
     ["1"] = function ()
-      spectrum.setVisualization(1)
+      visualization.set(1)
     end,
     ["2"] = function ()
-      spectrum.setVisualization(2)
+      visualization.set(2)
     end,
     ["3"] = function ()
-      spectrum.setVisualization(3)
+      visualization.set(3)
     end,
     ["4"] = function ()
-      spectrum.setVisualization(4)
+      visualization.set(4)
     end,
     ["escape"] = function ()
       if love.window.getFullscreen() then
@@ -230,10 +230,10 @@ function love.load()
 
     -- moves slowly through the visualization by the length of a frame.  Used to compare visualizations
     [","] = function ()
-      audio.music.seekSong(audio.music.tellSong()-spectrum.getSize()/(audio.getSampleRate()*audio.getChannels()))
+      audio.music.seekSong(audio.music.tellSong()-visualization.getSamplingSize()/(audio.getSampleRate()*audio.getChannels()))
     end,
     ["."] = function ()
-      audio.music.seekSong(audio.music.tellSong()+spectrum.getSize()/(audio.getSampleRate()*audio.getChannels()))
+      audio.music.seekSong(audio.music.tellSong()+visualization.getSamplingSize()/(audio.getSampleRate()*audio.getChannels()))
     end
   }
   ------------------------------------------------------------------------------------
@@ -241,7 +241,7 @@ function love.load()
   
   ----------------------------------- Main -------------------------------------------
   audio = require 'audio'
-  spectrum = require 'spectrum'
+  visualization = require 'spectrum'
   gui = require 'gui'
   
   sleep_time = config.sleep_time
@@ -282,15 +282,15 @@ function love.update(dt)
   if audio.music.exists() or audio.recordingdevice.isActive() then
     if audio.recordingdevice.isActive() then audio.recordingdevice.update() else audio.music.update() end
 
-    if spectrum.wouldChange() and not love.window.isMinimized() then
+    if visualization.wouldChange() and not love.window.isMinimized() then
     
       -- fft calculations (generates waveform for visualization)
       if audio.recordingdevice.isActive() then
         if audio.recordingdevice.isReady() then
-          waveform = spectrum.generateMicrophoneWaveform()
+          waveform = visualization.generateRecordingDeviceWaveform()
         end
       else
-        waveform = spectrum.generateWaveform()
+        waveform = visualization.generateMusicWaveform()
       end
     end
 
@@ -329,7 +329,7 @@ function love.draw()
       end
     end
   elseif not love.window.isMinimized() then
-    spectrum.draw(waveform)
+    visualization.draw(waveform)
   end
   
   if not gui.extra.sleep() then
@@ -479,13 +479,13 @@ function love.quit()
   end
   
   if config.session_persistence then
-    local visualization = spectrum.getVisualization()
+    local visualization = visualization.get()
     local shuffle = audio.isShuffling()
     local loop = audio.isLooping()
     local mute = audio.isMuted()
     local volume = math.floor((mute and audio.getPreviousVolume() or not audio.music.exists() and audio.music.getVolume() or love.audio.getVolume()) * 10 + 0.5) / 10
     local fullscreen = love.window.getFullscreen()
-    local fade = spectrum.isFading()
+    local fade = visualization.isFading()
     
     if config.visualization ~= visualization or config.shuffle ~= shuffle or config.loop ~= loop or config.volume ~= volume or config.mute ~= mute or config.fullscreen ~= fullscreen or config.fade ~= fade then
       config.visualization = visualization

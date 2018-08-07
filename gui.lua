@@ -459,7 +459,7 @@ function gui.buttons.menu.activate()
   print("Reloading Drop...")
 
   audio.reload()
-  spectrum.reload()
+  visualization.reload()
   gui.reload()
   main.reload()
   

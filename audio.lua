@@ -233,7 +233,7 @@ function audio.music.changeSong(number)
   seconds_per_buffer = decoder_buffer/(sample_rate*channels*bit_depth/8)
 
   -- start song queue
-  queue_size = 4+math.max(math.floor(2*spectrum.getSize()/(decoder_buffer/(bit_depth/8))), 1)
+  queue_size = 4+math.max(math.floor(2*visualization.getSamplingSize()/(decoder_buffer/(bit_depth/8))), 1)
   current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
   
   -- song/decoder initialization
@@ -463,7 +463,7 @@ function audio.recordingdevice.getSample(buffer)
 end
 
 function audio.recordingdevice.isReady()
-  return sample_sum >= spectrum.getSize()*channels and rd_active
+  return sample_sum >= visualization.getSamplingSize()*channels and rd_active
 end
 
 function audio.recordingdevice.isActive()
