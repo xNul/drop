@@ -241,7 +241,7 @@ function love.load()
   
   ----------------------------------- Main -------------------------------------------
   audio = require 'audio'
-  visualization = require 'spectrum'
+  visualization = require 'visualization'
   gui = require 'gui'
   
   sleep_time = config.sleep_time
