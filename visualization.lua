@@ -137,7 +137,7 @@ function visualization.generateRecordingDeviceWaveform()
 end
 
 --- Handles all drawing of visualization.
--- @param table: Waveform FFT of samples.
+-- @param waveform table: Waveform FFT of samples.
 function visualization.draw(waveform)
 
   local tick_distance
@@ -208,7 +208,7 @@ function visualization.draw(waveform)
 end
 
 --- Sets the type of bar visualization.
--- @param number: An integer of 1-4.  Each changes the bar visualization properties.
+-- @param v number: An integer of 1-4.  Each changes the bar visualization properties.
 function visualization.set(v)
 
   visualizer_type = v
@@ -224,7 +224,7 @@ function visualization.get()
 end
 
 --- Enable/Disable fade.
--- @param boolean: Fade option.
+-- @param f boolean: Fade option.
 function visualization.setFade(f)
 
   fade_activated = f
