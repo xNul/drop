@@ -65,8 +65,6 @@ end
 -- Callback for main Love2D thread.
 function love.load()
 
-  print("Starting Drop...")
-
   --[[ Configuration ]]
   -- Config initialization
   local CURRENT_VERSION = 2
@@ -176,13 +174,15 @@ function love.load()
   
   -- Validating config table.
   if not config or CURRENT_VERSION < config.version then
-    print("Error: config.lua is either missing, corrupt, or from a later version.  Recreating...")
+    print(os.date('[%H:%M] ').."config.lua is either missing, corrupt, or from a newer version.  Recreating file...")
     
     -- Use default config.
     config = DEFAULT_CONFIG
     love.filesystem.write("config.lua", TSerial.pack(config, false, true))
+    
+    print(os.date('[%H:%M] ').."Done.")
   elseif CURRENT_VERSION > config.version then
-    print("Old config.lua found.  Updating it to the latest version.")
+    print(os.date('[%H:%M] ').."Old config.lua found.  Updating it to the latest version...")
     
     -- Transfer compatible configurations from old config to new config.
     local dconfig = DEFAULT_CONFIG
@@ -196,16 +196,20 @@ function love.load()
     dconfig.version = CURRENT_VERSION
     config = dconfig
     love.filesystem.write("config.lua", TSerial.pack(config, false, true))
+    
+    print(os.date('[%H:%M] ').."Done.")
   else
     local invalid = false
     
     -- Validate configurations.  Resets configuration to default if invalid.
     for key, value in pairs(config) do
       if CHECK_VALUES[key] and not CHECK_VALUES[key](value) then
-        print("Error: Invalid "..key.." value detected.  Resetting to default.")
+        print(os.date('[%H:%M] ').."Error: Invalid "..key.." value detected in config.lua.  Resetting to default.")
       
         config[key] = DEFAULT_CONFIG[key]
         invalid = true
+        
+        print(os.date('[%H:%M] ').."Done.")
       end
     end
     
@@ -214,8 +218,6 @@ function love.load()
       love.filesystem.write("config.lua", TSerial.pack(config, false, true))
     end
   end
-  
-  print("Successfully loaded config.lua.")
   
   --------------------------------- Keyboard Actions ---------------------------------
   KEY_FUNCTIONS = {
@@ -295,10 +297,6 @@ function love.load()
   MONITOR_REFRESH_RATE = ({love.window.getMode()})[3].refreshrate
   
   --[[ Init Location Jumping ]]
-  if config.init_location ~= "menu" then
-    print("Init Location detected.  Now jumping to "..config.init_location..".")
-  end
-  
   if config.init_location == "sysaudio" then
     rd_option_pressed = true
     rd_list = love.audio.getRecordingDevices()
@@ -582,8 +580,6 @@ end
 -- Callback for main Love2D thread.
 -- @return boolean: True to cancel and keep Drop alive.  False to quit.
 function love.quit()
-
-  print("Quit attempt detected...")
   
   --[[ Save config (for session persistence) ]]
   local write_config = false
@@ -642,10 +638,7 @@ function love.quit()
   -- If config has been changed, update config file.
   if write_config then
     love.filesystem.write("config.lua", TSerial.pack(config, false, true))
-    print("Updated config.lua.")
   end
-  
-  print("Quitting Drop...")
   
   return false
   
