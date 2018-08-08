@@ -248,16 +248,16 @@ function love.load()
       audio.mute()
     end,
     ["1"] = function ()
-      visualization.set(1)
+      visualization.setType(1)
     end,
     ["2"] = function ()
-      visualization.set(2)
+      visualization.setType(2)
     end,
     ["3"] = function ()
-      visualization.set(3)
+      visualization.setType(3)
     end,
     ["4"] = function ()
-      visualization.set(4)
+      visualization.setType(4)
     end,
     ["escape"] = function ()
       if love.window.getFullscreen() then
@@ -294,7 +294,11 @@ function love.load()
   
   gui.load()
   
-  MONITOR_REFRESH_RATE = ({love.window.getMode()})[3].refreshrate
+  -- If refresh rate can be determined, use it.
+  local potential_refresh_rate = ({love.window.getMode()})[3].refreshrate
+  if potential_refresh_rate ~= 0 then
+    MONITOR_REFRESH_RATE = potential_refresh_rate
+  end
   
   --[[ Init Location Jumping ]]
   if config.init_location == "sysaudio" then
@@ -614,7 +618,7 @@ function love.quit()
   
   -- If need to update config values, set flag to true and save new values.
   if config.session_persistence then
-    local visualization_type = visualization.get()
+    local visualization_type = visualization.getType()
     local shuffle = audio.isShuffling()
     local loop = audio.isLooping()
     local mute = audio.isMuted()

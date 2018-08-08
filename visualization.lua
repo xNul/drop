@@ -209,7 +209,7 @@ end
 
 --- Sets the type of bar visualization.
 -- @param v number: An integer of 1-4.  Each changes the bar visualization properties.
-function visualization.set(v)
+function visualization.setType(v)
 
   visualizer_type = v
   
@@ -217,7 +217,7 @@ end
 
 --- Obtains the type of bar visualization.
 -- @return number: An integer of 1-4.  The type of bar visualization.
-function visualization.get()
+function visualization.getType()
 
   return visualizer_type
   
