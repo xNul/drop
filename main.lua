@@ -1,3 +1,26 @@
+--  MIT License
+--
+--  Copyright (c) 2018 nabakin
+--
+--  Permission is hereby granted, free of charge, to any person obtaining a copy
+--  of this software and associated documentation files (the "Software"), to deal
+--  in the Software without restriction, including without limitation the rights
+--  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+--  copies of the Software, and to permit persons to whom the Software is
+--  furnished to do so, subject to the following conditions:
+--
+--  The above copyright notice and this permission notice shall be included in all
+--  copies or substantial portions of the Software.
+--
+--  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+--  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+--  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+--  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+--  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+--  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+--  SOFTWARE.
+
+--[[ Initialize Variables ]]
 main = {}
 
 local TSerial = require 'TSerial'
@@ -13,57 +36,65 @@ local sleep_time = 0
 local fps_cap = 0
 local last_frame_time = 0
 local button_pressed = nil
-local appdata_music_possible = true
+local appdata_music_success = true
 local rd_option_pressed = false
 local rd_list = nil
 local rd_string = ""
 local rd_option = 0
 local dragndrop = false
 
+--- Reloads variables that affect the menu.
+-- Necessary for returning to the main menu.
 function main.reload()
 
   waveform = {}
   sleep_counter = 0
   button_pressed = nil
-  appdata_music_possible = true
+  appdata_music_success = true
   rd_option_pressed = false
   rd_list = nil
   rd_string = ""
-  rd_option = 0 -- not attached to config.init_sysaudio_option bc init location should only work on init, not after
   dragndrop = false
+  
+  rd_option = 0
   
 end
 
+--[[ Core Function Callbacks ]]
+--- Initializes core elements of Drop.
+-- Callback for main Love2D thread.
 function love.load()
 
   print("Starting Drop...")
 
+  --[[ Configuration ]]
+  -- Config initialization
   local CURRENT_VERSION = 2
   local DEFAULT_CONFIG = {
-    version = CURRENT_VERSION, -- every time config format changes 1 is added
-    visualization = 3, -- visualization to show on start (session persistent)
-    shuffle = false, -- enable/disable shuffle on start (session persistent)
-    loop = false, -- enable/disable loop on start (session persistent)
-    volume = 0.5, -- volume on start (session persistent)
-    mute = false, -- enable/disable mute on start (session persistent)
-    fullscreen = false, -- enable/disable fullscreen on start (session persistent)
-    fade = false, -- enable/disable fade on start (session persistent)
-    fade_intensity_multiplier = 30, -- degree of fading
-    session_persistence = false, -- options restored from previous session
-    color = {0, 1, 0}, -- color of visualization/music controls.  Format: {r, g, b} [0-1]
-    fps_cap = 0, -- places cap on fps (looks worse, but less cpu intensive).  0 for vsync
-    sleep_time = 7, -- seconds until overlay is put to sleep
-    visualization_update = true, -- update visualization when dragging scrubhead (false=less cpu intensive)
-    sampling_size = 2048, -- number of audio samples to generate waveform from (maintain a power of 2)
-    window_size_persistence = true, -- window size restored from previous session
-    window_size = {1280, 720}, -- size of window on start (window size persistent)
-    window_location_persistence = false, -- window position restored from previous session
-    window_location = {420, 340, 1}, -- location of window when persistent (window location persistent)
-    init_location = "menu", -- where to go on start.  Options: "menu", "dragndrop", "sysaudio", or "appdata"
-    init_sysaudio_option = 0, -- which system audio input to automatically select. Options: 0=show options, 1-infinity=audio input
-    rd_sample_rate = 44100, -- audio input device's sample rate (in hz). Change only if having issues visualizing audio
-    rd_bit_depth = 16, -- audio input device's bit depth. Change only if having issues visualizing audio
-    rd_channels = 1 -- audio input device's number of channels. Change only if having issues visualizing audio
+    version = CURRENT_VERSION, -- Every time config format changes, 1 is added.
+    visualization = 3, -- Visualization to show on start. (session persistent)
+    shuffle = false, -- Enable/disable shuffle on start. (session persistent)
+    loop = false, -- Enable/disable loop on start. (session persistent)
+    volume = 0.5, -- Volume on start. (session persistent)
+    mute = false, -- Enable/disable mute on start. (session persistent)
+    fullscreen = false, -- Enable/disable fullscreen on start. (session persistent)
+    fade = false, -- Enable/disable fade on start. (session persistent)
+    fade_intensity_multiplier = 30, -- Amount of fade.
+    session_persistence = false, -- Options restored from previous session.
+    color = {0, 1, 0}, -- Color of visualization/music controls.  Format: {r, g, b} [0-1]
+    fps_cap = 0, -- Places cap on fps (looks worse, but less cpu intensive).  0 for vsync.
+    sleep_time = 7, -- Seconds until overlay is put to sleep.
+    visualization_update = true, -- Update visualization when dragging scrubhead (false=less cpu intensive).
+    sampling_size = 2048, -- Number of audio samples to generate waveform from (maintain a power of 2).
+    window_size_persistence = true, -- Window size restored from previous session.
+    window_size = {1280, 720}, -- Size of window on start. (window size persistent)
+    window_location_persistence = false, -- Window position restored from previous session.
+    window_location = {420, 340, 1}, -- Location of window when persistent. (window location persistent)
+    init_location = "menu", -- Where to go on start.  Options: "menu", "dragndrop", "sysaudio", or "appdata".
+    init_sysaudio_option = 0, -- Which system audio input to automatically select. Options: 0=show options, 1-infinity=audio input.
+    rd_sample_rate = 44100, -- [ADVANCED] Audio input device's sample rate (in hz). Change only if having issues visualizing audio.
+    rd_bit_depth = 16, -- [ADVANCED] Audio input device's bit depth. Change only if having issues visualizing audio.
+    rd_channels = 1 -- [ADVANCED] Audio input device's number of channels. Change only if having issues visualizing audio.
   }
   local CHECK_VALUES = {
     version = function (v)
@@ -140,36 +171,48 @@ function love.load()
     end
   }
   
+  -- config.lua -> config table
   config = TSerial.unpack(love.filesystem.read("config.lua"), true)
-  if not config or CURRENT_VERSION < config.version then -- if config.lua doesnt exist, or if config.lua has invalid settings, or if config version is higher than current then replace it
+  
+  -- Validating config table.
+  if not config or CURRENT_VERSION < config.version then
     print("Error: config.lua is either missing, corrupt, or from a later version.  Recreating...")
+    
+    -- Use default config.
     config = DEFAULT_CONFIG
     love.filesystem.write("config.lua", TSerial.pack(config, false, true))
   elseif CURRENT_VERSION > config.version then
     print("Old config.lua found.  Updating it to the latest version.")
-    local dconfig = DEFAULT_CONFIG
     
+    -- Transfer compatible configurations from old config to new config.
+    local dconfig = DEFAULT_CONFIG
     for key, value in pairs(config) do
-      if dconfig[key] ~= nil and CHECK_VALUES[key](value) then -- and check values
+      if dconfig[key] and CHECK_VALUES[key](value) then
         dconfig[key] = value
       end
     end
     
+    -- Finalize config update.
     dconfig.version = CURRENT_VERSION
     config = dconfig
     love.filesystem.write("config.lua", TSerial.pack(config, false, true))
   else
     local invalid = false
     
+    -- Validate configurations.  Resets configuration to default if invalid.
     for key, value in pairs(config) do
-      if not CHECK_VALUES[key](value) then
+      if CHECK_VALUES[key] and not CHECK_VALUES[key](value) then
+        print("Error: Invalid "..key.." value detected.  Resetting to default.")
+      
         config[key] = DEFAULT_CONFIG[key]
         invalid = true
-        print("Error: Invalid "..key.." value detected.  Resetting to default.")
       end
     end
     
-    if invalid then love.filesystem.write("config.lua", TSerial.pack(config, false, true)) end
+    -- Finalize config fix.
+    if invalid then
+      love.filesystem.write("config.lua", TSerial.pack(config, false, true))
+    end
   end
   
   print("Successfully loaded config.lua.")
@@ -177,14 +220,12 @@ function love.load()
   --------------------------------- Keyboard Actions ---------------------------------
   KEY_FUNCTIONS = {
     ["up"] = function ()
-      -- round to nearest 1st decimal place
-      local new_volume = math.floor((love.audio.getVolume()+.1) * 10 + 0.5) / 10
-      gui.buttons.volume.activate(new_volume)
+      local new_volume_rounded = math.floor((love.audio.getVolume()+.1)*10+0.5)/10
+      gui.buttons.volume.activate(new_volume_rounded)
     end,
     ["down"] = function ()
-      -- round to nearest 1st decimal place
-      local new_volume = math.floor((love.audio.getVolume()-.1) * 10 + 0.5) / 10
-      gui.buttons.volume.activate(new_volume)
+      local new_volume_rounded = math.floor((love.audio.getVolume()-.1)*10+0.5)/10
+      gui.buttons.volume.activate(new_volume_rounded)
     end,
     ["right"] = function ()
       gui.buttons.right.activate()
@@ -228,7 +269,7 @@ function love.load()
       gui.buttons.playback.activate()
     end,
 
-    -- moves slowly through the visualization by the length of a frame.  Used to compare visualizations
+    -- Moves slowly through the visualization by the length of a frame.  Used to compare visualizations.
     [","] = function ()
       audio.music.seekSong(audio.music.tellSong()-visualization.getSamplingSize()/(audio.getSampleRate()*audio.getChannels()))
     end,
@@ -249,42 +290,54 @@ function love.load()
   rd_option = config.init_sysaudio_option
   love.keyboard.setKeyRepeat(true)
   
-  -- load/scale gui
   gui.load()
   
   MONITOR_REFRESH_RATE = ({love.window.getMode()})[3].refreshrate
   
-  if config.init_location ~= "menu" then print("Init Location detected.  Now jumping to "..config.init_location..".") end
+  --[[ Init Location Jumping ]]
+  if config.init_location ~= "menu" then
+    print("Init Location detected.  Now jumping to "..config.init_location..".")
+  end
   
   if config.init_location == "sysaudio" then
     rd_option_pressed = true
     rd_list = love.audio.getRecordingDevices()
     
+    -- Check for valid option.
     if rd_option > 0 and rd_option <= #rd_list then
       audio.recordingdevice.load(rd_list[rd_option])
       rd_option_pressed = false
     else
+      -- Prepare audio input list.
       rd_string = "Choose audio input:\n"
       for i,v in ipairs(rd_list) do
         rd_string = rd_string..tostring(i)..") "..v:getName().."\n"
       end
     end
   elseif config.init_location == "appdata" then
-    appdata_music_possible = audio.music.load()
+    appdata_music_success = audio.music.load()
   elseif config.init_location == "dragndrop" then
     dragndrop = true
   end
   ------------------------------------------------------------------------------------
+  
 end
 
+--- Contains all time-oriented operations. Physics, audio playback, etc.
+-- Callback for main Love2D thread.
+-- @param dt number: Delta time between current call and last.
 function love.update(dt)
 
   if audio.music.exists() or audio.recordingdevice.isActive() then
-    if audio.recordingdevice.isActive() then audio.recordingdevice.update() else audio.music.update() end
+    -- Update queueable audio and sampling table.
+    if audio.recordingdevice.isActive() then
+      audio.recordingdevice.update()
+    else
+      audio.music.update()
+    end
 
     if visualization.wouldChange() and not love.window.isMinimized() then
-    
-      -- fft calculations (generates waveform for visualization)
+      -- Performs FFT to generate waveform.
       if audio.recordingdevice.isActive() then
         if audio.recordingdevice.isReady() then
           waveform = visualization.generateRecordingDeviceWaveform()
@@ -294,7 +347,7 @@ function love.update(dt)
       end
     end
 
-    --overlay timer: puts overlay to sleep after sleep_time sec of inactivity
+    -- Sleep timer for overlay.
     if not gui.extra.sleep() then
       sleep_counter = sleep_counter+dt
       
@@ -307,9 +360,11 @@ function love.update(dt)
   
 end
 
+--- Contains all graphics drawing operations.
+-- Callback for main Love2D thread.
 function love.draw()
 
-  -- overlay/start_screen drawing
+  --[[ Menu/Visualization drawing ]]
   if gui.buttons.menu.isActive() then
     love.graphics.setColor(1, 1, 1)
     love.graphics.setFont(gui.graphics.getBigFont())
@@ -322,7 +377,7 @@ function love.draw()
     else
       if dragndrop then
         love.graphics.printf("Drag and drop music files/folders here", graphics_width/80, graphics_height/2-5*love.graphics.getFont():getHeight()/2, graphics_width, "center")
-      elseif appdata_music_possible then
+      elseif appdata_music_success then
         love.graphics.printf("Drop music files/folders here or press the corresponding number:\n1) Play system audio\n2) Play music in appdata", graphics_width/80, graphics_height/2-5*love.graphics.getFont():getHeight()/2, graphics_width, "left")
       else
         love.graphics.printf("Failed to play music from your appdata.  Copy songs to \""..appdata_path.."/LOVE/Drop/music\" to make this work or just drag and drop music onto this window.", graphics_width/80, graphics_height/2-5*love.graphics.getFont():getHeight()/2, graphics_width, "left")
@@ -332,17 +387,19 @@ function love.draw()
     visualization.draw(waveform)
   end
   
+  --[[ Overlay drawing ]]
   if not gui.extra.sleep() then
     gui.overlay()
   end
   
+  -- FPS Limiter
   if fps_cap > 0 then
     local slack = 1/fps_cap - (love.timer.getTime()-last_frame_time)
     if slack > 0 then love.timer.sleep(slack) end
     last_frame_time = love.timer.getTime()
   
-  --[[ manual love.window.isVisible for behind windows and minimized.  Only works on Mac.
-  Saves a lot of cpu.  Likely error-prone because it's a bad implementation (no other way) ]]
+  --[[ Manual detection for when behind windows or minimized.  Only works on Mac.
+  Saves a lot of cpu.  Likely error-prone because it's a bad implementation (no other way). ]]
   elseif operating_system == "OS X" and love.timer.getFPS() > MONITOR_REFRESH_RATE+6 then
     local slack = 1/(MONITOR_REFRESH_RATE+10) - (love.timer.getTime()-last_frame_time)
     if slack > 0 then love.timer.sleep(slack) end
@@ -355,103 +412,183 @@ end
 
 
 
--- Input Callbacks --
-function love.mousepressed(x, y, key, istouch)
+--[[ Input Function Callbacks ]]
+--- Handles all mouse button press input.
+-- Callback for main Love2D thread.
+-- @param x number: x coordinate of mouse.
+-- @param y number: y coordinate of mouse.
+-- @param key number: Mouse button pressed.
+-- @param istouch boolean: True when touchscreen press.  False otherwise.
+-- @param presses number: Number of presses in a short time frame.
+function love.mousepressed(x, y, key, istouch, presses)
+
+  -- Reset sleep counter.
   gui.extra.sleep(false)
   sleep_counter = 0
   
   if key == 1 then
     button_pressed = gui.buttons.getButton(x, y)
     
-    -- detects if scrub bar clicked and moves to the corresponding point in time
+    -- Detects if scrub bar clicked and moves to the corresponding point in time.
     if audio.music.exists() and gui.buttons.scrubbar.inBoundsX(x) and gui.buttons.scrubbar.inBoundsY(y) then
       gui.buttons.scrubbar.activate(x)
     end
   end
+  
 end
 
-function love.mousereleased(x, y, key, istouch)
-  if key == 1 and button_pressed ~= nil and button_pressed.inBoundsX(x) and button_pressed.inBoundsY(y) then
+--- Handles all mouse button release input.
+-- Callback for main Love2D thread.
+-- @param x number: x coordinate of mouse.
+-- @param y number: y coordinate of mouse.
+-- @param key number: Mouse button released.
+-- @param istouch boolean: True when touchscreen release.  False otherwise.
+-- @param presses number: Number of releases in a short time frame.
+function love.mousereleased(x, y, key, istouch, presses)
+
+  -- Verifies releasing on the same button as pressed with some polymorphism.
+  if key == 1 and button_pressed and button_pressed.inBoundsX(x) and button_pressed.inBoundsY(y) then
     button_pressed:activate()
   end
   button_pressed = nil
 
-  if gui.buttons.scrubbar.isActive() then gui.buttons.scrubbar.deactivate(x) end
+  -- If scrubbar is being dragged, stop.
+  if gui.buttons.scrubbar.isActive() then
+    gui.buttons.scrubbar.deactivate(x)
+  end
+  
 end
 
+--- Handles all mouse movement input.
+-- Callback for main Love2D thread.
+-- @param x number: x coordinate of mouse.
+-- @param y number: y coordinate of mouse.
+-- @param dx number: Distance along x since last call.
+-- @param dy number: Distance along y since last call.
+-- @param istouch boolean: True when touchscreen press.  False otherwise.
 function love.mousemoved(x, y, dx, dy, istouch)
+
+  -- Reset sleep counter.
   gui.extra.sleep(false)
   sleep_counter = 0
   
   gui.buttons.setCursor(x, y)
 
-  -- makes scrub bar draggable
+  -- Update scrubhead/music position.  Makes scrubhead draggable.
   if gui.buttons.scrubbar.isActive() and gui.buttons.scrubbar.inBoundsX(x) then
     gui.buttons.scrubbar.activate(x)
   end
+  
 end
 
+--- Called when mouse loses/gains window focus.
+-- Callback for main Love2D thread.
+-- @param focus boolean: True when gains.  False otherwise.
 function love.mousefocus(focus)
+
+  -- If scrubbar is being dragged, stop.
   if gui.buttons.scrubbar.isActive() then
     gui.buttons.scrubbar.deactivate(gui.buttons.scrubbar.getScrubheadPosition())
   end
+  
 end
 
+--- Handles all key press input.
+-- Callback for main Love2D thread.
+-- @param key string: Key pressed.
+-- @param scancode number: Number representation of key.
+-- @param isrepeat boolean: True if keypress event repeats.  False otherwise.
 function love.keypressed(key, scancode, isrepeat)
+
+  -- Reset sleep counter.
   gui.extra.sleep(false)
   sleep_counter = 0
 
+  -- Menu controls.
   local key_int = tonumber(key)
-  if gui.buttons.menu.isActive() and key_int ~= nil and not dragndrop then
+  if gui.buttons.menu.isActive() and key_int and not dragndrop then
+    -- Audio input options.
     if rd_option_pressed then
       if key_int > 0 and key_int <= #rd_list then
         audio.recordingdevice.load(rd_list[key_int])
         rd_option_pressed = false
       end
+    
+    -- Menu options.
     else
+      -- Select system audio.
       if key_int == 1 then
-        rd_option_pressed = true
         rd_list = love.audio.getRecordingDevices()
         
+        -- If init_sysaudio_option configured in config, use.  Start RD instantly.
         if rd_option > 0 and rd_option <= #rd_list then
           audio.recordingdevice.load(rd_list[rd_option])
           rd_option_pressed = false
+        
+        -- Obtain user input.  Have user select from audio input options.
         else
+          rd_option_pressed = true
           rd_string = "Choose audio input:\n"
+          
           for i,v in ipairs(rd_list) do
             rd_string = rd_string..tostring(i)..") "..v:getName().."\n"
           end
         end
+      
+      -- Select music from appdata.
       elseif key_int == 2 then
-        appdata_music_possible = audio.music.load()
+        appdata_music_success = audio.music.load()
       end
     end
+    
+  -- Player controls.
   else
     local function catch_nil() end
     (KEY_FUNCTIONS[key] or catch_nil)()
   end
+  
 end
 
--- when window resizes, scale
+--- Called on window resize.
+-- Callback for main Love2D thread.
+-- @param w number: Width window resized to.
+-- @param h number: Height window resized to.
 function love.resize(w, h)
+
   gui.scale()
+  
 end
 
+--- Called when directory dropped onto window.
+-- Callback for main Love2D thread.
+-- @param path string: Path of directory dropped.
 function love.directorydropped(path)
+
   love.filesystem.mount(path, "music")
   audio.music.load()
+  
 end
 
+--- Called when file dropped onto window.
+-- Callback for main Love2D thread.
+-- @param file File: Love2D object representing dropped file.
 function love.filedropped(file)
+
   audio.music.addSong(file)
+  
 end
 
--- when exiting drop, save config (for persistence)
+--- Called when exiting Drop.
+-- Callback for main Love2D thread.
+-- @return boolean: True to cancel and keep Drop alive.  False to quit.
 function love.quit()
+
   print("Quit attempt detected...")
   
+  --[[ Save config (for session persistence) ]]
   local write_config = false
   
+  -- If need to update config values, set flag to true and save new values.
   if config.window_size_persistence then
     local new_window_size
     if love.window.getFullscreen() then
@@ -465,6 +602,7 @@ function love.quit()
     end
   end
   
+  -- If need to update config values, set flag to true and save new values.
   if config.window_location_persistence then
     local new_window_location
     if love.window.getFullscreen() then
@@ -478,8 +616,9 @@ function love.quit()
     end
   end
   
+  -- If need to update config values, set flag to true and save new values.
   if config.session_persistence then
-    local visualization = visualization.get()
+    local visualization_type = visualization.get()
     local shuffle = audio.isShuffling()
     local loop = audio.isLooping()
     local mute = audio.isMuted()
@@ -487,8 +626,8 @@ function love.quit()
     local fullscreen = love.window.getFullscreen()
     local fade = visualization.isFading()
     
-    if config.visualization ~= visualization or config.shuffle ~= shuffle or config.loop ~= loop or config.volume ~= volume or config.mute ~= mute or config.fullscreen ~= fullscreen or config.fade ~= fade then
-      config.visualization = visualization
+    if config.visualization ~= visualization_type or config.shuffle ~= shuffle or config.loop ~= loop or config.volume ~= volume or config.mute ~= mute or config.fullscreen ~= fullscreen or config.fade ~= fade then
+      config.visualization = visualization_type
       config.shuffle = shuffle
       config.loop = loop
       config.volume = volume
@@ -500,6 +639,7 @@ function love.quit()
     end
   end
   
+  -- If config has been changed, update config file.
   if write_config then
     love.filesystem.write("config.lua", TSerial.pack(config, false, true))
     print("Updated config.lua.")
@@ -508,4 +648,5 @@ function love.quit()
   print("Quitting Drop...")
   
   return false
+  
 end
