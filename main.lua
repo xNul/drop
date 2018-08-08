@@ -450,7 +450,7 @@ function love.mousereleased(x, y, key, istouch, presses)
 
   -- Verifies releasing on the same button as pressed with some polymorphism.
   if key == 1 and button_pressed and button_pressed.inBoundsX(x) and button_pressed.inBoundsY(y) then
-    button_pressed:activate()
+    button_pressed.activate()
   end
   button_pressed = nil
 
