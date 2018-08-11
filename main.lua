@@ -245,7 +245,7 @@ function love.load()
       visualization.setFade(not visualization.isFading())
     end,
     ["m"] = function ()
-      audio.mute()
+      audio.toggleMute()
     end,
     ["1"] = function ()
       visualization.setType(1)
@@ -622,7 +622,7 @@ function love.quit()
     local shuffle = audio.isShuffling()
     local loop = audio.isLooping()
     local mute = audio.isMuted()
-    local volume = math.floor((mute and audio.getPreviousVolume() or not audio.music.exists() and audio.music.getVolume() or love.audio.getVolume()) * 10 + 0.5) / 10
+    local volume = math.floor((mute and audio.getUnmuteVolume() or not audio.music.exists() and audio.music.getVolume() or love.audio.getVolume())*10+0.5)/10
     local fullscreen = love.window.getFullscreen()
     local fade = visualization.isFading()
     
