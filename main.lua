@@ -474,7 +474,7 @@ function love.mousemoved(x, y, dx, dy, istouch)
   gui.extra.sleep(false)
   sleep_counter = 0
   
-  gui.buttons.setCursor(x, y)
+  gui.buttons.setCursorIcon(x, y)
 
   -- Update scrubhead/music position.  Makes scrubhead draggable.
   if gui.buttons.scrubbar.isActive() and gui.buttons.scrubbar.inBoundsX(x) then
