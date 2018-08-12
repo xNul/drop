@@ -431,7 +431,7 @@ function audio.music.recursiveEnumerate(folder)
       -- Generate song title from ID3 metadata supported file types.
       if v:sub(-4) == ".mp3" then
         local tags = id3.readtags(complete_music_table[index][1])
-        if tags and tags.title and tags.title and tags.artist and tags.artist then
+        if tags and tags.title and tags.title ~= "" and tags.artist and tags.artist ~= "" then
           song_title = tags.artist:gsub("[^\x20-\x7E]", '').." - "..tags.title:gsub("[^\x20-\x7E]", '')
         end
       end
