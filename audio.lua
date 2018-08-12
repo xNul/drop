@@ -458,7 +458,7 @@ function audio.music.recursiveEnumerate(folder)
 end
 
 --- Gets specified sample from stored sounddata.
--- @param unit string: Unit in which to return.
+-- @param[opt] unit string: Unit in which to return.
 -- @return number: Current position in music file (seconds or samples).
 function audio.music.tellSong(unit)
 
