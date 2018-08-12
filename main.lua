@@ -317,6 +317,7 @@ function love.load()
       end
     end
   elseif config.init_location == "appdata" then
+    love.filesystem.mount("music", "mount")
     appdata_music_success = audio.music.load()
   elseif config.init_location == "dragndrop" then
     dragndrop = true
@@ -539,6 +540,7 @@ function love.keypressed(key, scancode, isrepeat)
       
       -- Select music from appdata.
       elseif key_int == 2 then
+        love.filesystem.mount("music", "mount")
         appdata_music_success = audio.music.load()
       end
     end
@@ -566,7 +568,7 @@ end
 -- @param path string: Path of directory dropped.
 function love.directorydropped(path)
 
-  love.filesystem.mount(path, "music")
+  love.filesystem.mount(path, "mount")
   audio.music.load()
   
 end

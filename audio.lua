@@ -62,6 +62,9 @@ local shuffle_history = {}
 if not love.filesystem.getInfo("music") then
   love.filesystem.createDirectory("music")
 end
+if not love.filesystem.getInfo("mount") then
+  love.filesystem.createDirectory("mount")
+end
 
 --- Reloads audio variables that affect the menu.
 -- Necessary for returning to the main menu.
@@ -98,7 +101,7 @@ function audio.reload()
   
 end
 
---- Attempts to load music in the folder "music" (mounted files and all).
+--- Attempts to load music in the folder "mount".
 -- @return boolean: True if successful.  False otherwise.
 function audio.music.load()
 
@@ -107,7 +110,7 @@ function audio.music.load()
   end
 
   shuffle_history = {}
-  music_list = audio.music.recursiveEnumerate("music")
+  music_list = audio.music.recursiveEnumerate("mount")
 
   if not next(music_list) then
     music_list = nil
