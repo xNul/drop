@@ -58,6 +58,7 @@ local is_paused = false
 local loop_toggle = config.loop
 local shuffle_toggle = config.shuffle
 local shuffle_history = {}
+local mount_history = {}
 
 if not love.filesystem.getInfo("music") then
   love.filesystem.createDirectory("music")
@@ -75,6 +76,11 @@ function audio.reload()
   end
   if current_song then
     audio.stop()
+  end
+  
+  -- Unmount all music directories.
+  for i,v in ipairs(mount_history) do
+    love.filesystem.unmount(v)
   end
   
   sample_sum = 0
@@ -98,18 +104,23 @@ function audio.reload()
   rd_active = false
   is_paused = false
   shuffle_history = {}
+  mount_history = {}
   
 end
 
 --- Attempts to load music in the folder "mount".
+-- @param path string: Path of music folder to mount and load.
 -- @return boolean: True if successful.  False otherwise.
-function audio.music.load()
+function audio.music.load(path)
 
   if rd_active then
     return
   end
+  
+  mount_history[#mount_history+1] = path
 
   shuffle_history = {}
+  love.filesystem.mount(path, "mount")
   music_list = audio.music.recursiveEnumerate("mount")
 
   if not next(music_list) then
