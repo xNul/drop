@@ -108,7 +108,7 @@ function audio.reload()
   
 end
 
---- Attempts to load music in the folder "mount".
+--- Mounts path and attempts to load all mounted music.
 -- @param path string: Path of music folder to mount and load.
 -- @return boolean: True if successful.  False otherwise.
 function audio.music.load(path)

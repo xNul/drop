@@ -3,15 +3,15 @@ Drop, a LÖVE visualizer and music player
 
 I've always loved music and visualizations, but mainstream visualizers are frequently so packed with features
 that they feel cumbersome. They have some neat graphics, but aren't very good at reflecting the actual beat of
-the music. I think visualizers have a lot of potential integrated into music players and so, I decided to
-create Drop; a simple, efficient music player/visualizer.    
+the music and so, I decided to create Drop; a simple, efficient music player/visualizer.    
+
 ![music visualization](https://i.imgur.com/LLsSyNt.png)    
 To add music, either drag and drop your music on the window or make sure you run the visualizer at least once, exit, navigate to your system's appdata directory, open "LOVE/Drop/music", and place your music files/folders in there.
 
 ### Features:
-  - drag and drop
-  - scalable ui
-  - realtime ffi-implemented rfft calculations (really fast and efficient spectrum generation)
+  - drag and drop music files/folders onto window
+  - scalable gui (can make Drop really small and put it in the corner of your screen)
+  - realtime ffi-implemented rfft calculations (really fast and efficient waveform generation)
   - decoder/queueable audio support
   - ID3 metadata support (gets song name/artist when stored in mp3)
   - audio input support (with this you can visualize speaker and microphone audio!)
@@ -25,7 +25,7 @@ To add music, either drag and drop your music on the window or make sure you run
   - quick start
   - fps capping
   - session persistence
-  - spectrum visualization
+  - spectrum/bar visualization
   - custom colors
   - doesn't run fft calculations when minimized or paused
 
@@ -35,8 +35,6 @@ To add music, either drag and drop your music on the window or make sure you run
   - Up Arrow: Volume Up
   - Down Arrow: Volume Down
   - Space bar: Pause/Play
-  - Click the scrub bar to change time
-  - Drag the scrub head to change time
   - s and l: Shuffle and Loop
   - i: toggle fade
   - m: toggle mute
