@@ -47,6 +47,7 @@ local audio_title = nil
 local time_count = 0
 local recording_device = nil
 local rd_active = false
+local rd_min_buffer = 448
 local rd_sample_rate = config.rd_sample_rate
 local rd_bit_depth = config.rd_bit_depth
 local rd_channels = config.rd_channels
@@ -304,7 +305,11 @@ function audio.music.changeSong(number)
   seconds_per_buffer = decoder_buffer/(sample_rate*channels*bit_depth/8)
 
   -- Start song queue.
-  queue_size = 4+math.max(math.floor(2*visualization.getSamplingSize()/(decoder_buffer/(bit_depth/8))), 1)
+  local necessary_buffers = math.ceil(channels*visualization.getSamplingSize()/decoder_buffer)
+  if necessary_buffers % 2 == 1 then
+    necessary_buffers = necessary_buffers+1
+  end
+  queue_size = 2+necessary_buffers
   current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
   
   -- Music initialization.
@@ -530,7 +535,11 @@ function audio.recordingdevice.load(device)
   bit_depth = device:getBitDepth()
   channels = device:getChannelCount()
   
-  queue_size = 8
+  local necessary_buffers = math.ceil(channels*visualization.getSamplingSize()/rd_min_buffer)
+  if necessary_buffers % 2 == 1 then
+    necessary_buffers = necessary_buffers+1
+  end
+  queue_size = 2+necessary_buffers
   current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
   
   gui.buttons.volume.activate("volume1")
@@ -542,7 +551,7 @@ function audio.recordingdevice.update()
 
   -- Manage decoder processing and audio queue.
   local current_sample_count = recording_device:getSampleCount()
-  if current_sample_count >= 448 and not is_paused then
+  if current_sample_count >= rd_min_buffer and not is_paused then
     sample_sum = sample_sum+current_sample_count-sample_counts[1]
   
     -- Time to make room for new sounddata.  Shift everything.
