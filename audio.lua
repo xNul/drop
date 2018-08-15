@@ -258,6 +258,73 @@ function audio.music.getSample(buffer)
   
 end
 
+--- Repopulates audio sampling tables and changes the size of the audio queue.
+-- Called when sampling size changes.  Aka when changing visualizations.
+-- @param sampling_size number: New sampling size to build the table/queue around.
+function audio.music.resizeQueue(sampling_size)
+
+  local necessary_buffers = math.ceil(channels*sampling_size/decoder_buffer)
+  if necessary_buffers % 2 == 1 then
+    necessary_buffers = necessary_buffers+1
+  end
+
+  local old_queue_size = queue_size
+  queue_size = 2+necessary_buffers
+
+  -- Escape now because neither the table or queue would change.
+  if old_queue_size == queue_size then
+    return
+  end
+
+  current_song:stop()
+  current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
+
+  -- Copy old sounddata.
+  local sounddata_transfer = {}
+  for i,v in ipairs(sounddata_array) do
+    sounddata_transfer[i] = v
+  end
+
+  sounddata_array = {}
+  local diff_queue = queue_size-old_queue_size
+
+  --[[ Adjust and repopulate the queue and table. ]]
+  if diff_queue > 0 then
+    for i=1, diff_queue do
+      sounddata_array[i] = sounddata_transfer[1]
+    end
+  end
+
+  for i=math.max(diff_queue+1, 1), queue_size do
+    sounddata_array[i] = sounddata_transfer[i-diff_queue]
+  end
+
+  for i=queue_size+1, math.min(queue_size+old_queue_size, 2*queue_size) do
+    sounddata_array[i] = sounddata_transfer[i-diff_queue]
+    current_song:queue(sounddata_array[i])
+  end
+
+  if diff_queue > 0 then
+    local sounddata
+    for i=queue_size+old_queue_size+1, 2*queue_size do
+      sounddata = decoder:decode()
+      if sounddata then
+        current_song:queue(sounddata)
+      end
+      
+      sounddata_array[i] = sounddata
+    end
+  end
+
+  -- Restore previous paused/play state of current_song.
+  if is_paused then
+    audio.pause()
+  else
+    audio.play()
+  end
+
+end
+
 --- Play next or previous music file.
 -- @param number number: -1 for previous, 0 for current, 1 for next.
 function audio.music.changeSong(number)
@@ -313,6 +380,7 @@ function audio.music.changeSong(number)
   current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
   
   -- Music initialization.
+  sounddata_array = {}
   time_count = 0
   end_of_song = false
   free_buffers_old = 0
@@ -337,6 +405,7 @@ function audio.music.changeSong(number)
     sounddata_array[queue_size+i] = sounddata
   end
 
+  -- Restore previous paused/play state of current_song.
   if is_paused then
     audio.pause()
   else
@@ -541,6 +610,9 @@ function audio.recordingdevice.load(device)
   end
   queue_size = 2+necessary_buffers
   current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
+
+  sounddata_array = {}
+  sample_counts = {0, 0, 0, 0, 0, 0, 0, 0}
   
   gui.buttons.volume.activate("volume1")
   
@@ -602,6 +674,54 @@ function audio.recordingdevice.getSample(buffer)
   -- Finds requested sample in decoder sounddata.
   return sounddata_array[index]:getSample(sample)
   
+end
+
+--- Repopulates audio sampling tables and changes the size of the audio queue.
+-- Called when sampling size changes.  Aka when changing visualizations.
+-- @param sampling_size number: New sampling size to build the table/queue around.
+function audio.recordingdevice.resizeQueue(sampling_size)
+
+  local necessary_buffers = math.ceil(channels*sampling_size/rd_min_buffer)
+  if necessary_buffers % 2 == 1 then
+    necessary_buffers = necessary_buffers+1
+  end
+
+  local old_queue_size = queue_size
+  queue_size = 2+necessary_buffers
+
+  -- Escape now because neither the table or queue would change.
+  if old_queue_size == queue_size then
+    return
+  end
+
+  current_song:stop()
+  current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
+
+  -- Copy old sounddata.
+  local sounddata_transfer = {}
+  for i,v in ipairs(sounddata_array) do
+    sounddata_transfer[i] = v
+  end
+
+  sounddata_array = {}
+  local diff_queue = queue_size-old_queue_size
+
+  --[[ Adjust and repopulate the queue and table. ]]
+  if diff_queue > 0 then
+    for i=1, 2*diff_queue do
+      sounddata_array[i] = sounddata_transfer[1]
+    end
+  end
+
+  for i=math.max(2*diff_queue+1, 1), 2*diff_queue+old_queue_size do
+    sounddata_array[i] = sounddata_transfer[i-2*diff_queue]
+  end
+
+  for i=2*diff_queue+old_queue_size+1, 2*queue_size do
+    sounddata_array[i] = sounddata_transfer[i-2*diff_queue]
+    current_song:queue(sounddata_array[i])
+  end
+
 end
 
 --- Determines if there's enough Recording Device sounddata to produce a waveform.
