@@ -68,7 +68,7 @@ function love.load()
   local CURRENT_VERSION = 2
   local DEFAULT_CONFIG = {
     version = CURRENT_VERSION, -- Every time config format changes, 1 is added.
-    visualization = 3, -- Visualization to show on start. (session persistent)
+    visualization = "bar", -- Visualization to show on start. (session persistent)
     shuffle = false, -- Enable/disable shuffle on start. (session persistent)
     loop = false, -- Enable/disable loop on start. (session persistent)
     volume = 0.5, -- Volume on start. (session persistent)
@@ -97,7 +97,7 @@ function love.load()
       return type(v) == "number" and v >= 0
     end,
     visualization = function (v)
-      return type(v) == "number" and v >= 1 and v <= 4 and v == math.floor(v)
+      return type(v) == "string"
     end,
     shuffle = function (v)
       return type(v) == "boolean"
@@ -244,18 +244,6 @@ function love.load()
     end,
     ["m"] = function ()
       audio.toggleMute()
-    end,
-    ["1"] = function ()
-      visualization.setType(1)
-    end,
-    ["2"] = function ()
-      visualization.setType(2)
-    end,
-    ["3"] = function ()
-      visualization.setType(3)
-    end,
-    ["4"] = function ()
-      visualization.setType(4)
     end,
     ["escape"] = function ()
       if love.window.getFullscreen() then
@@ -510,6 +498,7 @@ function love.keypressed(key, scancode, isrepeat)
     -- Audio input options.
     if rd_option_pressed then
       if key_int > 0 and key_int <= #rd_list then
+        visualization.load()
         audio.recordingdevice.load(rd_list[key_int])
         rd_option_pressed = false
       end
@@ -522,6 +511,7 @@ function love.keypressed(key, scancode, isrepeat)
         
         -- If init_sysaudio_option configured in config, use.  Start RD instantly.
         if rd_option > 0 and rd_option <= #rd_list then
+          visualization.load()
           audio.recordingdevice.load(rd_list[rd_option])
           rd_option_pressed = false
         
@@ -537,6 +527,7 @@ function love.keypressed(key, scancode, isrepeat)
       
       -- Select music from appdata.
       elseif key_int == 2 then
+        visualization.load()
         appdata_music_success = audio.music.load("music")
       end
     end
@@ -615,7 +606,7 @@ function love.quit()
   
   -- If need to update config values, set flag to true and save new values.
   if config.session_persistence then
-    local visualization_type = visualization.getType()
+    local visualization_name = visualization.getName()
     local shuffle = audio.isShuffling()
     local loop = audio.isLooping()
     local mute = audio.isMuted()
@@ -623,8 +614,8 @@ function love.quit()
     local fullscreen = love.window.getFullscreen()
     local fade = visualization.isFading()
     
-    if config.visualization ~= visualization_type or config.shuffle ~= shuffle or config.loop ~= loop or config.volume ~= volume or config.mute ~= mute or config.fullscreen ~= fullscreen or config.fade ~= fade then
-      config.visualization = visualization_type
+    if config.visualization ~= visualization_name or config.shuffle ~= shuffle or config.loop ~= loop or config.volume ~= volume or config.mute ~= mute or config.fullscreen ~= fullscreen or config.fade ~= fade then
+      config.visualization = visualization_name
       config.shuffle = shuffle
       config.loop = loop
       config.volume = volume

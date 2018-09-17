@@ -37,11 +37,16 @@ local old_sample = 0
 local samples_ptr = nil
 
 -- Variables for drawing the visualization.
-local visualizer_type = config.visualization
-local tick_amplitude_average = 0
+local default_visualizer = config.visualization
 local tick_count = 128
 local fade_activated = config.fade
 local fade_intensity_multiplier = config.fade_intensity_multiplier
+
+if not love.filesystem.getInfo("visualizers") then
+  love.filesystem.createDirectory("visualizers")
+end
+
+local visualizers = love.filesystem.getDirectoryItems("visualizers")
 
 --[[ Functions ]]
 --- Reloads visualization variables that affect the menu.
@@ -52,9 +57,6 @@ function visualization.reload()
   waveform = {}
   old_sample = 0
   samples_ptr = nil
-
-  -- Variables for drawing the visualization.
-  tick_amplitude_average = 0
   
 end
 
@@ -138,90 +140,44 @@ function visualization.generateRecordingDeviceWaveform()
   
 end
 
+function visualization.load()
+
+  -- if not default set then,
+  visualizer = require("visualizers/"..visualizers[1].."/"..visualizers[1])
+  visualizer:load()
+
+end
+
 --- Handles all drawing of visualization.
 -- @param waveform table: Waveform FFT of samples.
 function visualization.draw()
 
-  local tick_distance
-  local tick_width
-  local graphics_width = gui.graphics.getWidth()
-  local graphics_height = gui.graphics.getHeight()
-  
-  -- Scales visualization at a decreasing rate.
-  local graphics_scaled_height = math.max(71.138*graphics_height^(1/3), graphics_height)
-
-  -- Load properties of bar visualization.
-  if visualizer_type == 1 then
-    tick_count = 48
-    tick_distance = graphics_width/(tick_count*2)
-    tick_width = graphics_width/(tick_count*5.5)
-  elseif visualizer_type == 2 then
-    tick_count = 64
-    tick_distance = graphics_width/(tick_count*2)
-    tick_width = graphics_width/(tick_count*4.3)
-  elseif visualizer_type == 3 then
-    tick_count = 128
-    local tick_padding = 2
-    tick_distance = graphics_width/((tick_count+tick_padding)*2)
-    tick_width = tick_distance
-  elseif visualizer_type == 4 then
-    tick_count = 256
-    tick_distance = graphics_width/(tick_count*2)
-    tick_width = tick_distance
-  end
-
-  if fade_activated then
-    gui.graphics.setColor(nil, (.03-tick_amplitude_average)*fade_intensity_multiplier)
-  else
-    gui.graphics.setColor()
-  end
-  
-  --[[ Draw bar visualization ]]
-  -- If no waveform, skip drawing of bar visualization.
-  if not waveform[0] then
-    tick_count = 0
-  end
-  
-  -- Draw bars.
-  local tick_amplitude_sum = 0
-  for i=0, tick_count-1 do
-    local tick_amplitude = waveform[i]
-    local tick_height = math.max(graphics_scaled_height*tick_amplitude*2, tick_width/2)
-
-    love.graphics.rectangle(
-      'fill', graphics_width/2+i*tick_distance,
-      graphics_height/2 - tick_height/2,
-      tick_width, tick_height,
-      tick_width/2, tick_width/2
-    )
-    love.graphics.rectangle(
-      'fill', graphics_width/2-(i+1)*tick_distance,
-      graphics_height/2 - tick_height/2,
-      tick_width, tick_height,
-      tick_width/2, tick_width/2
-    )
-
-    tick_amplitude_sum = tick_amplitude_sum + tick_amplitude
-  end
-
-  -- Used to manipulate the degree of fade (if enabled).
-  tick_amplitude_average = tick_amplitude_sum/tick_count
+  visualizer:draw(waveform)
   
 end
 
---- Sets the type of bar visualization.
--- @param v number: An integer of 1-4.  Each changes the bar visualization properties.
-function visualization.setType(v)
+--- Sets the visualization.
+-- @param name string: The name of the visualization.
+function visualization.set(name)
 
-  visualizer_type = v
+  visualizers = love.filesystem.getDirectoryItems("visualizers")
+
+  for i,v in ipairs(visualizers) do
+    if v == name then
+      visualizer = require("visualizers/"..visualizers[name].."/"..visualizers[name])
+      return
+    end
+  end
+  
+  print(os.date('[%H:%M] ').."Unable to set visualizer to: "..name)
   
 end
 
 --- Obtains the type of bar visualization.
 -- @return number: An integer of 1-4.  The type of bar visualization.
-function visualization.getType()
+function visualization.getName()
 
-  return visualizer_type
+  return visualizer:getInfo().name
   
 end
 
