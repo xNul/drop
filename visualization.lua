@@ -31,6 +31,7 @@ local fft = ffi.load(ffi.os == "Windows" and "fft" or "./libfft.dylib")
 --[[ Initialize Variables ]]
 -- Variables for FFT.
 local visualization = {}
+local waveform = {}
 local sampling_size = config.sampling_size
 local old_sample = 0
 local samples_ptr = nil
@@ -48,6 +49,7 @@ local fade_intensity_multiplier = config.fade_intensity_multiplier
 function visualization.reload()
 
   -- Variables for FFT.
+  waveform = {}
   old_sample = 0
   samples_ptr = nil
 
@@ -94,7 +96,7 @@ function visualization.generateMusicWaveform()
   local sample_count_ptr = ffi.new("int", sampling_size)
   local tick_count_ptr = ffi.new("int", tick_count)
 
-  return fft.fft(samples_ptr, sample_count_ptr, tick_count_ptr)
+  waveform = fft.fft(samples_ptr, sample_count_ptr, tick_count_ptr)
   
 end
 
@@ -132,13 +134,13 @@ function visualization.generateRecordingDeviceWaveform()
   local sample_count_ptr = ffi.new("int", sampling_size)
   local tick_count_ptr = ffi.new("int", tick_count)
 
-  return fft.fft(samples_ptr, sample_count_ptr, tick_count_ptr)
+  waveform = fft.fft(samples_ptr, sample_count_ptr, tick_count_ptr)
   
 end
 
 --- Handles all drawing of visualization.
 -- @param waveform table: Waveform FFT of samples.
-function visualization.draw(waveform)
+function visualization.draw()
 
   local tick_distance
   local tick_width

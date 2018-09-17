@@ -30,7 +30,6 @@ local KEY_FUNCTIONS = {}
 
 local appdata_path = love.filesystem.getAppdataDirectory()
 local operating_system = love.system.getOS()
-local waveform = {}
 local sleep_counter = 0
 local sleep_time = 0
 local fps_cap = 0
@@ -47,7 +46,6 @@ local dragndrop = false
 -- Necessary for returning to the main menu.
 function main.reload()
 
-  waveform = {}
   sleep_counter = 0
   button_pressed = nil
   appdata_music_success = true
@@ -342,10 +340,10 @@ function love.update(dt)
       -- Performs FFT to generate waveform.
       if audio.recordingdevice.isActive() then
         if audio.recordingdevice.isReady() then
-          waveform = visualization.generateRecordingDeviceWaveform()
+          visualization.generateRecordingDeviceWaveform()
         end
       else
-        waveform = visualization.generateMusicWaveform()
+        visualization.generateMusicWaveform()
       end
     end
 
@@ -386,7 +384,7 @@ function love.draw()
       end
     end
   elseif not love.window.isMinimized() then
-    visualization.draw(waveform)
+    visualization.draw()
   end
   
   --[[ Overlay drawing ]]
