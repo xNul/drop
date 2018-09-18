@@ -37,13 +37,28 @@ local old_sample = 0
 local samples_ptr = nil
 
 -- Variables for drawing the visualization.
-local default_visualizer = config.visualization
+local visualizer_name = config.visualization
 local tick_count = 128
-local fade_activated = config.fade
-local fade_intensity_multiplier = config.fade_intensity_multiplier
 
+-- Ensure there is always at least one visualizer available.
 if not love.filesystem.getInfo("visualizers") then
   love.filesystem.createDirectory("visualizers")
+  love.filesystem.createDirectory("visualizers/bar")
+  love.filesystem.write("visualizers/bar/bar.lua", love.filesystem.read("bar.lua"))
+else
+  local vis_found = false
+
+  for i,v in ipairs(love.filesystem.getDirectoryItems("visualizers")) do
+    if love.filesystem.getInfo("visualizers/"..v, "directory") and love.filesystem.getInfo("visualizers/"..v.."/"..v..".lua", "file") then
+      vis_found = true
+      break
+    end
+  end
+
+  if not vis_found then
+    love.filesystem.createDirectory("visualizers/bar")
+    love.filesystem.write("visualizers/bar/bar.lua", love.filesystem.read("bar.lua"))
+  end
 end
 
 local visualizers = love.filesystem.getDirectoryItems("visualizers")
@@ -143,62 +158,22 @@ end
 function visualization.load()
 
   -- if not default set then,
-  visualizer = require("visualizers/"..visualizers[1].."/"..visualizers[1])
-  visualizer:load()
+  visualizer_name = visualizers[1]
+  visualizer = require("visualizers/"..visualizer_name.."/"..visualizer_name)
 
 end
 
---- Handles all drawing of visualization.
--- @param waveform table: Waveform FFT of samples.
-function visualization.draw()
+function visualization.getWaveform()
 
-  visualizer:draw(waveform)
+  return waveform
   
 end
 
---- Sets the visualization.
--- @param name string: The name of the visualization.
-function visualization.set(name)
-
-  visualizers = love.filesystem.getDirectoryItems("visualizers")
-
-  for i,v in ipairs(visualizers) do
-    if v == name then
-      visualizer = require("visualizers/"..visualizers[name].."/"..visualizers[name])
-      return
-    end
-  end
-  
-  print(os.date('[%H:%M] ').."Unable to set visualizer to: "..name)
-  
-end
-
---- Obtains the type of bar visualization.
--- @return number: An integer of 1-4.  The type of bar visualization.
+--- Obtains the current visualizer's name.
+-- @return string: The name of the current visualizer.
 function visualization.getName()
 
-  return visualizer:getInfo().name
-  
-end
-
---- Enable/Disable fade.
--- @param f boolean: Fade option.
-function visualization.setFade(f)
-
-  fade_activated = f
-  
-  -- If disabled, fade intensity becomes 0.
-  if not f then
-    gui.graphics.setColor(nil, 0)
-  end
-  
-end
-
---- Obtains status of fade activation.
--- @return boolean: A boolean representing the status of fade activation.
-function visualization.isFading()
-
-  return fade_activated
+  return visualizer_name
   
 end
 
@@ -228,6 +203,34 @@ function visualization.getSamplingSize()
 
   return sampling_size
   
+end
+
+function visualization.callback(callback, ...)
+
+  local function catch_nil() end
+  (visualizer[callback] or catch_nil)(...)
+
+end
+
+function visualization.setTickCount(n)
+
+  tick_count = n
+  
+  -- Performs FFT to generate waveform.
+  if audio.recordingdevice.isActive() then
+    if audio.recordingdevice.isReady() then
+      visualization.generateRecordingDeviceWaveform()
+    end
+  else
+    visualization.generateMusicWaveform()
+  end
+
+end
+
+function visualization.getTickCount()
+
+  return tick_count
+
 end
 
 return visualization

@@ -239,9 +239,6 @@ function love.load()
     ["l"] = function ()
       gui.buttons.loop.activate()
     end,
-    ["i"] = function ()
-      visualization.setFade(not visualization.isFading())
-    end,
     ["m"] = function ()
       audio.toggleMute()
     end,
@@ -372,7 +369,7 @@ function love.draw()
       end
     end
   elseif not love.window.isMinimized() then
-    visualization.draw()
+    visualization.callback("draw")
   end
   
   --[[ Overlay drawing ]]
@@ -534,7 +531,9 @@ function love.keypressed(key, scancode, isrepeat)
     
   -- Player controls.
   else
-    local function catch_nil() end
+    local function catch_nil()
+      visualization.callback("keypressed", key, scancode, isrepeat)
+    end
     (KEY_FUNCTIONS[key] or catch_nil)()
   end
   
@@ -612,7 +611,7 @@ function love.quit()
     local mute = audio.isMuted()
     local volume = math.floor((mute and audio.getUnmuteVolume() or not audio.music.exists() and audio.music.getVolume() or love.audio.getVolume())*10+0.5)/10
     local fullscreen = love.window.getFullscreen()
-    local fade = visualization.isFading()
+    local fade = false-- temp visualization.isFading()
     
     if config.visualization ~= visualization_name or config.shuffle ~= shuffle or config.loop ~= loop or config.volume ~= volume or config.mute ~= mute or config.fullscreen ~= fullscreen or config.fade ~= fade then
       config.visualization = visualization_name
