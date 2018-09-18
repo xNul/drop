@@ -50,11 +50,22 @@ else
 
   for i,v in ipairs(love.filesystem.getDirectoryItems("visualizers")) do
     if love.filesystem.getInfo("visualizers/"..v, "directory") and love.filesystem.getInfo("visualizers/"..v.."/"..v..".lua", "file") then
+      -- Updates bar visualizer.
+      if v == "bar" then
+        local appdata_bar = require("visualizers/bar/bar")
+        local main_bar = require("bar")
+        
+        if appdata_bar:getInfo().version < main_bar:getInfo().version then
+          love.filesystem.write("visualizers/bar/bar.lua", love.filesystem.read("bar.lua"))
+        end
+      end
+      
       vis_found = true
       break
     end
   end
 
+  -- Creates missing files.
   if not vis_found then
     love.filesystem.createDirectory("visualizers/bar")
     love.filesystem.write("visualizers/bar/bar.lua", love.filesystem.read("bar.lua"))
@@ -160,6 +171,7 @@ function visualization.load()
   -- if not default set then,
   visualizer_name = visualizers[1]
   visualizer = require("visualizers/"..visualizer_name.."/"..visualizer_name)
+  visualization.callback("load")
 
 end
 

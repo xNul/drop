@@ -25,17 +25,6 @@ local fade_activated = config.fade
 local tick_amplitude_average = 0
 local fade_intensity_multiplier = config.fade_intensity_multiplier
 
---[[if config.visualization == 1 then
-  visualization.setTickCount(48)
-elseif config.visualization == 2 then
-  visualization.setTickCount(64)
-elseif config.visualization == 3 then
-  visualization.setTickCount(128)
-elseif config.visualization == 4 then
-  visualization.setTickCount(256)
-end]]
-visualization.setTickCount(128)
-
 local KEY_FUNCTIONS = {
   ["i"] = function ()
     fade_activated = not fade_activated
@@ -64,12 +53,27 @@ function visualizer:getInfo()
   return {
     ["name"] = "bar",
     ["author"] = "nabakin",
-    ["version"] = "1.0"
+    ["version"] = 1
   }
 
 end
 
-function visualizer:draw(waveform)
+function visualizer:load()
+
+  --[[if config.visualization == 1 then
+    visualization.setTickCount(48)
+  elseif config.visualization == 2 then
+    visualization.setTickCount(64)
+  elseif config.visualization == 3 then
+    visualization.setTickCount(128)
+  elseif config.visualization == 4 then
+    visualization.setTickCount(256)
+  end]]
+  visualization.setTickCount(128)
+
+end
+
+function visualizer:draw()
 
   local tick_distance
   local tick_width
