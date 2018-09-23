@@ -169,7 +169,10 @@ end
 function visualization.load()
 
   -- if not default set then,
-  visualizer_name = visualizers[1]
+  if not (visualizer_name and love.filesystem.getInfo("visualizers/"..visualizer_name, "directory") and love.filesystem.getInfo("visualizers/"..visualizer_name.."/"..visualizer_name..".lua", "file")) then
+    visualizer_name = visualizers[1]
+  end
+  
   visualizer = require("visualizers/"..visualizer_name.."/"..visualizer_name)
   visualization.callback("load")
 
