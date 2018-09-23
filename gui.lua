@@ -90,15 +90,9 @@ local fullscreen_x = 0
 local fullscreen_quad = "fullscreen"
 
 local desktop_width, desktop_height = love.window.getDesktopDimensions()
-if config.window_location_persistence then
-  window_position_x = config.window_location[1]
-  window_position_y = config.window_location[2]
-  display_location = config.window_location[3]
-else
-  window_position_x = (desktop_width-window_width)/2
-  window_position_y = (desktop_height-window_height)*(5/12) --5/12 to account for taskbar/dock
-  display_location = 1
-end
+window_position_x = (config.window_location[1] == -1) and (desktop_width-window_width)/2 or config.window_location[1]
+window_position_y = (config.window_location[2] == -1) and (desktop_height-window_height)*(5/12) or config.window_location[2] --5/12 to account for taskbar/dock
+display_location = (config.window_location[3] == -1) and 1 or config.window_location[3]
 
 --- Reloads gui variables that affect the menu.
 -- Necessary for returning to the main menu.

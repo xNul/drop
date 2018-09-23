@@ -79,15 +79,15 @@ function love.load()
     fps_cap = 0, -- Places cap on fps (looks worse, but less cpu intensive).  0 for vsync.
     sleep_time = 7, -- Seconds until overlay is put to sleep.
     visualization_update = true, -- Update visualization when dragging scrubhead (false=less cpu intensive).
-    window_size_persistence = true, -- Window size restored from previous session.
+    window_size_persistence = false, -- Window size restored from previous session.
     window_size = {1280, 720}, -- Size of window on start. (window size persistent)
     window_location_persistence = false, -- Window position restored from previous session.
-    window_location = {420, 340, 1}, -- Location of window when persistent. (window location persistent)
+    window_location = {-1, -1, -1}, -- Location of window on start. (window location persistent)
     init_location = "menu", -- Where to go on start.  Options: "menu", "dragndrop", "sysaudio", or "appdata".
     init_sysaudio_option = 0, -- Which system audio input to automatically select. Options: 0=show options, 1-infinity=audio input.
-    rd_sample_rate = 44100, -- [ADVANCED] Audio input device's sample rate (in hz). Change only if having issues visualizing audio.
-    rd_bit_depth = 16, -- [ADVANCED] Audio input device's bit depth. Change only if having issues visualizing audio.
-    rd_channels = 1 -- [ADVANCED] Audio input device's number of channels. Change only if having issues visualizing audio.
+    rd_sample_rate = 44100, -- [EXPERT] Audio input device's sample rate (in hz). Change only if having issues visualizing audio.
+    rd_bit_depth = 16, -- [EXPERT] Audio input device's bit depth. Change only if having issues visualizing audio.
+    rd_channels = 1 -- [EXPERT] Audio input device's number of channels. Change only if having issues visualizing audio.
   }
   local CHECK_VALUES = {
     version = function (v)
