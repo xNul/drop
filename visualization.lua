@@ -37,6 +37,7 @@ local old_sample = 0
 local samples_ptr = nil
 
 -- Variables for drawing the visualization.
+local visualizer
 local visualizer_name = config.visualization
 local visualizer_index = 1
 local waveform_size = 128
@@ -223,7 +224,7 @@ end
 function visualization.callback(callback, ...)
 
   local function catch_nil() end
-  (visualizer[callback] or catch_nil)(...)
+  ((visualizer ~= nil) and visualizer[callback] or catch_nil)(...)
 
 end
 
@@ -255,6 +256,7 @@ function visualization.next()
   end
   
   visualizer_name = visualizers[visualizer_index]
+  visualization.callback("quit")
   visualizer = require("visualizers/"..visualizer_name.."/"..visualizer_name)
   visualization.callback("load")
 
@@ -269,6 +271,7 @@ function visualization.previous()
   end
   
   visualizer_name = visualizers[visualizer_index]
+  visualization.callback("quit")
   visualizer = require("visualizers/"..visualizer_name.."/"..visualizer_name)
   visualization.callback("load")
 

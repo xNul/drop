@@ -322,6 +322,8 @@ function love.update(dt)
     end
   end
   
+  visualization.callback("update", dt)
+  
 end
 
 --- Contains all graphics drawing operations.
@@ -399,6 +401,8 @@ function love.mousepressed(x, y, key, istouch, presses)
     end
   end
   
+  visualization.callback("mousepressed", x, y, key, istouch, presses)
+  
 end
 
 --- Handles all mouse button release input.
@@ -420,6 +424,8 @@ function love.mousereleased(x, y, key, istouch, presses)
   if gui.buttons.scrubbar.isActive() then
     gui.buttons.scrubbar.deactivate(x)
   end
+  
+  visualization.callback("mousereleased", x, y, key, istouch, presses)
   
 end
 
@@ -443,6 +449,8 @@ function love.mousemoved(x, y, dx, dy, istouch)
     gui.buttons.scrubbar.activate(x)
   end
   
+  visualization.callback("mousemoved", x, y, dx, dy, istouch)
+  
 end
 
 --- Called when mouse loses/gains window focus.
@@ -454,6 +462,8 @@ function love.mousefocus(focus)
   if gui.buttons.scrubbar.isActive() then
     gui.buttons.scrubbar.deactivate(gui.buttons.scrubbar.getScrubheadPosition())
   end
+  
+  visualization.callback("mousefocus", focus)
   
 end
 
@@ -525,6 +535,7 @@ end
 function love.resize(w, h)
 
   gui.scale()
+  visualization.callback("resize", w, h)
   
 end
 
@@ -534,6 +545,7 @@ end
 function love.directorydropped(path)
 
   audio.music.load(path)
+  visualization.callback("directorydropped", path)
   
 end
 
@@ -543,6 +555,7 @@ end
 function love.filedropped(file)
 
   audio.music.addSong(file)
+  visualization.callback("filedropped", file)
   
 end
 
@@ -550,6 +563,8 @@ end
 -- Callback for main Love2D thread.
 -- @return boolean: True to cancel and keep Drop alive.  False to quit.
 function love.quit()
+
+  visualization.callback("quit")
   
   --[[ Save config (for session persistence) ]]
   local write_config = false
@@ -610,4 +625,124 @@ function love.quit()
   
   return false
   
+end
+
+
+
+
+
+
+--[[ Additional Visualization Function Callbacks ]]
+function love.keyreleased(...)
+
+  visualization.callback("keyreleased", ...)
+
+end
+
+function love.lowmemory(...)
+
+  visualization.callback("lowmemory", ...)
+
+end
+
+function love.textedited(...)
+
+  visualization.callback("textedited", ...)
+
+end
+
+function love.textinput(...)
+
+  visualization.callback("textinput", ...)
+
+end
+
+function love.threaderror(...)
+
+  visualization.callback("threaderror", ...)
+
+end
+
+function love.touchmoved(...)
+
+  visualization.callback("touchmoved", ...)
+
+end
+
+function love.touchpressed(...)
+
+  visualization.callback("touchpressed", ...)
+
+end
+
+function love.touchreleased(...)
+
+  visualization.callback("touchreleased", ...)
+
+end
+
+function love.visible(...)
+
+  visualization.callback("visible", ...)
+
+end
+
+function love.wheelmoved(...)
+
+  visualization.callback("wheelmoved", ...)
+
+end
+
+function love.gamepadaxis(...)
+
+  visualization.callback("gamepadaxis", ...)
+
+end
+
+function love.gamepadpressed(...)
+
+  visualization.callback("gamepadpressed", ...)
+
+end
+
+function love.gamepadreleased(...)
+
+  visualization.callback("gamepadreleased", ...)
+
+end
+
+function love.joystickadded(...)
+
+  visualization.callback("joystickadded", ...)
+
+end
+
+function love.joystickaxis(...)
+
+  visualization.callback("joystickaxis", ...)
+
+end
+
+function love.joystickhat(...)
+
+  visualization.callback("joystickhat", ...)
+
+end
+
+function love.joystickpressed(...)
+
+  visualization.callback("joystickpressed", ...)
+
+end
+
+function love.joystickreleased(...)
+
+  visualization.callback("joystickreleased", ...)
+
+end
+
+function love.joystickremoved(...)
+
+  visualization.callback("joystickremoved", ...)
+
 end
