@@ -173,7 +173,7 @@ function love.load()
     -- Transfer compatible configurations from old config to new config.
     local dconfig = DEFAULT_CONFIG
     for key, value in pairs(config) do
-      if dconfig[key] and CHECK_VALUES[key](value) then
+      if dconfig[key] ~= nil and CHECK_VALUES[key](value) then
         dconfig[key] = value
       end
     end
@@ -189,7 +189,7 @@ function love.load()
     
     -- Validate configurations.  Resets configuration to default if invalid.
     for key, value in pairs(config) do
-      if CHECK_VALUES[key] and not CHECK_VALUES[key](value) then
+      if CHECK_VALUES[key] ~= nil and not CHECK_VALUES[key](value) then
         print(os.date('[%H:%M] ').."Error: Invalid "..key.." value detected in config.lua.  Resetting to default.")
       
         config[key] = DEFAULT_CONFIG[key]
