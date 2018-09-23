@@ -208,12 +208,10 @@ function love.load()
   --------------------------------- Keyboard Actions ---------------------------------
   KEY_FUNCTIONS = {
     ["up"] = function ()
-      local new_volume_rounded = math.floor((love.audio.getVolume()+.1)*10+0.5)/10
-      gui.buttons.volume.activate(new_volume_rounded)
+      visualization.next()
     end,
     ["down"] = function ()
-      local new_volume_rounded = math.floor((love.audio.getVolume()-.1)*10+0.5)/10
-      gui.buttons.volume.activate(new_volume_rounded)
+      visualization.previous()
     end,
     ["right"] = function ()
       gui.buttons.right.activate()

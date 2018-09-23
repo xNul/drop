@@ -38,6 +38,7 @@ local samples_ptr = nil
 
 -- Variables for drawing the visualization.
 local visualizer_name = config.visualization
+local visualizer_index = 1
 local waveform_size = 128
 
 -- Ensure there is always at least one visualizer available.
@@ -168,7 +169,6 @@ end
 
 function visualization.load()
 
-  -- if not default set then,
   if not (visualizer_name and love.filesystem.getInfo("visualizers/"..visualizer_name, "directory") and love.filesystem.getInfo("visualizers/"..visualizer_name.."/"..visualizer_name..".lua", "file")) then
     visualizer_name = visualizers[1]
   end
@@ -243,6 +243,34 @@ function visualization.generateWaveform()
   else
     visualization.generateMusicWaveform()
   end
+
+end
+
+function visualization.next()
+
+  if visualizer_index+1 > #visualizers then
+    visualizer_index = 1
+  else
+    visualizer_index = visualizer_index+1
+  end
+  
+  visualizer_name = visualizers[visualizer_index]
+  visualizer = require("visualizers/"..visualizer_name.."/"..visualizer_name)
+  visualization.callback("load")
+
+end
+
+function visualization.previous()
+
+  if visualizer_index-1 < 1 then
+    visualizer_index = #visualizers
+  else
+    visualizer_index = visualizer_index-1
+  end
+  
+  visualizer_name = visualizers[visualizer_index]
+  visualizer = require("visualizers/"..visualizer_name.."/"..visualizer_name)
+  visualization.callback("load")
 
 end
 
