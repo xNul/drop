@@ -65,7 +65,7 @@ function love.load()
 
   --[[ Configuration ]]
   -- Config initialization
-  local CURRENT_VERSION = 2
+  local CURRENT_VERSION = 3
   local DEFAULT_CONFIG = {
     version = CURRENT_VERSION, -- Every time config format changes, 1 is added.
     visualization = "bar", -- Visualization to show on start. (session persistent)
@@ -74,14 +74,11 @@ function love.load()
     volume = 0.5, -- Volume on start. (session persistent)
     mute = false, -- Enable/disable mute on start. (session persistent)
     fullscreen = false, -- Enable/disable fullscreen on start. (session persistent)
-    fade = false, -- Enable/disable fade on start. (session persistent)
-    fade_intensity_multiplier = 30, -- Amount of fade.
     session_persistence = false, -- Options restored from previous session.
     color = {0, 1, 0}, -- Color of visualization/music controls.  Format: {r, g, b} [0-1]
     fps_cap = 0, -- Places cap on fps (looks worse, but less cpu intensive).  0 for vsync.
     sleep_time = 7, -- Seconds until overlay is put to sleep.
     visualization_update = true, -- Update visualization when dragging scrubhead (false=less cpu intensive).
-    sampling_size = 2048, -- Number of audio samples to generate waveform from (maintain a power of 2).
     window_size_persistence = true, -- Window size restored from previous session.
     window_size = {1280, 720}, -- Size of window on start. (window size persistent)
     window_location_persistence = false, -- Window position restored from previous session.
@@ -111,12 +108,6 @@ function love.load()
     fullscreen = function (v)
       return type(v) == "boolean"
     end,
-    fade = function (v)
-      return type(v) == "boolean"
-    end,
-    fade_intensity_multiplier = function (v)
-      return type(v) == "number" and v >= 0
-    end,
     volume = function (v)
       return type(v) == "number" and v >= 0 and v <= 1
     end,
@@ -134,9 +125,6 @@ function love.load()
     end,
     visualization_update = function (v)
       return type(v) == "boolean"
-    end,
-    sampling_size = function (v)
-      return type(v) == "number" and v == math.floor(v) and v%2 == 0
     end,
     window_size_persistence = function (v)
       return type(v) == "boolean"
@@ -322,14 +310,7 @@ function love.update(dt)
     end
 
     if visualization.wouldChange() and not love.window.isMinimized() then
-      -- Performs FFT to generate waveform.
-      if audio.recordingdevice.isActive() then
-        if audio.recordingdevice.isReady() then
-          visualization.generateRecordingDeviceWaveform()
-        end
-      else
-        visualization.generateMusicWaveform()
-      end
+      visualization.generateWaveform()
     end
 
     -- Sleep timer for overlay.
@@ -611,16 +592,14 @@ function love.quit()
     local mute = audio.isMuted()
     local volume = math.floor((mute and audio.getUnmuteVolume() or not audio.music.exists() and audio.music.getVolume() or love.audio.getVolume())*10+0.5)/10
     local fullscreen = love.window.getFullscreen()
-    local fade = false-- temp visualization.isFading()
     
-    if config.visualization ~= visualization_name or config.shuffle ~= shuffle or config.loop ~= loop or config.volume ~= volume or config.mute ~= mute or config.fullscreen ~= fullscreen or config.fade ~= fade then
+    if config.visualization ~= visualization_name or config.shuffle ~= shuffle or config.loop ~= loop or config.volume ~= volume or config.mute ~= mute or config.fullscreen ~= fullscreen then
       config.visualization = visualization_name
       config.shuffle = shuffle
       config.loop = loop
       config.volume = volume
       config.mute = mute
       config.fullscreen = fullscreen
-      config.fade = fade
       
       write_config = true
     end

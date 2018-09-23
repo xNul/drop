@@ -21,9 +21,11 @@
 --  SOFTWARE.
 
 local visualizer = {}
-local fade_activated = config.fade
+local fade_activated = false
+local sampling_size = 2048
+local visualization_type = 3
 local tick_amplitude_average = 0
-local fade_intensity_multiplier = config.fade_intensity_multiplier
+local fade_intensity_multiplier = 30
 
 local KEY_FUNCTIONS = {
   ["i"] = function ()
@@ -36,15 +38,19 @@ local KEY_FUNCTIONS = {
   end,
   ["1"] = function ()
     visualization.setTickCount(48)
+    visualization.generateWaveform()
   end,
   ["2"] = function ()
     visualization.setTickCount(64)
+    visualization.generateWaveform()
   end,
   ["3"] = function ()
     visualization.setTickCount(128)
+    visualization.generateWaveform()
   end,
   ["4"] = function ()
     visualization.setTickCount(256)
+    visualization.generateWaveform()
   end
 }
 
@@ -60,16 +66,17 @@ end
 
 function visualizer:load()
 
-  --[[if config.visualization == 1 then
+  if visualization_type == 1 then
     visualization.setTickCount(48)
-  elseif config.visualization == 2 then
+  elseif visualization_type == 2 then
     visualization.setTickCount(64)
-  elseif config.visualization == 3 then
+  elseif visualization_type == 3 then
     visualization.setTickCount(128)
-  elseif config.visualization == 4 then
+  elseif visualization_type == 4 then
     visualization.setTickCount(256)
-  end]]
-  visualization.setTickCount(128)
+  end
+  visualization.setSamplingSize(sampling_size)
+  visualization.generateWaveform()
 
 end
 
