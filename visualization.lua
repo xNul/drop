@@ -38,7 +38,7 @@ local samples_ptr = nil
 
 -- Variables for drawing the visualization.
 local visualizer_name = config.visualization
-local tick_count = 128
+local waveform_size = 128
 
 -- Ensure there is always at least one visualizer available.
 if not love.filesystem.getInfo("visualizers") then
@@ -122,9 +122,9 @@ function visualization.generateMusicWaveform()
   
   -- Lua Variables -> FFI/C Variables
   local sample_count_ptr = ffi.new("int", sampling_size)
-  local tick_count_ptr = ffi.new("int", tick_count)
+  local waveform_size_ptr = ffi.new("int", waveform_size)
 
-  waveform = fft.fft(samples_ptr, sample_count_ptr, tick_count_ptr)
+  waveform = fft.fft(samples_ptr, sample_count_ptr, waveform_size_ptr)
   
 end
 
@@ -160,9 +160,9 @@ function visualization.generateRecordingDeviceWaveform()
   
   -- Lua Variables -> FFI/C Variables
   local sample_count_ptr = ffi.new("int", sampling_size)
-  local tick_count_ptr = ffi.new("int", tick_count)
+  local waveform_size_ptr = ffi.new("int", waveform_size)
 
-  waveform = fft.fft(samples_ptr, sample_count_ptr, tick_count_ptr)
+  waveform = fft.fft(samples_ptr, sample_count_ptr, waveform_size_ptr)
   
 end
 
@@ -224,9 +224,9 @@ function visualization.callback(callback, ...)
 
 end
 
-function visualization.setTickCount(n)
+function visualization.setWaveformSize(n)
 
-  tick_count = n
+  waveform_size = n
 
 end
 
@@ -257,9 +257,9 @@ function visualization.setSamplingSize(ss)
 
 end
 
-function visualization.getTickCount()
+function visualization.getWaveformSize()
 
-  return tick_count
+  return waveform_size
 
 end
 

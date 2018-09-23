@@ -24,7 +24,7 @@ local visualizer = {}
 local fade_activated = false
 local sampling_size = 2048
 local visualization_type = 3
-local tick_amplitude_average = 0
+local bar_amplitude_average = 0
 local fade_intensity_multiplier = 30
 
 local KEY_FUNCTIONS = {
@@ -37,19 +37,19 @@ local KEY_FUNCTIONS = {
     end
   end,
   ["1"] = function ()
-    visualization.setTickCount(48)
+    visualization.setWaveformSize(48)
     visualization.generateWaveform()
   end,
   ["2"] = function ()
-    visualization.setTickCount(64)
+    visualization.setWaveformSize(64)
     visualization.generateWaveform()
   end,
   ["3"] = function ()
-    visualization.setTickCount(128)
+    visualization.setWaveformSize(128)
     visualization.generateWaveform()
   end,
   ["4"] = function ()
-    visualization.setTickCount(256)
+    visualization.setWaveformSize(256)
     visualization.generateWaveform()
   end
 }
@@ -67,13 +67,13 @@ end
 function visualizer:load()
 
   if visualization_type == 1 then
-    visualization.setTickCount(48)
+    visualization.setWaveformSize(48)
   elseif visualization_type == 2 then
-    visualization.setTickCount(64)
+    visualization.setWaveformSize(64)
   elseif visualization_type == 3 then
-    visualization.setTickCount(128)
+    visualization.setWaveformSize(128)
   elseif visualization_type == 4 then
-    visualization.setTickCount(256)
+    visualization.setWaveformSize(256)
   end
   visualization.setSamplingSize(sampling_size)
   visualization.generateWaveform()
@@ -82,9 +82,9 @@ end
 
 function visualizer:draw()
 
-  local tick_distance
-  local tick_width
-  local tick_count = visualization.getTickCount()
+  local bar_distance
+  local bar_width
+  local waveform_size = visualization.getWaveformSize()
   local graphics_width = gui.graphics.getWidth()
   local graphics_height = gui.graphics.getHeight()
   
@@ -92,23 +92,23 @@ function visualizer:draw()
   local graphics_scaled_height = math.max(71.138*graphics_height^(1/3), graphics_height)
 
   -- Load properties of bar visualization.
-  if tick_count == 48 then
-    tick_distance = graphics_width/(tick_count*2)
-    tick_width = graphics_width/(tick_count*5.5)
-  elseif tick_count == 64 then
-    tick_distance = graphics_width/(tick_count*2)
-    tick_width = graphics_width/(tick_count*4.3)
-  elseif tick_count == 128 then
-    local tick_padding = 2
-    tick_distance = graphics_width/((tick_count+tick_padding)*2)
-    tick_width = tick_distance
-  elseif tick_count == 256 then
-    tick_distance = graphics_width/(tick_count*2)
-    tick_width = tick_distance
+  if waveform_size == 48 then
+    bar_distance = graphics_width/(waveform_size*2)
+    bar_width = graphics_width/(waveform_size*5.5)
+  elseif waveform_size == 64 then
+    bar_distance = graphics_width/(waveform_size*2)
+    bar_width = graphics_width/(waveform_size*4.3)
+  elseif waveform_size == 128 then
+    local bar_padding = 2
+    bar_distance = graphics_width/((waveform_size+bar_padding)*2)
+    bar_width = bar_distance
+  elseif waveform_size == 256 then
+    bar_distance = graphics_width/(waveform_size*2)
+    bar_width = bar_distance
   end
 
   if fade_activated then
-    gui.graphics.setColor(nil, (.03-tick_amplitude_average)*fade_intensity_multiplier)
+    gui.graphics.setColor(nil, (.03-bar_amplitude_average)*fade_intensity_multiplier)
   else
     gui.graphics.setColor()
   end
@@ -118,33 +118,33 @@ function visualizer:draw()
   --[[ Draw bar visualizer ]]
   -- If no waveform, skip drawing of bar visualizer.
   if not waveform[0] then
-    tick_count = 0
+    waveform_size = 0
   end
   
   -- Draw bars.
-  local tick_amplitude_sum = 0
-  for i=0, tick_count-1 do
-    local tick_amplitude = waveform[i]
-    local tick_height = math.max(graphics_scaled_height*tick_amplitude*2, tick_width/2)
+  local bar_amplitude_sum = 0
+  for i=0, waveform_size-1 do
+    local bar_amplitude = waveform[i]
+    local bar_height = math.max(graphics_scaled_height*bar_amplitude*2, bar_width/2)
 
     love.graphics.rectangle(
-      'fill', graphics_width/2+i*tick_distance,
-      graphics_height/2-tick_height/2,
-      tick_width, tick_height,
-      tick_width/2, tick_width/2
+      'fill', graphics_width/2+i*bar_distance,
+      graphics_height/2-bar_height/2,
+      bar_width, bar_height,
+      bar_width/2, bar_width/2
     )
     love.graphics.rectangle(
-      'fill', graphics_width/2-(i+1)*tick_distance,
-      graphics_height/2-tick_height/2,
-      tick_width, tick_height,
-      tick_width/2, tick_width/2
+      'fill', graphics_width/2-(i+1)*bar_distance,
+      graphics_height/2-bar_height/2,
+      bar_width, bar_height,
+      bar_width/2, bar_width/2
     )
 
-    tick_amplitude_sum = tick_amplitude_sum+tick_amplitude
+    bar_amplitude_sum = bar_amplitude_sum+bar_amplitude
   end
 
   -- Used to manipulate the degree of fade (if enabled).
-  tick_amplitude_average = tick_amplitude_sum/tick_count
+  bar_amplitude_average = bar_amplitude_sum/waveform_size
 
 end
 
