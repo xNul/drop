@@ -32,7 +32,7 @@ local fft = ffi.load(ffi.os == "Windows" and "fft" or "./libfft.dylib")
 -- Variables for FFT.
 local visualization = {}
 local waveform = {}
-local sampling_size = config.sampling_size
+local sampling_size = 2048
 local old_sample = 0
 local samples_ptr = nil
 
@@ -227,7 +227,11 @@ end
 function visualization.setTickCount(n)
 
   tick_count = n
-  
+
+end
+
+function visualization.generateWaveform()
+
   -- Performs FFT to generate waveform.
   if audio.recordingdevice.isActive() then
     if audio.recordingdevice.isReady() then
@@ -235,6 +239,20 @@ function visualization.setTickCount(n)
     end
   else
     visualization.generateMusicWaveform()
+  end
+
+end
+
+function visualization.setSamplingSize(ss)
+  
+  if ss ~= sampling_size and audio.exists() then
+    if audio.recordingdevice.isActive() then
+      audio.recordingdevice.resizeQueue(ss)
+    else
+      audio.music.resizeQueue(ss)
+    end
+    
+    sampling_size = ss
   end
 
 end

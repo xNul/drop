@@ -773,7 +773,7 @@ end
 -- @return boolean: True for playing.  False otherwise.
 function audio.isPlaying()
 
-  return (current_song ~= nil) and current_song:isPlaying()
+  return audio.exists() and current_song:isPlaying()
   
 end
 
@@ -830,6 +830,12 @@ function audio.stop()
   gui.buttons.scrubbar.setTimestampStart(0)
   gui.buttons.scrubbar.setTimestampEnd(0)
   
+end
+
+function audio.exists()
+
+  return (current_song ~= nil)
+
 end
 
 --- Gets the number of samples in a decoder buffer.
