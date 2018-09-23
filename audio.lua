@@ -703,23 +703,38 @@ function audio.recordingdevice.resizeQueue(sampling_size)
     sounddata_transfer[i] = v
   end
 
+  sample_sum = 0
   sounddata_array = {}
+  sample_counts = {}
+  
+  local sample_count = 0
   local diff_queue = queue_size-old_queue_size
 
   --[[ Adjust and repopulate the queue and table. ]]
   if diff_queue > 0 then
-    for i=1, 2*diff_queue do
+    for i=1, diff_queue do
+      sample_count = sounddata_transfer[1]:getSampleCount()
+      sample_sum = sample_sum+sample_count
+      sample_counts[i] = sample_count
+      
       sounddata_array[i] = sounddata_transfer[1]
     end
   end
-
-  for i=math.max(2*diff_queue+1, 1), 2*diff_queue+old_queue_size do
-    sounddata_array[i] = sounddata_transfer[i-2*diff_queue]
-  end
-
-  for i=2*diff_queue+old_queue_size+1, 2*queue_size do
-    sounddata_array[i] = sounddata_transfer[i-2*diff_queue]
+  
+  for i=math.max(diff_queue+1, 1), diff_queue+old_queue_size do
+    sample_count = sounddata_transfer[i-diff_queue]:getSampleCount()
+    sample_sum = sample_sum+sample_count
+    sample_counts[i] = sample_count
+    
+    sounddata_array[i] = sounddata_transfer[i-diff_queue]
     current_song:queue(sounddata_array[i])
+  end
+  
+  -- Restore previous paused/play state of current_song.
+  if is_paused then
+    audio.pause()
+  else
+    audio.play()
   end
 
 end
