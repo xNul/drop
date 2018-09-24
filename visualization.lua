@@ -182,6 +182,14 @@ function visualization.load()
 
   if not (visualizer_name and love.filesystem.getInfo("visualizers/"..visualizer_name, "directory") and love.filesystem.getInfo("visualizers/"..visualizer_name.."/"..visualizer_name..".lua", "file")) then
     visualizer_name = visualizer_names[1]
+    visualizer_index = 1
+  else
+    for i,v in ipairs(visualizer_names) do
+      if v == visualizer_name then
+        visualizer_index = i
+        break
+      end
+    end
   end
   
   visualizer = require("visualizers/"..visualizer_name.."/"..visualizer_name)
