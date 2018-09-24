@@ -32,8 +32,10 @@ To add music, either drag and drop your music on the window or make sure you run
 ### Controls:
   - Left Arrow: Previous Song
   - Right Arrow: Next Song
-  - Up Arrow: Volume Up
-  - Down Arrow: Volume Down
+  - Up Arrow: Next Visualizer
+  - Shift+Up Arrow: Volume Up
+  - Down Arrow: Previous Visualizer
+  - Shift+Down Arrow: Volume Down
   - Space bar: Pause/Play
   - s and l: Shuffle and Loop
   - i: toggle fade

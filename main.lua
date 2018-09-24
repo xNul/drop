@@ -208,10 +208,20 @@ function love.load()
   --------------------------------- Keyboard Actions ---------------------------------
   KEY_FUNCTIONS = {
     ["up"] = function ()
-      visualization.next()
+      if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+        local new_volume_rounded = math.floor((love.audio.getVolume()+.1)*10+0.5)/10
+        gui.buttons.volume.activate(new_volume_rounded)
+      else
+        visualization.next()
+      end
     end,
     ["down"] = function ()
-      visualization.previous()
+      if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+        local new_volume_rounded = math.floor((love.audio.getVolume()-.1)*10+0.5)/10
+        gui.buttons.volume.activate(new_volume_rounded)
+      else
+        visualization.previous()
+      end
     end,
     ["right"] = function ()
       gui.buttons.right.activate()
