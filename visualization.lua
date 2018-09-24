@@ -86,6 +86,8 @@ function visualization.reload()
   old_sample = 0
   samples_ptr = nil
   
+  visualization.callback("quit")
+  
 end
 
 --- Runs FFT on music file samples and obtains the next waveform.
