@@ -263,19 +263,20 @@ local function setVisualizer(index)
     return
   end
 
-  visualization.callback("quit")
+  visualization.callback("away")
   visualizer_objects[visualizer_index] = visualizer
   visualizer_name = visualizer_names[index]
   
   if visualizer_objects[index] then
     visualizer = visualizer_objects[index]
     visualizer_objects[index] = nil
+    visualizer_index = index
+    visualization.callback("back")
   else
     visualizer = require("visualizers/"..visualizer_name.."/"..visualizer_name)
+    visualizer_index = index
+    visualization.callback("load")
   end
-  
-  visualizer_index = index
-  visualization.callback("load")
   
 end
 
