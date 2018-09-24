@@ -587,7 +587,7 @@ end
 -- @return boolean: True to cancel and keep Drop alive.  False to quit.
 function love.quit()
 
-  visualization.callback("quit")
+  visualization.quitAll()
   
   --[[ Save config (for session persistence) ]]
   local write_config = false

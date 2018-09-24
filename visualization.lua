@@ -55,7 +55,7 @@ function visualization.reload()
   samples_ptr = nil
   
   -- Variables for visualization
-  visualization.callback("quit")
+  visualization.quitAll()
   visualizer_objects = {}
   visualizer_names = {}
   
@@ -235,6 +235,16 @@ function visualization.callback(callback, ...)
 
   local function catch_nil() end
   ((visualizer ~= nil) and visualizer[callback] or catch_nil)(...)
+
+end
+
+function visualization.quitAll()
+
+  local function catch_nil()end
+  for key, value in pairs(visualizer_objects) do
+    (value["quit"] or catch_nil)()
+  end
+  ((visualizer ~= nil) and visualizer["quit"] or catch_nil)()
 
 end
 
