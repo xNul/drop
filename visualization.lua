@@ -38,43 +38,11 @@ local samples_ptr = nil
 
 -- Variables for drawing the visualization.
 local visualizer
+local visualizer_objects = {}
 local visualizer_name = config.visualization
+local visualizer_names = {}
 local visualizer_index = 1
 local waveform_size = 128
-
--- Ensure there is always at least one visualizer available.
-if not love.filesystem.getInfo("visualizers") then
-  love.filesystem.createDirectory("visualizers")
-  love.filesystem.createDirectory("visualizers/bar")
-  love.filesystem.write("visualizers/bar/bar.lua", love.filesystem.read("bar.lua"))
-else
-  local vis_found = false
-
-  for i,v in ipairs(love.filesystem.getDirectoryItems("visualizers")) do
-    if love.filesystem.getInfo("visualizers/"..v, "directory") and love.filesystem.getInfo("visualizers/"..v.."/"..v..".lua", "file") then
-      -- Updates bar visualizer.
-      if v == "bar" then
-        local appdata_bar = require("visualizers/bar/bar")
-        local main_bar = require("bar")
-        
-        if appdata_bar:getInfo().version < main_bar:getInfo().version then
-          love.filesystem.write("visualizers/bar/bar.lua", love.filesystem.read("bar.lua"))
-        end
-      end
-      
-      vis_found = true
-      break
-    end
-  end
-
-  -- Creates missing files.
-  if not vis_found then
-    love.filesystem.createDirectory("visualizers/bar")
-    love.filesystem.write("visualizers/bar/bar.lua", love.filesystem.read("bar.lua"))
-  end
-end
-
-local visualizers = love.filesystem.getDirectoryItems("visualizers")
 
 --[[ Functions ]]
 --- Reloads visualization variables that affect the menu.
@@ -86,7 +54,10 @@ function visualization.reload()
   old_sample = 0
   samples_ptr = nil
   
+  -- Variables for visualization
   visualization.callback("quit")
+  visualizer_objects = {}
+  visualizer_names = {}
   
 end
 
@@ -170,10 +141,47 @@ function visualization.generateRecordingDeviceWaveform()
   
 end
 
+local function prepareVisualizers()
+  -- Ensure there is always at least one visualizer available.
+  if not love.filesystem.getInfo("visualizers") then
+    love.filesystem.createDirectory("visualizers")
+    love.filesystem.createDirectory("visualizers/bar")
+    love.filesystem.write("visualizers/bar/bar.lua", love.filesystem.read("bar.lua"))
+  else
+    local vis_found = false
+
+    for i,v in ipairs(love.filesystem.getDirectoryItems("visualizers")) do
+      if love.filesystem.getInfo("visualizers/"..v, "directory") and love.filesystem.getInfo("visualizers/"..v.."/"..v..".lua", "file") then
+        -- Updates bar visualizer.
+        if v == "bar" then
+          local appdata_bar = require("visualizers/bar/bar")
+          local main_bar = require("bar")
+          
+          if appdata_bar:getInfo().version < main_bar:getInfo().version then
+            love.filesystem.write("visualizers/bar/bar.lua", love.filesystem.read("bar.lua"))
+          end
+        end
+        
+        vis_found = true
+        break
+      end
+    end
+
+    -- Creates missing files.
+    if not vis_found then
+      love.filesystem.createDirectory("visualizers/bar")
+      love.filesystem.write("visualizers/bar/bar.lua", love.filesystem.read("bar.lua"))
+    end
+  end
+end
+
 function visualization.load()
 
+  prepareVisualizers()
+  visualizer_names = love.filesystem.getDirectoryItems("visualizers")
+
   if not (visualizer_name and love.filesystem.getInfo("visualizers/"..visualizer_name, "directory") and love.filesystem.getInfo("visualizers/"..visualizer_name.."/"..visualizer_name..".lua", "file")) then
-    visualizer_name = visualizers[1]
+    visualizer_name = visualizer_names[1]
   end
   
   visualizer = require("visualizers/"..visualizer_name.."/"..visualizer_name)
@@ -249,33 +257,53 @@ function visualization.generateWaveform()
 
 end
 
-function visualization.next()
+local function setVisualizer(index)
 
-  if visualizer_index+1 > #visualizers then
-    visualizer_index = 1
+  if visualizer_index == index then
+    return
+  end
+
+  visualization.callback("quit")
+  visualizer_objects[visualizer_index] = visualizer
+  visualizer_name = visualizer_names[index]
+  
+  if visualizer_objects[index] then
+    visualizer = visualizer_objects[index]
+    visualizer_objects[index] = nil
   else
-    visualizer_index = visualizer_index+1
+    visualizer = require("visualizers/"..visualizer_name.."/"..visualizer_name)
   end
   
-  visualizer_name = visualizers[visualizer_index]
-  visualization.callback("quit")
-  visualizer = require("visualizers/"..visualizer_name.."/"..visualizer_name)
+  visualizer_index = index
   visualization.callback("load")
+  
+end
+
+function visualization.next()
+
+  local index
+
+  if visualizer_index+1 > #visualizer_names then
+    index = 1
+  else
+    index = visualizer_index+1
+  end
+  
+  setVisualizer(index)
 
 end
 
 function visualization.previous()
 
+  local index
+  
   if visualizer_index-1 < 1 then
-    visualizer_index = #visualizers
+    index = #visualizer_names
   else
-    visualizer_index = visualizer_index-1
+    index = visualizer_index-1
   end
   
-  visualizer_name = visualizers[visualizer_index]
-  visualization.callback("quit")
-  visualizer = require("visualizers/"..visualizer_name.."/"..visualizer_name)
-  visualization.callback("load")
+  setVisualizer(index)
 
 end
 
