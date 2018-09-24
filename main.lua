@@ -531,8 +531,11 @@ function love.keypressed(key, scancode, isrepeat)
       
       -- Select music from appdata.
       elseif key_int == 2 then
-        visualization.load()
         appdata_music_success = audio.music.load("music")
+        
+        if appdata_music_success then
+          visualization.load()
+        end
       end
     end
     
@@ -562,7 +565,9 @@ end
 -- @param path string: Path of directory dropped.
 function love.directorydropped(path)
 
-  audio.music.load(path)
+  if audio.music.load(path) then
+    visualization.load()
+  end
   visualization.callback("directorydropped", path)
   
 end
