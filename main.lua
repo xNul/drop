@@ -224,10 +224,18 @@ function love.load()
       end
     end,
     ["right"] = function ()
-      gui.buttons.right.activate()
+      if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+        audio.music.seekSong(audio.music.tellSong()+5)
+      else
+        gui.buttons.right.activate()
+      end
     end,
     ["left"] = function ()
-      gui.buttons.left.activate()
+      if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+        audio.music.seekSong(audio.music.tellSong()-5)
+      else
+        gui.buttons.left.activate()
+      end
     end,
     ["s"] = function ()
       gui.buttons.shuffle.activate()

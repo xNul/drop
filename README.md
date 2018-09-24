@@ -33,9 +33,11 @@ To add music, either drag and drop your music on the window or make sure you run
   - Left Arrow: Previous Song
   - Right Arrow: Next Song
   - Up Arrow: Next Visualizer
-  - Shift+Up Arrow: Volume Up
   - Down Arrow: Previous Visualizer
-  - Shift+Down Arrow: Volume Down
+  - Shift+Left: Skip Backwards 5s
+  - Shift+Right: Skip Forward 5s
+  - Shift+Up: Volume Up
+  - Shift+Down: Volume Down
   - Space bar: Pause/Play
   - s and l: Shuffle and Loop
   - i: toggle fade
