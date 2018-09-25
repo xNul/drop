@@ -39,6 +39,7 @@ local samples_ptr = nil
 -- Variables for drawing the visualization.
 local visualizer
 local visualizer_objects = {}
+local visualizer_configs = {}
 local visualizer_name = config.visualization
 local visualizer_names = {}
 local visualizer_index = 1
@@ -57,6 +58,7 @@ function visualization.reload()
   -- Variables for visualization
   visualization.quitAll()
   visualizer_objects = {}
+  visualizer_configs = {}
   visualizer_names = {}
   
 end
@@ -323,6 +325,18 @@ function visualization.previous()
   end
   
   setVisualizer(index)
+
+end
+
+function visualization.storeConfig(config_table)
+
+  visualizer_configs[visualizer_index] = config_table
+
+end
+
+function visualization.retrieveConfig()
+
+  return visualizer_configs[visualizer_index]
 
 end
 
