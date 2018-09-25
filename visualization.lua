@@ -38,6 +38,7 @@ local samples_ptr = nil
 
 -- Variables for drawing the visualization.
 local visualizer
+local visualizer_object_storing_enabled = true
 local visualizer_objects = {}
 local visualizer_configs = {}
 local visualizer_name = config.visualization
@@ -284,8 +285,11 @@ local function setVisualizer(index)
   end
 
   visualization.callback("away")
-  visualizer_objects[visualizer_index] = visualizer
+  if not visualizer_configs[visualizer_index] or visualizer_configs[visualizer_index][1] then
+    visualizer_objects[visualizer_index] = visualizer
+  end
   visualizer_name = visualizer_names[index]
+  visualizer_object_storing_enabled = true
   
   if visualizer_objects[index] then
     visualizer = visualizer_objects[index]
@@ -293,9 +297,14 @@ local function setVisualizer(index)
     visualizer_index = index
     visualization.callback("back")
   else
-    visualizer = require("visualizers/"..visualizer_name.."/"..visualizer_name)
     visualizer_index = index
-    visualization.callback("load")
+    visualizer = require("visualizers/"..visualizer_name.."/"..visualizer_name)
+    
+    if visualizer_configs[visualizer_index] and visualizer_configs[visualizer_index][1] then
+      visualization.callback("back")
+    else
+      visualization.callback("load")
+    end
   end
   
 end
@@ -330,13 +339,25 @@ end
 
 function visualization.storeConfig(config_table)
 
-  visualizer_configs[visualizer_index] = config_table
+  if not visualizer_configs[visualizer_index] then
+    visualizer_configs[visualizer_index] = {true}
+  end
+  visualizer_configs[visualizer_index][2] = config_table
 
 end
 
 function visualization.retrieveConfig()
 
-  return visualizer_configs[visualizer_index]
+  return visualizer_configs[visualizer_index][2]
+
+end
+
+function visualization.setObjectStoring(option)
+
+  if not visualizer_configs[visualizer_index] then
+    visualizer_configs[visualizer_index] = {}
+  end
+  visualizer_configs[visualizer_index][1] = option
 
 end
 
