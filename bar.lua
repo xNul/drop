@@ -21,18 +21,20 @@
 --  SOFTWARE.
 
 local visualizer = {}
-local fade_activated = false
-local sampling_size = 2048
-local visualization_type = 3
-local bar_amplitude_average = 0
-local fade_intensity_multiplier = 30
+local config = {
+  ["fade_activated"] = false,
+  ["sampling_size"] = 2048,
+  ["visualization_type"] = 3,
+  ["bar_amplitude_average"] = 0,
+  ["fade_intensity_multiplier"] = 30
+}
 
 local KEY_FUNCTIONS = {
   ["i"] = function ()
-    fade_activated = not fade_activated
+    config.fade_activated = not config.fade_activated
     
     -- If disabled, fade intensity becomes 0.
-    if not fade_activated then
+    if not config.fade_activated then
       gui.graphics.setColor(nil, 0)
     end
   end,
@@ -66,16 +68,16 @@ end
 
 function visualizer:load()
 
-  if visualization_type == 1 then
+  if config.visualization_type == 1 then
     visualization.setWaveformSize(48)
-  elseif visualization_type == 2 then
+  elseif config.visualization_type == 2 then
     visualization.setWaveformSize(64)
-  elseif visualization_type == 3 then
+  elseif config.visualization_type == 3 then
     visualization.setWaveformSize(128)
-  elseif visualization_type == 4 then
+  elseif config.visualization_type == 4 then
     visualization.setWaveformSize(256)
   end
-  visualization.setSamplingSize(sampling_size)
+  visualization.setSamplingSize(config.sampling_size)
   visualization.generateWaveform()
 
 end
@@ -107,8 +109,8 @@ function visualizer:draw()
     bar_width = bar_distance
   end
 
-  if fade_activated then
-    gui.graphics.setColor(nil, (.03-bar_amplitude_average)*fade_intensity_multiplier)
+  if config.fade_activated then
+    gui.graphics.setColor(nil, (.03-config.bar_amplitude_average)*config.fade_intensity_multiplier)
   else
     gui.graphics.setColor()
   end
@@ -144,7 +146,21 @@ function visualizer:draw()
   end
 
   -- Used to manipulate the degree of fade (if enabled).
-  bar_amplitude_average = bar_amplitude_sum/waveform_size
+  config.bar_amplitude_average = bar_amplitude_sum/waveform_size
+
+end
+
+function visualizer:away()
+
+  visualization.setObjectStoring(false)
+  visualization.storeConfig(config)
+
+end
+
+function visualizer:back()
+
+  config = visualization.retrieveConfig()
+  visualizer:load()
 
 end
 
