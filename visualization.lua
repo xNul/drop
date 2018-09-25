@@ -303,7 +303,7 @@ local function setVisualizer(index)
     local visualizer_chunk, errormsg = love.filesystem.load("visualizers/"..visualizer_name.."/"..visualizer_name..".lua")
     visualizer = visualizer_chunk()
     
-    if visualizer_configs[visualizer_index] and visualizer_configs[visualizer_index][1] then
+    if visualizer_configs[visualizer_index] and not visualizer_configs[visualizer_index][1] then
       visualization.callback("back")
     else
       visualization.callback("load")
