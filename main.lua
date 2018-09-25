@@ -211,7 +211,7 @@ function love.load()
       if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
         local new_volume_rounded = math.floor((love.audio.getVolume()+.1)*10+0.5)/10
         gui.buttons.volume.activate(new_volume_rounded)
-      else
+      elseif audio.music.exists() or audio.recordingdevice.isActive() then
         visualization.next()
       end
     end,
@@ -219,19 +219,19 @@ function love.load()
       if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
         local new_volume_rounded = math.floor((love.audio.getVolume()-.1)*10+0.5)/10
         gui.buttons.volume.activate(new_volume_rounded)
-      else
+      elseif audio.music.exists() or audio.recordingdevice.isActive() then
         visualization.previous()
       end
     end,
     ["right"] = function ()
-      if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+      if (love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")) and audio.music.exists() then
         audio.music.seekSong(audio.music.tellSong()+5)
       else
         gui.buttons.right.activate()
       end
     end,
     ["left"] = function ()
-      if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+      if (love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")) and audio.music.exists() then
         audio.music.seekSong(audio.music.tellSong()-5)
       else
         gui.buttons.left.activate()
