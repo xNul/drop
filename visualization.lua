@@ -169,8 +169,10 @@ local function prepareVisualizers()
       if love.filesystem.getInfo("visualizers/"..v, "directory") and love.filesystem.getInfo("visualizers/"..v.."/"..v..".lua", "file") then
         -- Updates bar visualizer.
         if v == "bar" then
-          local appdata_bar = require("visualizers/bar/bar")
-          local main_bar = require("bar")
+          local appdata_bar_chunk, errormsg = love.filesystem.load("visualizers/bar/bar.lua")
+          local appdata_bar = appdata_bar_chunk()
+          local main_bar_chunk, errormsg = love.filesystem.load("bar.lua")
+          local main_bar = main_bar_chunk()
           
           if appdata_bar:getInfo().version < main_bar:getInfo().version then
             love.filesystem.write("visualizers/bar/bar.lua", love.filesystem.read("bar.lua"))
@@ -207,7 +209,8 @@ function visualization.load()
     end
   end
   
-  visualizer = require("visualizers/"..visualizer_name.."/"..visualizer_name)
+  local visualizer_chunk, errormsg = love.filesystem.load("visualizers/"..visualizer_name.."/"..visualizer_name..".lua")
+  visualizer = visualizer_chunk()
   visualization.callback("load")
 
 end
@@ -297,7 +300,8 @@ local function setVisualizer(index)
     visualization.callback("back")
   else
     visualizer_index = index
-    visualizer = require("visualizers/"..visualizer_name.."/"..visualizer_name)
+    local visualizer_chunk, errormsg = love.filesystem.load("visualizers/"..visualizer_name.."/"..visualizer_name..".lua")
+    visualizer = visualizer_chunk()
     
     if visualizer_configs[visualizer_index] and visualizer_configs[visualizer_index][1] then
       visualization.callback("back")
