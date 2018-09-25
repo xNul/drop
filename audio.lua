@@ -28,7 +28,7 @@ local audio = {
 local id3 = require("id3")
 
 local sample_sum = 0
-local sample_counts = {0, 0, 0, 0, 0, 0, 0, 0}
+local sample_counts = {}
 local sounddata_array = {}
 local decoder_buffer = 2048
 local decoder = nil
@@ -85,7 +85,7 @@ function audio.reload()
   end
   
   sample_sum = 0
-  sample_counts = {0, 0, 0, 0, 0, 0, 0, 0}
+  sample_counts = {}
   sounddata_array = {}
   decoder = nil
   channels = 0
@@ -612,7 +612,11 @@ function audio.recordingdevice.load(device)
   current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
 
   sounddata_array = {}
-  sample_counts = {0, 0, 0, 0, 0, 0, 0, 0}
+  sample_counts = {}
+  
+  for i=1, queue_size do
+    sample_counts[i] = 0
+  end
   
   gui.buttons.volume.activate("volume1")
   
