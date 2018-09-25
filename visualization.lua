@@ -38,7 +38,6 @@ local samples_ptr = nil
 
 -- Variables for drawing the visualization.
 local visualizer
-local visualizer_object_storing_enabled = true
 local visualizer_objects = {}
 local visualizer_configs = {}
 local visualizer_name = config.visualization
@@ -66,7 +65,7 @@ end
 
 --- Runs FFT on music file samples and obtains the next waveform.
 -- @return table: Waveform output of FFT.
-function visualization.generateMusicWaveform()
+local function generateMusicWaveform()
 
   local normalized_samples = {}
   local channels = audio.getChannels()
@@ -108,7 +107,7 @@ end
 
 --- Runs FFT on Recording Device samples and obtains the next waveform.
 -- @return table: Waveform output of FFT.
-function visualization.generateRecordingDeviceWaveform()
+local function generateRecordingDeviceWaveform()
 
   local normalized_samples = {}
   local channels = audio.getChannels()
@@ -142,6 +141,19 @@ function visualization.generateRecordingDeviceWaveform()
 
   waveform = fft.fft(samples_ptr, sample_count_ptr, waveform_size_ptr)
   
+end
+
+function visualization.generateWaveform()
+
+  -- Performs FFT to generate waveform.
+  if audio.recordingdevice.isActive() then
+    if audio.recordingdevice.isReady() then
+      generateRecordingDeviceWaveform()
+    end
+  else
+    generateMusicWaveform()
+  end
+
 end
 
 local function prepareVisualizers()
@@ -262,19 +274,6 @@ end
 function visualization.setWaveformSize(n)
 
   waveform_size = n
-
-end
-
-function visualization.generateWaveform()
-
-  -- Performs FFT to generate waveform.
-  if audio.recordingdevice.isActive() then
-    if audio.recordingdevice.isReady() then
-      visualization.generateRecordingDeviceWaveform()
-    end
-  else
-    visualization.generateMusicWaveform()
-  end
 
 end
 
