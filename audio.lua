@@ -195,11 +195,6 @@ function audio.music.update()
     
     audio.music.changeSong(1)
   end
-  
-  -- If window was dragged, restart audio.
-  if not is_paused and not current_song:isPlaying() then
-    audio.play()
-  end
 
   --[[ Manage decoder processing and audio queue. ]]
   -- If new sounddata available, process it.
@@ -237,6 +232,11 @@ function audio.music.update()
   -- When song finished, play next one.
   if current_song:getFreeBufferCount() >= queue_size and not is_paused then
     audio.music.changeSong(1)
+  end
+  
+  -- If window was dragged or buffer ran out, restart audio. Needs to be after buffer refilled.
+  if not is_paused and not current_song:isPlaying() then
+    audio.play()
   end
   
 end
