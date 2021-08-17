@@ -28,9 +28,9 @@ local audio = {
 local id3 = require("id3")
 
 local sample_sum = 0
-local sample_counts = {0, 0, 0, 0, 0, 0, 0, 0}
+local sample_counts = {}
 local sounddata_array = {}
-local decoder_buffer = 2048
+local decoder_buffer = 1024
 local decoder = nil
 local channels = 0
 local bit_depth = 0
@@ -85,7 +85,7 @@ function audio.reload()
   end
   
   sample_sum = 0
-  sample_counts = {0, 0, 0, 0, 0, 0, 0, 0}
+  sample_counts = {}
   sounddata_array = {}
   decoder = nil
   channels = 0
@@ -263,13 +263,15 @@ end
 -- @param sampling_size number: New sampling size to build the table/queue around.
 function audio.music.resizeQueue(sampling_size)
 
-  local necessary_buffers = math.ceil(channels*sampling_size/decoder_buffer)
+  local old_queue_size = queue_size
+  
+  local vis_necessary_buffers = math.ceil(channels*sampling_size/decoder_buffer)
+  local audio_necessary_buffers = math.ceil(0.2*(sample_rate*channels*bit_depth/8)/decoder_buffer)
+  local necessary_buffers = math.min(math.max(2+vis_necessary_buffers, audio_necessary_buffers), 64)
   if necessary_buffers % 2 == 1 then
     necessary_buffers = necessary_buffers+1
   end
-
-  local old_queue_size = queue_size
-  queue_size = 2+necessary_buffers
+  queue_size = necessary_buffers
 
   -- Escape now because neither the table or queue would change.
   if old_queue_size == queue_size then
@@ -372,11 +374,13 @@ function audio.music.changeSong(number)
   seconds_per_buffer = decoder_buffer/(sample_rate*channels*bit_depth/8)
 
   -- Start song queue.
-  local necessary_buffers = math.ceil(channels*visualization.getSamplingSize()/decoder_buffer)
+  local vis_necessary_buffers = math.ceil(channels*visualization.getSamplingSize()/decoder_buffer)
+  local audio_necessary_buffers = math.ceil(0.2*(sample_rate*channels*bit_depth/8)/decoder_buffer)
+  local necessary_buffers = math.min(math.max(2+vis_necessary_buffers, audio_necessary_buffers), 64)
   if necessary_buffers % 2 == 1 then
     necessary_buffers = necessary_buffers+1
   end
-  queue_size = 2+necessary_buffers
+  queue_size = necessary_buffers
   current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
   
   -- Music initialization.
@@ -604,15 +608,21 @@ function audio.recordingdevice.load(device)
   bit_depth = device:getBitDepth()
   channels = device:getChannelCount()
   
-  local necessary_buffers = math.ceil(channels*visualization.getSamplingSize()/rd_min_buffer)
+  local vis_necessary_buffers = math.ceil(channels*visualization.getSamplingSize()/rd_min_buffer)
+  local audio_necessary_buffers = math.ceil(0.1*(sample_rate*channels*bit_depth/8)/rd_min_buffer)
+  local necessary_buffers = math.min(math.max(2+vis_necessary_buffers, audio_necessary_buffers), 64)
   if necessary_buffers % 2 == 1 then
     necessary_buffers = necessary_buffers+1
   end
-  queue_size = 2+necessary_buffers
+  queue_size = necessary_buffers
   current_song = love.audio.newQueueableSource(sample_rate, bit_depth, channels, queue_size)
 
   sounddata_array = {}
-  sample_counts = {0, 0, 0, 0, 0, 0, 0, 0}
+  sample_counts = {}
+  
+  for i=1, queue_size do
+    sample_counts[i] = 0
+  end
   
   gui.buttons.volume.activate("volume1")
   
@@ -681,13 +691,15 @@ end
 -- @param sampling_size number: New sampling size to build the table/queue around.
 function audio.recordingdevice.resizeQueue(sampling_size)
 
-  local necessary_buffers = math.ceil(channels*sampling_size/rd_min_buffer)
+  local old_queue_size = queue_size
+  
+  local vis_necessary_buffers = math.ceil(channels*sampling_size/rd_min_buffer)
+  local audio_necessary_buffers = math.ceil(0.1*(sample_rate*channels*bit_depth/8)/rd_min_buffer)
+  local necessary_buffers = math.min(math.max(2+vis_necessary_buffers, audio_necessary_buffers), 64)
   if necessary_buffers % 2 == 1 then
     necessary_buffers = necessary_buffers+1
   end
-
-  local old_queue_size = queue_size
-  queue_size = 2+necessary_buffers
+  queue_size = necessary_buffers
 
   -- Escape now because neither the table or queue would change.
   if old_queue_size == queue_size then
@@ -703,6 +715,13 @@ function audio.recordingdevice.resizeQueue(sampling_size)
     sounddata_transfer[i] = v
   end
 
+  -- Copy old sample_counts.
+  local sample_counts_transfer = {}
+  for i,v in ipairs(sample_counts) do
+    sample_counts_transfer[i] = v
+  end
+  
+  sample_counts = {}
   sounddata_array = {}
   local diff_queue = queue_size-old_queue_size
 
@@ -710,15 +729,18 @@ function audio.recordingdevice.resizeQueue(sampling_size)
   if diff_queue > 0 then
     for i=1, 2*diff_queue do
       sounddata_array[i] = sounddata_transfer[1]
+      sample_counts[i] = 0
     end
   end
 
   for i=math.max(2*diff_queue+1, 1), 2*diff_queue+old_queue_size do
     sounddata_array[i] = sounddata_transfer[i-2*diff_queue]
+    sample_counts[i] = sample_counts_transfer[i-2*diff_queue]
   end
 
   for i=2*diff_queue+old_queue_size+1, 2*queue_size do
     sounddata_array[i] = sounddata_transfer[i-2*diff_queue]
+    sample_counts[i] = sample_counts_transfer[i-2*diff_queue]
     current_song:queue(sounddata_array[i])
   end
 
