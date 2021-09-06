@@ -6,7 +6,7 @@ This distribution contains code from the following projects (full license text b
  - LOVE
 	Website: https://love2d.org/
 	License: zlib
-	Copyright (c) 2006-2018 LOVE Development Team
+	Copyright (c) 2006-2019 LOVE Development Team
 
  - ENet
 	Website: http://enet.bespin.org/index.html
@@ -73,6 +73,12 @@ This distribution contains code from the following projects (full license text b
 	Copyright (C) 2012-2016, Yann Collet.
 		You can contact the author at :
 		- xxHash source repository : https://github.com/Cyan4973/xxHash
+
+ - dr_flac
+	Website: https://github.com/mackron/dr_libs
+	Source download: https://github.com/mackron/dr_libs/blob/41bc0e8/dr_flac.h
+	License: MIT/Expat
+	Copyright 2018 David Reid
 
  - libmpg123
      Website: http://www.mpg123.de/
